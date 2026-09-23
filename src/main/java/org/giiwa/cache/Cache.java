@@ -316,16 +316,17 @@ public final class Cache {
 	 * @param value
 	 * @param ms
 	 */
-	public static void expire(String name, int ms) {
+	public static boolean expire(String name, int ms) {
 		TimeStamp t = TimeStamp.create();
 		try {
 			if (cacheSystem != null) {
 				name = GROUP + name;
-				cacheSystem.expire(name, ms);
+				return cacheSystem.expire(name, ms);
 			}
 		} finally {
 			write.add(t.pastms(), "name=%s", name);
 		}
+		return false;
 	}
 
 	/**
@@ -357,6 +358,11 @@ public final class Cache {
 
 	private static Counter read = new Counter("read");
 	private static Counter write = new Counter("write");
+
+	/**
+	 * Cache有错误， 1=yes
+	 */
+	public static int error = 1;
 
 	public static Counter.Stat statRead() {
 		return read.get();
@@ -390,6 +396,7 @@ public final class Cache {
 
 	public static void touch(String name, long expired) {
 		if (cacheSystem != null) {
+			name = GROUP + name;
 			cacheSystem.touch(name, expired);
 		}
 	}
@@ -411,4 +418,11 @@ public final class Cache {
 
 	}
 
+	public static String type() {
+		String name = cacheSystem == null ? null : cacheSystem.getClass().getSimpleName();
+		if (name.endsWith("Cache")) {
+			name = name.substring(0, name.length() - 5);
+		}
+		return name;
+	}
 }

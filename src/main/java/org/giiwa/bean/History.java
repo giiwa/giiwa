@@ -14,6 +14,9 @@
 */
 package org.giiwa.bean;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Bean;
@@ -24,11 +27,12 @@ import org.giiwa.dao.Helper;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Consumer;
 import org.giiwa.web.Language;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 
-@Table(name = "gi_history", memo = "GI-数据痕迹")
+@Table(name = "gi_history", memo = "GI-历史版本")
 public final class History extends Bean {
 
 	/**
@@ -62,15 +66,34 @@ public final class History extends Bean {
 
 	public User getUid_obj() {
 		if (uid_obj == null) {
-			uid_obj = User.dao.load(uid);
+			uid_obj = User.load(uid);
 		}
 		return uid_obj;
 	}
 
+	@Deprecated
 	public static boolean create(Bean p, V v, long uid) {
 		return create(p, v, uid, null);
 	}
 
+	private static List<Consumer<Bean>> listeners;
+
+	public static void addListener(Consumer<Bean> listener) {
+		if (listeners == null) {
+			listeners = new ArrayList<>();
+		}
+		listeners.add(listener);
+	}
+
+	private static void notify(Bean b) {
+		if (listeners != null) {
+			for (Consumer<Bean> e : listeners) {
+				e.accept(b);
+			}
+		}
+	}
+
+	@Deprecated
 	public static boolean create(Bean p, V v, long uid, String ip) {
 		/**
 		 * diff each data in V
@@ -94,7 +117,7 @@ public final class History extends Bean {
 
 			StringBuilder sb = new StringBuilder();
 			for (String name : v.names()) {
-				if (X.isIn(name, "updated", "created", "_id", "id")) {
+				if (X.isIn(name, "updated", X.CREATED, "_id", X.ID)) {
 					continue;
 				}
 				Object v0 = p == null ? null : p.get(name);
@@ -110,7 +133,7 @@ public final class History extends Bean {
 			}
 			if (sb.length() > 0) {
 				_create(V.create("_table", table).append("dataid", dataid).append("data", sb.toString())
-						.append("uid", uid).append("ip", ip));
+						.append("uid", uid).append(X.IP, ip));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -141,7 +164,10 @@ public final class History extends Bean {
 			dataid = dataid.toString();
 
 			_create(V.create("_table", table).append("dataid", dataid).append("data", p.json().toString())
-					.append("uid", uid).append("ip", ip));
+					.append("uid", uid).append(X.IP, ip));
+
+			notify(p);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -149,9 +175,10 @@ public final class History extends Bean {
 		return true;
 	}
 
+	@Deprecated
 	public static boolean changed(Bean p, V v) {
 		for (String name : v.names()) {
-			if (X.isIn(name, "updated", "created", "_id", "id"))
+			if (X.isIn(name, "updated", X.CREATED, "_id", X.ID))
 				continue;
 			Object v0 = p == null ? null : p.get(name);
 			Object v1 = v.value(name);
@@ -162,6 +189,7 @@ public final class History extends Bean {
 		return false;
 	}
 
+	@Deprecated
 	public static boolean create(String table, V v, long uid) {
 		/**
 		 * compare each data in V
@@ -178,7 +206,7 @@ public final class History extends Bean {
 
 		StringBuilder sb = new StringBuilder();
 		for (String name : v.names()) {
-			if (X.isIn(name, "updated", "created", "_id", "id")) {
+			if (X.isIn(name, "updated", X.CREATED, "_id", X.ID)) {
 				continue;
 			}
 			Object v1 = v.value(name);
@@ -214,6 +242,7 @@ public final class History extends Bean {
 		return -1;
 	}
 
+	@Deprecated
 	public static boolean create(BeanDAO<?, ? extends Bean> b, V v, long uid) {
 		/**
 		 * compare each data in V
@@ -232,7 +261,7 @@ public final class History extends Bean {
 
 			StringBuilder sb = new StringBuilder();
 			for (String name : v.names()) {
-				if (X.isIn(name, "updated", "created", "_id", "id")) {
+				if (X.isIn(name, "updated", X.CREATED, "_id", X.ID)) {
 					continue;
 				}
 
@@ -259,12 +288,12 @@ public final class History extends Bean {
 	}
 
 	public static Beans<History> load(String table, String dataid, int s, int n) {
-		return dao.load(W.create().and("_table", table).and("dataid", dataid).sort("created", -1), s, n);
+		return dao.load(W.create().and("_table", table).and("dataid", dataid).sort(X.CREATED, -1), s, n);
 	}
 
 	public static Beans<History> load(BeanDAO<?, ? extends Bean> b, String dataid, int s, int n) {
 		try {
-			return dao.load(W.create().and("_table", b.tableName()).and("dataid", dataid).sort("created", -1), s, n);
+			return dao.load(W.create().and("_table", b.tableName()).and("dataid", dataid).sort(X.CREATED, -1), s, n);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

@@ -26,8 +26,9 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 
 /**
- * web api： <a href='/menu' target='_blank'>/menu</a> <br>
+ * 系统菜单接口： <a href='/menu' target='_blank'>/menu</a> <br>
  * used to get menu
+ * 
  * @Deprecated
  * @author joe
  * 
@@ -58,7 +59,7 @@ public class menu extends Controller {
 		User me = this.user();
 
 		long id = this.getLong("root");
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		Beans<Menu> bs = null;
 		Menu m = null;
@@ -109,7 +110,7 @@ public class menu extends Controller {
 				 * set the text width language
 				 */
 				jo.put("text", lang.get(m.getName()));
-				jo.put("id", m.getId());
+				jo.put(X.ID, m.getId());
 				if (!X.isEmpty(m.getClasses())) {
 					jo.put("classes", m.getClasses());
 				}
@@ -133,7 +134,7 @@ public class menu extends Controller {
 				}
 
 				jo.put("seq", m.getSeq());
-				jo.put("tag", m.getTag());
+				jo.put(X.TAG, m.getTag());
 				if (!X.isEmpty(m.getLoad1())) {
 					jo.put("load", m.getLoad1() + "?__node=" + this.getString("__node"));
 				}

@@ -48,7 +48,7 @@ public class _Mem extends Bean {
 
 	public static BeanDAO<String, _Mem> dao = BeanDAO.create(_Mem.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "节点", size = 50)
@@ -93,15 +93,15 @@ public class _Mem extends Bean {
 
 			String id = UID.id(node);
 			if (dao.exists2(id)) {
-				dao.update(id, v.copy().force("node", node));
+				dao.update(id, v.copy().force(X.NODE, node));
 			} else {
 				// insert
-				dao.insert(v.copy().force(X.ID, id).force("node", node));
+				dao.insert(v.copy().force(X.ID, id).force(X.NODE, node));
 			}
 
 			String id1 = UID.id(node, Global.now() / X.AMINUTE);
 			if (!Record.dao.exists(id1)) {
-				Record.dao.insert(v.force(X.ID, id1).force("node", node));
+				Record.dao.insert(v.force(X.ID, id1).force(X.NODE, node));
 			}
 
 		} catch (Exception e) {
@@ -120,7 +120,7 @@ public class _Mem extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

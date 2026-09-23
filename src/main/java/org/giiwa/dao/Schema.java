@@ -38,6 +38,7 @@ import org.giiwa.web.Language;
  * @author joe
  *
  */
+@Comment(text = "schema")
 public final class Schema implements Serializable {
 
 	/**
@@ -137,10 +138,9 @@ public final class Schema implements Serializable {
 
 	}
 
-	@SuppressWarnings({ "unused" })
 	public static JSON format(JSON e, Language lang) throws SQLException {
 
-		String tablename = e.getString("name");
+		String tablename = e.getString(X.NAME);
 
 		Class<? extends Bean> c = bean(tablename);
 
@@ -166,7 +166,7 @@ public final class Schema implements Serializable {
 
 		JSON stat = Helper.primary.stats(table.name());
 
-		JSON j1 = JSON.create().append("name", c.getName()).append("table", table.name()).append("display", display);
+		JSON j1 = JSON.create().append(X.NAME, c.getName()).append("table", table.name()).append("display", display);
 		j1.append("count", Helper.primary.count(table.name(), W.create()))
 				.append("totalsize", stat == null ? null : stat.getLong("totalSize"))
 				.append("indexsize", stat == null ? null : stat.getLong("totalIndexSize"));

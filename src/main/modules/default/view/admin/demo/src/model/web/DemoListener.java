@@ -19,7 +19,7 @@ public class DemoListener implements IListener {
 		m.setLicense(License.LICENSE.free, "modulecode");
 
 		setting.register("demosetting", demosetting.class);
-
+		
 	}
 
 	@Override

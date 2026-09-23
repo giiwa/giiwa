@@ -18,13 +18,12 @@ import java.util.List;
 
 import org.giiwa.bean.*;
 import org.giiwa.conf.Global;
-import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.UID;
 import org.giiwa.json.JSON;
-import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Monitor;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
@@ -49,10 +48,10 @@ public class node extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void delete() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			Node.dao.load(W.create().and(X.ID, null));
 			this.set(X.ERROR, "缺少参数, [id]").send(201);
@@ -79,15 +78,15 @@ public class node extends Controller {
 
 		JSON jo = new JSON();
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		int power = this.getInt("power");
 		Node n = Node.dao.load(id);
 
 		if (n != null) {
 			try {
 
-				MQ.topic("giiwa.state", org.giiwa.net.mq.MQ.Request.create()
-						.put(JSON.create().append("node", id).append("power", power)));
+				n.power(power);
+
 				jo.put(X.STATE, 200);
 				jo.put(X.MESSAGE, lang.get("sent.node.power." + power));
 				GLog.oplog.info(this, "power", n.label + ", power=" + power);
@@ -106,7 +105,7 @@ public class node extends Controller {
 	public void update() {
 
 		String label = this.getString("label");
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		Node.dao.update(id, V.create("label", label));
 
 		GLog.oplog.error(this, "update", label + "/" + id, null);
@@ -118,17 +117,18 @@ public class node extends Controller {
 	@Path(path = "stat", login = true, access = "access.config.admin")
 	public void stat() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 
-		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", 1), 0,
+				24 * 60 * 7);
 
-		this.set("list", bs);
+		this.set(X.LIST, bs);
 		this.show("/admin/node.stat.html");
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "clean", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void clean() {
 		JSON jo = JSON.create();
 
@@ -148,19 +148,19 @@ public class node extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = W.create().sort("label", 1).sort("ip", 1);
+		W q = W.create().sort("label", 1).sort(X.IP, 1);
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		if (!X.isEmpty(name)) {
 			W q1 = W.create();
 			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-//			q1.or("id", name, W.OP.like);
+			q1.or(X.IP, name, W.OP.like);
+//			q1.or(X.ID, name, W.OP.like);
 			q.and(q1);
-			this.set("name", name);
+			this.set(X.NAME, name);
 		}
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
@@ -171,7 +171,6 @@ public class node extends Controller {
 		this.show("/admin/node.index.html");
 	}
 
-	@SuppressWarnings("serial")
 	@Path(path = "add", login = true, access = "access.config.admin", oplog = true)
 	public void add() {
 
@@ -246,6 +245,58 @@ public class node extends Controller {
 		this.set("l2", X.join(l2, ","));
 
 		this.show("/admin/node.add.html");
+
+	}
+
+	/**
+	 * 远程节点注册和heartbeat
+	 */
+	@Path(path = "hello")
+	public void hello() {
+		// Token授权验证
+		String token = this.get("token");
+		App a = App.load("appmon");
+		if (a == null) {
+			this.set(X.ERROR, "没有找到[appmon]应用，请联系管理员！").send(201);
+			return;
+		}
+		if (!X.isSame(token, a.secret)) {
+			this.set(X.ERROR, "错误[token]，请联系管理员！").send(201);
+			return;
+		}
+
+		if (!a.isAllow(this)) {
+			this.set(X.ERROR, "禁止[" + this.ip() + "]！").send(201);
+			return;
+		}
+
+		a.touch(this.ip());
+
+		String label = this.get(X.NAME);
+		V v = V.create();
+
+		v.append(X.IP, this.ip());
+		v.append(X.OS, this.get(X.OS));
+		v.append("modules", X.asList(X.split(this.getHtml("modules"), "[,; ]"), s -> s));
+		v.append("uptime", this.getLong("uptime"));
+		v.append("cores", this.getInt("cores"));
+		v.append("mem", this.getLong("mem_total"));
+		v.append("_usage", X.toDouble(this.get("cpu_usage")));
+		v.append("mem_usage", X.toDouble(this.get("mem_usage")));
+		v.append("timestamp", this.getHtml("time"));
+		v.append("tag", this.get("tag"));
+		v.append("lastcheck", Global.now());
+		v.append("label", label);
+		v.append("disk", this.getHtml("disk"));
+		v.append("ghz", X.toDouble(this.get("ghz")));
+
+		if (Node.dao.exists2(label)) {
+			Node.dao.update(label, v);
+		} else {
+			v.append(X.ID, label);
+			Node.dao.insert(v);
+		}
+		this.send(200);
 
 	}
 

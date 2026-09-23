@@ -46,7 +46,7 @@ public final class Access extends Bean {
 
 	public final static BeanDAO<String, Access> dao = BeanDAO.create(Access.class);
 
-	@Column(name = X.ID, memo = "名称", unique = true, size=50)
+	@Column(name = X.ID, memo = "名称", unique = true, size=64)
 	private String name;
 
 	@Column(memo = "备注", size = 512)

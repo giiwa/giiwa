@@ -35,10 +35,11 @@
 		<g>$lang.get('language.hint')</g>
 	</label></div>
 
+<!-- 
 	<div><label><h3>$lang.get('zookeeper.server'):</h3>
 		<input type='text' name='zookeeper.server' value="$!global.getString('zookeeper.server','')"/>
 		<g>$lang.get('zookeeper.server.hint')</g></label></div>
-	
+ -->	
 	<div><label><h3>$lang.get('ntp.server'):</h3>
 		<input type='text' name='ntpserver' value="$!global.getString('ntp.server','cn.ntp.org.cn')"/>
 		<g>$lang.get('ntp.server.hint')</g></label></div>
@@ -50,10 +51,6 @@
 	<div><label><h3>$lang.get('perf.moniter'):</h3>
 		<input type='checkbox' name='perf.moniter' #if($global.getInt('perf.moniter',1)==1) checked="checked" #end/>
 		<g>$lang.get('perf.moniter.hint')</g></label></div>
-
-	<div><label><h3>$lang.get('db.optimizer'):</h3>
-		<input type='checkbox' name='db.optimizer' #if($global.getInt("db.optimizer", 1)==1) checked="checked" #end />
-		<g>$lang.get('db.optimizer.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('web.debug'):</h3>
 		<input type='checkbox' name='web.debug' #if($global.getInt("web.debug", 0)==1) checked="checked" #end />
@@ -143,6 +140,10 @@
 	<div><label><h3>$lang.get('home.uri.1'):</h3>
 		<input type='text' name='home.uri.1' value="$!local.getString('home.uri.1','')"/>
 		<g>$lang.get('home.uri.1.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('forbidden.http.method'):</h3>
+		<input type='text' name='forbidden.http.method' value="$!global.getString('forbidden.http.method', '')"/>
+		<g>$lang.get('forbidden.http.method.hint')</g></label></div>
 		
 	<div><label><h3>$lang.get('cross.domain'):</h3>
 		<input type='text' name='cross_domain' value="$!cross_domain"/>
@@ -177,7 +178,7 @@
 	<hr/>
 	
 	<div><label><h3>$lang.get('user.name.rule'):</h3>
-		<input type='text' name='user_name' value="$!global.getString('user.name.rule','^[a-zA-Z0-9]{4,16}$')"/>
+		<input type='text' name='user_name' value="$!global.getString('user.name.rule','^[a-zA-Z0-9]{3,16}$')"/>
 		<g>$lang.get('user.name.rule.hint')</g></label></div>
 
 	<div style="margin-left:20px;"><label><h3>$lang.get('user.name.rule.tips'):</h3>
@@ -185,7 +186,7 @@
 		</label></div>
 		
 	<div><label><h3>$lang.get('user.passwd.rule'):</h3>
-		<input type='text' name='user_passwd' value="$!global.getString('user.passwd.rule','^[a-zA-Z0-9]{6,16}$')"/>
+		<input type='text' name='user_passwd' value="$!global.getString('user.passwd.rule','^[a-zA-Z0-9@#]{6,16}$')"/>
 		<g>$lang.get('user.passwd.rule.hint')</g></label></div>
 	
 	<div style="margin-left:20px;"><label><h3>$lang.get('user.passwd.rule.tips'):</h3>
@@ -203,6 +204,20 @@
 	<div><label><h3>$lang.get('user.captcha'):</h3>
 		<input type='checkbox' name='user_captcha' #if($global.getInt('user.captcha',0) == 1) checked #end/>
 		<g>$lang.get('user.captcha.hint')</g></label></div>
+	<div style="margin-left:20px">
+		<div><label><h3>$lang.get('user.captcha.option'):</h3>
+			<select name='user.captcha.option'>
+				<option value='image' #if($global.getString('user.captcha.option','') == 'image') selected #end>$lang.get('user.captcha.option.image')</option>
+				<option value='sms' #if($global.getString('user.captcha.option','') == 'sms') selected #end>$lang.get('user.captcha.option.sms')</option>
+				<option value='email' #if($global.getString('user.captcha.option','') == 'email') selected #end>$lang.get('user.captcha.option.email')</option>
+				<option value='2fa' #if($global.getString('user.captcha.option','') == '2fa') selected #end>$lang.get('user.captcha.option.2fa')</option>
+			</select>
+			</label></div>
+	</div>
+		
+	<div><label><h3>$lang.get('user.login.showmessage'):</h3>
+		<input type='checkbox' name='user.login.showmessage' #if($global.getLong('user.login.showmessage',1) == 1) checked #end/>
+		<g>$lang.get('user.login.showmessage.hint')</g></label></div>
 	<div><label><h3>$lang.get('user.token'):</h3>
 		<input type='checkbox' name='user_token' #if($global.getInt('user.token',0) == 1) checked #end/>
 		<g>$lang.get('user.token.hint')</g></label></div>
@@ -297,9 +312,9 @@
 	<!-- div><label><h3>gi.uuid:</h3><i>&nbsp;$!global.getString('gi.uuid', '')</i></label></div-->
 	<div><label><h3>global.id:</h3><i>&nbsp;$!global.id()</i></label></div>
 	<div><label><h3>node.id:</h3><i>&nbsp;$!local.id()</i></label></div>
+	<div><label><h3>global.code:</h3><i>&nbsp;$!global.getString('global.code', '')</i></label></div>
 	<div><label><h3>system.id:</h3><i>&nbsp;$!serial</i></label></div>
 	<div><label><h3>db.url:</h3><i>&nbsp;$!db_url</i><g>$lang.get('db.url.hint')</g></label></div>
-	<div><label><h3>db.user:</h3><i>&nbsp;$!db_user</i><g>$lang.get('db.user.hint')</g></label></div>
 
 	<div><label><g>$lang.get('partial.lang.notes')</g></label></div>
 	<hr/>

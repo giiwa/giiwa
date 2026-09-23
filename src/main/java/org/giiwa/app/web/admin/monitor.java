@@ -30,7 +30,7 @@ public class monitor extends Controller {
 	@Path(path = "checking", login = true)
 	public void checking() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		String access = this.get("access");
 
 		JSON jo = Monitor.get(id, access);

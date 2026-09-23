@@ -45,7 +45,7 @@ public class PG extends RDSHelper._AbstractDriver {
 			}
 			if (cols != null && !cols.isEmpty()) {
 				for (JSON col : cols) {
-					stat.execute("comment on column " + tablename + "." + col.getString("name") + " is '"
+					stat.execute("comment on column " + tablename + "." + col.getString(X.NAME) + " is '"
 							+ col.getString("display") + "'");
 				}
 			}
@@ -108,7 +108,7 @@ public class PG extends RDSHelper._AbstractDriver {
 	@Override
 	public String addColumn(String tablename, JSON col) {
 
-		String name = col.getString("name");
+		String name = col.getString(X.NAME);
 		String type = col.getString("type");
 		int size = col.getInt("size");
 
@@ -185,7 +185,7 @@ public class PG extends RDSHelper._AbstractDriver {
 //				}
 //				String type = r.getString("table_type");
 //				if (X.isEmpty(name) || tablename.matches(name)) {
-//					l1.add(JSON.create().append("type", type).append("name", tablename).append("display", tablename)
+//					l1.add(JSON.create().append("type", type).append(X.NAME, tablename).append("display", tablename)
 //							.append("memo", tablename));
 //				}
 //				if (n > 0 && l1.size() >= 1000) {

@@ -18,13 +18,19 @@ import org.giiwa.bean.S;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
 
+/**
+ * 短链接接口
+ * 
+ * @author joe
+ *
+ */
 public class s extends Controller {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
+	
 	public void onGet() {
 		S e = S.dao.load(path);
 		if (e != null) {

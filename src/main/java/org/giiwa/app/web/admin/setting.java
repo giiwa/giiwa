@@ -91,7 +91,7 @@ public class setting extends Controller {
 	 * @param name the name
 	 * @return the object
 	 */
-	@Path(path = "reset/(.*)", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "reset/(.*)", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	final public void reset(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
@@ -107,11 +107,59 @@ public class setting extends Controller {
 				s.module = this.module;
 				s.reset();
 
-				GLog.oplog.warn(this, "reset", "reset " + name);
+				GLog.oplog.warn(name, "reset", "seccuess.");
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(this, "reset", e.getMessage(), e);
+				GLog.oplog.error(name, "reset", e.getMessage(), e);
+			}
+		}
+	}
+
+	@Path(path = "download/(.*)", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
+	final public void download(String name) {
+		Class<? extends setting> c = settings.get(name);
+		if (log.isDebugEnabled())
+			log.debug("/download/" + c);
+
+		if (c != null) {
+			try {
+				setting s = c.getDeclaredConstructor().newInstance();
+				s.req = this.req;
+				s.resp = this.resp;
+				s.login = this.login;
+				s.lang = this.lang;
+				s.module = this.module;
+				s.download();
+
+			} catch (Exception e) {
+				log.error(name, e);
+				GLog.oplog.error(name, "download", e.getMessage(), e);
+			}
+		}
+	}
+
+	@Path(path = "upload/(.*)", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
+	final public void upload(String name) {
+		Class<? extends setting> c = settings.get(name);
+		if (log.isDebugEnabled())
+			log.debug("/download/" + c);
+
+		if (c != null) {
+			try {
+				setting s = c.getDeclaredConstructor().newInstance();
+				s.req = this.req;
+				s.resp = this.resp;
+				s.login = this.login;
+				s.lang = this.lang;
+				s.module = this.module;
+				s.upload();
+
+				GLog.oplog.warn(name, "upload", "success");
+
+			} catch (Exception e) {
+				log.error(name, e);
+				GLog.oplog.error(name, "upload", e.getMessage(), e);
 			}
 		}
 	}
@@ -124,7 +172,7 @@ public class setting extends Controller {
 			f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
 		}
 		if (f1.exists()) {
-			String s = IOUtil.read(f1, "UTF-8");
+			String s = IOUtil.read(f1, X.UTF8);
 			this.set("text", s);
 		}
 
@@ -146,7 +194,7 @@ public class setting extends Controller {
 		X.IO.mkdirs(f1.getParentFile());
 
 		String s = this.getHtml("text");
-		IOUtil.write(f1, "UTF-8", s);
+		IOUtil.write(f1, X.UTF8, s);
 
 		try {
 			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
@@ -214,14 +262,14 @@ public class setting extends Controller {
 
 				s.set("lang", lang);
 				s.set("module", module);
-				s.set("name", name);
+				s.set(X.NAME, name);
 				s.set("__node", this.getString("__node"));
 				s.set("settings", names);
 				s.show("/admin/setting.html");
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(this, path, e.getMessage(), e);
+				GLog.oplog.error(name, path, e.getMessage(), e);
 
 				this.show("/admin/setting.html");
 			}
@@ -235,7 +283,7 @@ public class setting extends Controller {
 	 *
 	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "set/(.*)", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	final public void set(String name) {
 
 		Class<? extends setting> c = settings.get(name);
@@ -249,7 +297,7 @@ public class setting extends Controller {
 				s.set("lang", lang);
 				s.set("module", module);
 				s.set("__node", this.getString("__node"));
-				s.set("name", name);
+				s.set(X.NAME, name);
 				s.set("settings", names);
 				s.set();
 
@@ -265,18 +313,26 @@ public class setting extends Controller {
 		}
 	}
 
+	public void download() {
+		println("不支持下载配置！");
+	}
+
+	public void upload() {
+
+	}
+
 	/**
 	 * invoked when post setting form.
 	 */
 	public void set() {
-
+		this.send(201);
 	}
 
 	/**
 	 * invoked when reset called.
 	 */
 	public void reset() {
-		this.set(X.MESSAGE, "ok").send(200);
+		this.send(201);
 	}
 
 	public void settingPage(String view) {
@@ -300,7 +356,7 @@ public class setting extends Controller {
 
 		if (!names.isEmpty()) {
 			String name = names.get(0);
-			this.set("name", name);
+			this.set(X.NAME, name);
 			get1(name);
 			return;
 		}
@@ -354,14 +410,19 @@ public class setting extends Controller {
 			Global.setConfig("f.g.online", X.isSame(this.getString("f.g.online"), "on") ? 1 : 0);
 			Global.setConfig("f.g.whitelist", this.getHtml("f.g.whitelist"));
 
-			Global.setConfig("zookeeper.server", this.getString("zookeeper.server"));
+//			Global.setConfig("zookeeper.server", this.getString("zookeeper.server"));
 
-			Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
+			int captcha = X.isSame(this.getString("user_captcha"), "on") ? 1 : 0;
+			Global.setConfig("user.captcha", captcha);
+			String s = this.getString("user.captcha.option");
+			Global.setConfig("user.captcha.option", s);
+
 			Global.setConfig("user.token", X.isSame(this.getString("user_token"), "on") ? 1 : 0);
 			Global.setConfig("user.passwd", X.isSame("on", this.getString("user.passwd")) ? 1 : 0);
 			Global.setConfig("session.baseip", X.isSame("on", this.getString("session.baseip")) ? 1 : 0);
 			long alive = this.getLong("session.alive");
 			if (alive == 0) {
+				// 会话级
 				alive = -1;
 			}
 			Global.setConfig("session.alive", alive);
@@ -390,6 +451,12 @@ public class setting extends Controller {
 			Global.setConfig("user.name.rule.tips", this.getString("user.name.rule.tips"));
 			Global.setConfig("user.passwd.rule.tips", this.getString("user.passwd.rule.tips"));
 
+			String s1 = this.get("forbidden.http.method");
+			if (s1 != null) {
+				s1 = s1.toUpperCase();
+			}
+			Global.setConfig("forbidden.http.method", s1);
+
 			Global.setConfig("cross.domain", this.getString("cross_domain"));
 			Global.setConfig("cross.header", this.getString("cross_header"));
 			Global.setConfig("html.source", this.getHtml("html.source"));
@@ -398,7 +465,7 @@ public class setting extends Controller {
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
 			Global.setConfig("http.proxy", this.getString("http.proxy"));
 
-			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
+//			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("security.task", X.isSame("on", this.getString("security.task")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("perf.moniter", X.isSame("on", this.getString("perf.moniter")) ? 1 : 0);
@@ -486,7 +553,7 @@ public class setting extends Controller {
 
 			try {
 				Beans<Node> l1 = Node.dao
-						.load(W.create().and("lastcheck", Global.now() - X.ADAY, W.OP.gte).sort("created"), 0, 1024);
+						.load(W.create().and("lastcheck", Global.now() - X.ADAY, W.OP.gte).sort(X.CREATED), 0, 1024);
 				String code = "";
 
 //				List<String> cpuids = Host.getCpuID();
@@ -551,44 +618,6 @@ public class setting extends Controller {
 
 			this.settingPage("/admin/setting.system.html");
 
-		}
-
-	}
-
-	public static class smtp extends setting {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.giiwa.app.web.admin.setting.set()
-		 */
-		@Override
-		public void set() {
-
-			Global.setConfig("mail.protocol", this.getString("mail.protocol"));
-			Global.setConfig("mail.host", this.getString("mail.host"));
-			Global.setConfig("mail.email", this.getString("mail.email"));
-			Global.setConfig("mail.title", this.getString("mail.title"));
-			Global.setConfig("mail.user", this.getString("mail.user"));
-			Global.setConfig("mail.passwd", this.getString("mail.passwd"));
-
-			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.giiwa.app.web.admin.setting.get()
-		 */
-		@Override
-		public void get() {
-
-			this.set("page", "/admin/setting.smtp.html");
 		}
 
 	}
@@ -665,14 +694,14 @@ public class setting extends Controller {
 		}
 	}
 
-	@Path(path = "list", login = true, access = "access.config.admin")
+	@Path(path = X.LIST, login = true, access = "access.config.admin")
 	public final void list() {
 
 	}
 
 	@Path(path = "get1", login = true, access = "access.config.admin")
 	public void get1() {
-		String name = this.get("name");
+		String name = this.get(X.NAME);
 		Global e = Global.dao.load(name);
 		if (e != null) {
 			this.print(e.json());
@@ -681,7 +710,7 @@ public class setting extends Controller {
 
 	@Path(path = "delete1", login = true, access = "access.config.admin")
 	public void delete1() {
-		String name = this.get("name");
+		String name = this.get(X.NAME);
 		Global.dao.delete(name);
 		this.print("ok");
 	}

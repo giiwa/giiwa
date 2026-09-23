@@ -14,6 +14,7 @@
 */
 package org.giiwa.dao;
 
+import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -23,6 +24,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Data;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.sql.SQL;
@@ -70,14 +73,17 @@ public final class Helper implements Serializable {
 	 */
 	public static DBHelper primary = null;
 
-	/** The conf. */
+	/**
+	 * The conf.
+	 * 
+	 */
 	protected static Configuration conf;
 
 	/**
-	 * initialize the Bean with the configuration.
+	 * 初始化数据库助手.
 	 * 
 	 * @deprecated by init2
-	 * @param conf the conf
+	 * @param conf - 配置信息
 	 */
 	public static void init(Configuration conf) {
 
@@ -106,10 +112,16 @@ public final class Helper implements Serializable {
 
 	}
 
+	private static final Map<String, Class<DBHelper>> _helpers = new HashMap<>();
+
+	public static void addHelper(String drivername, Class<DBHelper> helper) {
+		_helpers.put(drivername, helper);
+	}
+
 	/**
-	 * init
+	 * 初始化数据库助手（新）
 	 * 
-	 * @param conf
+	 * @param conf - 配置信息
 	 * @return
 	 */
 	public synchronized static boolean init2(Configuration conf) {
@@ -151,7 +163,8 @@ public final class Helper implements Serializable {
 				}
 			}
 
-			if (url.startsWith("mongodb://") || url.startsWith("jmdb://") || url.startsWith("mysql://")) {
+			if (url.startsWith("sdb://") || url.startsWith("mongodb://") || url.startsWith("jmdb://")
+					|| url.startsWith("mysql://")) {
 
 				int timeout = conf.getInt("db.timeout", 30000);
 
@@ -160,12 +173,12 @@ public final class Helper implements Serializable {
 
 			} else {
 
+				// int timeout = conf.getInt("db.timeout", 30000);
 				String locale = conf.getString("db.locale", X.EMPTY);
-//				int timeout = conf.getInt("db.timeout", 30000);
 
 				// test driver
-				Connection con = RDSHelper.getConnection(url, user, passwd, locale);
-				RDSHelper.close(con);
+//					Connection con = RDSHelper.getConnection(url, user, passwd, locale);
+//					RDSHelper.close(con);
 				// tested ok
 
 				primary = RDSHelper.create(url, user, passwd, conns, locale);
@@ -201,11 +214,11 @@ public final class Helper implements Serializable {
 	}
 
 	/**
-	 * delete the data by query
+	 * 删除数据，并记录性能
 	 * 
-	 * @param table
-	 * @param q
-	 * @return
+	 * @param table - 表
+	 * @param q     - 条件
+	 * @return 删除条数
 	 */
 	public static int delete(String table, W q) {
 
@@ -213,9 +226,9 @@ public final class Helper implements Serializable {
 		try {
 			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(table, q);
-				}
+//				if (monitor != null) {
+//					monitor.query(table, q);
+//				}
 
 				return primary.delete(table, q);
 
@@ -227,16 +240,21 @@ public final class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * 修复表
+	 * 
+	 * @param table - 表
+	 */
 	public static void repair(String table) {
 		primary.repair(table);
 	}
 
 	/**
-	 * exists
+	 * 检测数据是否存在
 	 * 
-	 * @param table
-	 * @param q
-	 * @return
+	 * @param table - 表
+	 * @param q     - 条件
+	 * @return True - 存在
 	 * @throws SQLException
 	 */
 	public static boolean exists(String table, W q) throws SQLException {
@@ -245,9 +263,9 @@ public final class Helper implements Serializable {
 		try {
 			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(table, q);
-				}
+//				if (monitor != null) {
+//					monitor.query(table, q);
+//				}
 
 				return primary.exists(table, q);
 			}
@@ -258,15 +276,22 @@ public final class Helper implements Serializable {
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
 	}
 
+	/**
+	 * 检测数据是否存在
+	 * 
+	 * @param table - 表
+	 * @param q     - 条件
+	 * @return True - 存在
+	 */
 	public static boolean exists2(String table, W q) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(table, q);
-				}
+//				if (monitor != null) {
+//					monitor.query(table, q);
+//				}
 
 				return primary.exists(table, q);
 			}
@@ -279,8 +304,8 @@ public final class Helper implements Serializable {
 	}
 
 	/**
-	 * Values in SQL, used to insert or update data both RDS and Mongo<br>
-	 * .
+	 * Value 类, 主要用于插入/更新数据
+	 * 
 	 */
 	public static final class V implements Serializable {
 
@@ -297,62 +322,160 @@ public final class Helper implements Serializable {
 		public Map<String, String> t = new LinkedHashMap<String, String>();
 
 		/**
-		 * convert the V to json and return
+		 * 转化成JSON对象
 		 * 
-		 * @return
+		 * @return JSON - 转化结果
 		 */
 		public JSON json() {
 			return JSON.fromObject(m);
 		}
 
 		/**
-		 * copy the request parameters to V
+		 * 从Controller对象中复制V对象， 值为String
 		 * 
-		 * @param m     the model
-		 * @param names the names string
-		 * @return the V
+		 * @param m     - Controller对象
+		 * @param names - 参数
+		 * @return V - this
 		 */
 		public V copy(Controller m, String... names) {
 			if (X.isEmpty(names)) {
 				// copy all
 				for (String name : m.names()) {
-					this.set(name, m.getString(name));
+					String v = m.get(name);
+					if (v != null) {
+						this.set(name, v);
+					}
 				}
 			} else {
 				for (String name : names) {
-					this.set(name, m.getString(name));
+					String v = m.get(name);
+					if (v != null) {
+						this.set(name, v);
+					}
 				}
 			}
 			return this;
 		}
 
 		/**
-		 * copy the request parameters to V
+		 * 从Controller对象中复制V对象， 值为Int
 		 * 
-		 * @param m     the model
-		 * @param names the names string
+		 * @param m     - Controller对象
+		 * @param names - 参数
+		 * @return V - this
 		 */
 		public V copyInt(Controller m, String... names) {
 			if (!X.isEmpty(names)) {
 				for (String name : names) {
-					this.set(name, m.getInt(name));
+					String v = m.get(name);
+					if (v != null) {
+						this.set(name, X.toInt(v));
+					}
 				}
 			}
 			return this;
 		}
 
 		/**
-		 * From json.
+		 * 从Controller对象中复制V对象， 值为Long
+		 * 
+		 * @param m     - Controller对象
+		 * @param names - 参数
+		 * @return V - this
+		 */
+		public V copyLong(Controller m, String... names) {
+			if (!X.isEmpty(names)) {
+				for (String name : names) {
+					String v = m.get(name);
+					if (v != null) {
+						this.set(name, X.toLong(v));
+					}
+				}
+			}
+			return this;
+		}
+
+		/**
+		 * 从Controller对象中复制V对象， 值为List， 自动分割“，；[]”值
+		 * 
+		 * @param m     - Controller对象
+		 * @param names - 参数
+		 * @return V - this
+		 */
+		public V copyList(Controller m, String... names) {
+			if (!X.isEmpty(names)) {
+				for (String name : names) {
+					String[] ss = m.getHtmls(name);
+					if (ss != null && ss.length > 0) {
+						List<String> l1 = null;
+						for (String s : ss) {
+							String[] ss1 = X.split(s, "[\\[\\] ,，；;]");
+							if (ss1 != null) {
+								if (l1 == null) {
+									l1 = new ArrayList<String>();
+								}
+								for (String s1 : ss1) {
+									if (!l1.contains(s1)) {
+										l1.add(s1);
+									}
+								}
+							}
+						}
+						this.set(name, l1);
+					} else {
+						String s = m.getHtml(name);
+						if (s != null) {
+							List<String> l1 = null;
+							String[] ss1 = X.split(s, "[\\[\\] ,，；;]");
+							if (ss1 != null) {
+								if (l1 == null) {
+									l1 = new ArrayList<String>();
+								}
+								for (String s1 : ss1) {
+									if (!l1.contains(s1)) {
+										l1.add(s1);
+									}
+								}
+							}
+							this.set(name, l1);
+						}
+					}
+				}
+			}
+			return this;
+		}
+
+		/**
+		 * 从Controller对象中复制V对象， 值为Html(原始值，不转义）
+		 * 
+		 * @param m     - Controller对象
+		 * @param names - 参数
+		 * @return V - this
+		 */
+		public V copyHtml(Controller m, String... names) {
+			if (!X.isEmpty(names)) {
+				for (String name : names) {
+					String v = m.getHtml(name);
+					if (v != null) {
+						this.set(name, v);
+					}
+				}
+			}
+			return this;
+		}
+
+		/**
+		 * 从JSON转换成V对象
 		 *
-		 * @param j the j
-		 * @return the v
+		 * @param j - JSON对象
+		 * @return 新的V
 		 */
 		public static V fromJSON(JSON j) {
 			return V.create().copy(j);
 		}
 
 		/**
-		 * get the names.
+		 * 列表所有Key
 		 *
 		 * @return Collection
 		 */
@@ -367,7 +490,7 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * get the size of the values.
+		 * V对象的存储大小
 		 *
 		 * @return the int
 		 */
@@ -399,10 +522,20 @@ public final class Helper implements Serializable {
 			return size;
 		}
 
+		/**
+		 * V对象中条目数
+		 * 
+		 * @return
+		 */
 		public int length() {
 			return m.size();
 		}
 
+		/**
+		 * 检测是否空，非V.ignore值
+		 * 
+		 * @return True - 空，或全是V.ignore
+		 */
 		public boolean isEmpty() {
 			if (m.isEmpty()) {
 				return true;
@@ -416,9 +549,9 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * To string.
+		 * 转为字符串
 		 *
-		 * @return the string
+		 * @return 字符串 {name=value, ...}
 		 */
 		/*
 		 * (non-Javadoc)
@@ -434,11 +567,11 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * Creates a V and set the init name=value.
+		 * 使用name=v创建一个新的V对象
 		 *
-		 * @param name the name
-		 * @param v    the value
-		 * @return the v
+		 * @param name - name
+		 * @param v    - 值
+		 * @return 新V对象
 		 */
 		public static V create(String name, Object v) {
 			if (name != null && v != null) {
@@ -767,8 +900,11 @@ public final class Helper implements Serializable {
 		 */
 		private static final long serialVersionUID = 1L;
 
+		/**
+		 * 条件
+		 */
 		public enum OP {
-			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
+			eq, gt, gte, lt, lte, like, notlike, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
 		private IAccess access;
@@ -795,21 +931,40 @@ public final class Helper implements Serializable {
 		 */
 		public static final int OR = 2;
 
-		public static final int NOT = 4;
+//		public static final int NOT = 4;
 
 		private String connectsql;
+
+		/**
+		 * 查询条件
+		 */
 		private List<W> queryList = new ArrayList<W>();
-		private List<Entity> order = new ArrayList<Entity>();
+
+		/**
+		 * 排序条件
+		 */
+		private List<Entity> orderList = new ArrayList<Entity>();
+
 		private String groupby;
 
-		public int cond = AND;
+		protected int cond = AND;
+
+		public boolean not = false;
 
 		private transient BeanDAO<?, ?> dao = null;
 		public String table = null;
 		private transient DBHelper helper = Helper.primary;
 
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({ "rawtypes", "deprecation" })
 		private Class t = Data.class;
+
+		public boolean isAnd() {
+			return cond == AND;
+		}
+
+		public boolean isOr() {
+			return cond == OR;
+		}
 
 		/**
 		 * @deprecated
@@ -836,6 +991,9 @@ public final class Helper implements Serializable {
 			return table;
 		}
 
+		/**
+		 * 字段
+		 */
 		String fields;
 
 		public String fields() {
@@ -895,7 +1053,7 @@ public final class Helper implements Serializable {
 //		}
 
 		public List<Entity> getOrder() {
-			return order;
+			return orderList;
 		}
 
 //		public void parse(JSON data) throws Exception {
@@ -981,7 +1139,7 @@ public final class Helper implements Serializable {
 			if (l1 != null && l1.size() > 0) {
 				for (JSON j1 : l1) {
 					Entity e = Entity.fromJSON(j1);
-					q.order.add(e);
+					q.orderList.add(e);
 				}
 			}
 
@@ -991,6 +1149,8 @@ public final class Helper implements Serializable {
 		private W() {
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public W inc(String name, int n) throws SQLException {
 
 			if (access != null) {
@@ -1063,8 +1223,8 @@ public final class Helper implements Serializable {
 				w.queryList.add(e.copy());
 			}
 
-			for (Entity e : order) {
-				w.order.add(e.copy());
+			for (Entity e : orderList) {
+				w.orderList.add(e.copy());
 			}
 
 			return w;
@@ -1094,7 +1254,7 @@ public final class Helper implements Serializable {
 		 */
 		@Comment(text = "检查是否空条件")
 		public boolean isEmpty() {
-			return X.isEmpty(queryList) && X.isEmpty(order);
+			return X.isEmpty(queryList) && X.isEmpty(groupby) && X.isEmpty(orderList);
 		}
 
 		/**
@@ -1136,8 +1296,8 @@ public final class Helper implements Serializable {
 
 			StringBuilder sb = new StringBuilder();
 			sb.append("{" + where() + "=>" + Helper.toString(args()));
-			if (!X.isEmpty(order)) {
-				sb.append(", sort=" + order);
+			if (!X.isEmpty(orderList)) {
+				sb.append(", sort=" + orderList);
 			}
 			if (!X.isEmpty(groupby)) {
 				sb.append(", groupby=" + groupby);
@@ -1170,18 +1330,18 @@ public final class Helper implements Serializable {
 
 			for (W clause : queryList) {
 				if (sb.length() > 0) {
-					if (clause.getCondition() == AND) {
+					if (clause.cond == AND) {
 						sb.append(" and ");
-					} else if (clause.getCondition() == OR) {
+					} else if (clause.cond == OR) {
 						sb.append(" or ");
-					} else if (clause.getCondition() == NOT) {
-						sb.append(" and not ");
+//					} else if (clause.cond == NOT) {
+//						sb.append(" and not ");
 					}
 				}
 				sb.append(clause.where(tansfers));
 			}
 
-			if (this.getCondition() == NOT) {
+			if (this.not) {
 				return sb.length() == 0 ? X.EMPTY : "not (" + sb + ")";
 			} else {
 //				return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
@@ -1236,10 +1396,10 @@ public final class Helper implements Serializable {
 		 */
 		String orderby(Map<String, String> transfers) {
 
-			if (order.size() > 0) {
+			if (orderList.size() > 0) {
 				StringBuilder sb = new StringBuilder("order by ");
-				for (int i = 0; i < order.size(); i++) {
-					Entity e = order.get(i);
+				for (int i = 0; i < orderList.size(); i++) {
+					Entity e = orderList.get(i);
 					if (i > 0) {
 						sb.append(",");
 					}
@@ -1266,31 +1426,31 @@ public final class Helper implements Serializable {
 		 * @return W
 		 */
 		@Comment()
-		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v) {
+		public W and(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v) {
 			return and(name, v, 1);
 		}
 
 		@Comment()
-		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v,
 				@Comment(text = "boost") int boost) {
 			return and(name, v, OP.eq, boost);
 		}
 
-		/**
-		 * set and "and (...)" conditions
-		 *
-		 * @param w the w
-		 * @return W
-		 */
-		@Comment()
-		public W and(@Comment(text = "query") W w) {
-			return and(w, W.AND);
-		}
+//		/**
+//		 * set and "and (...)" conditions
+//		 *
+//		 * @param w the w
+//		 * @return W
+//		 */
+//		@Comment()
+//		public W and(@Comment(text = "query") W w) {
+//			return and(w, W.AND);
+//		}
 
-		@Comment(text = "and (not ....)")
-		public W andnot(@Comment(text = "query") W w) {
-			return and(w, W.NOT);
-		}
+//		@Comment(text = "and (not ....)")
+//		public W andnot(@Comment(text = "query") W w) {
+//			return and(w, W.NOT);
+//		}
 
 		/**
 		 * 
@@ -1299,54 +1459,80 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@Comment()
-		public W and(@Comment(text = "query") W w, @Comment(text = "cond") int cond) {
+		public W and(@Comment(text = "query") W w) {
 
 			if (w.isEmpty())
 				return this;
 
-//			if (w.queryList.size() == 1 && (cond == W.AND || cond == W.OR)) {
-//				queryList.add(w.queryList.get(0));
-//				return this;
-//			}
-//
-			if (this.size() > 1 && queryList.get(queryList.size() - 1).cond != cond) {
-				W e = W.create();
-				e.queryList = queryList;
-				this.queryList = new ArrayList<W>();
-				this.queryList.add(e);
-			}
-			if (w.size() == 1) {
-				w = w.queryList.get(0);
-			}
-			if (cond == NOT) {
-				if (w.cond == NOT) {
-					w.cond = AND;
-				} else {
-					w.cond = cond;
-				}
-			}
-//			if (w instanceof Entity) {
-//				((Entity) w).container = this;
-//			}
-			queryList.add(w);
+			w.cond = AND;
 
-			if (!w.order.isEmpty()) {
-				for (Entity e : w.order) {
-					if (!this.ordered(e.name)) {
-						this.order.add(e);
+			// 复制查询条件
+			if (this.queryList.isEmpty()) {
+				// 自己空的，直接put所有子条件
+				if (w instanceof Entity) {
+					this.queryList.add(w);
+				} else if (!w.queryList.isEmpty()) {
+					this.queryList.addAll(w.queryList);
+					this.not = w.not;
+				}
+			} else {
+				if (this.queryList.size() > 1 && this.queryList.get(queryList.size() - 1).cond != w.cond) {
+					// 本身多个条件， 最后一个cond与现在这个不相等（a or b -> and c) => (a or b) and c
+					W e = W.create();
+					e.queryList = this.queryList;
+					this.queryList = new ArrayList<W>();
+					this.queryList.add(e);
+				}
+				if (w instanceof Entity) {
+					this.queryList.add(w);
+				} else if (w.queryList.size() == 1) {
+					// 去“括弧”
+					this.queryList.add(w.queryList.get(0));
+				} else if (w.queryList.size() > 1) {
+					if (this.queryList.size() == 1 && w.queryList.get(1).cond == w.cond) {
+						// 去“括弧”
+						this.queryList.addAll(w.queryList);
+					} else {
+						this.queryList.add(w);
 					}
 				}
+			}
+
+			// 复制分组条件
+			if (!X.isEmpty(w.groupby)) {
+				if (X.isEmpty(this.groupby)) {
+					this.groupby = w.groupby;
+				} else {
+					List<String> l1 = X.asList(X.split(this.groupby, "[, ]"), s -> s.toString());
+					List<String> l2 = X.asList(X.split(w.groupby, "[, ]"), s -> s.toString());
+					for (String s2 : l2) {
+						if (!l1.contains(s2)) {
+							l1.add(s2);
+						}
+					}
+					this.groupby = X.join(l1, ",");
+				}
+			}
+
+			// 复制排序条件
+			if (!w.orderList.isEmpty()) {
+				for (Entity e : w.orderList) {
+					if (!this.ordered(e.name)) {
+						this.orderList.add(e);
+					}
+				}
+				w.orderList.clear();
 			}
 
 			return this;
 		}
 
 		private boolean ordered(String name) {
-			if (this.order == null || this.order.isEmpty()) {
+			if (this.orderList == null || this.orderList.isEmpty()) {
 				return false;
 			}
 
-			for (Entity e : this.order) {
+			for (Entity e : this.orderList) {
 				if (X.isSame(e.name, name)) {
 					return true;
 				}
@@ -1383,10 +1569,10 @@ public final class Helper implements Serializable {
 						sb.append(" and ");
 					} else if (clause.cond == OR) {
 						sb.append(" or ");
-					} else if (clause.cond == NOT) {
-						sb.append(" and not ");
+//					} else if (clause.cond == NOT) {
+//						sb.append(" and not ");
 					}
-				} else if (clause.cond == NOT) {
+				} else if (clause.not) {
 					sb.append(" not ");
 				}
 
@@ -1399,21 +1585,26 @@ public final class Helper implements Serializable {
 					sb.append(")");
 				}
 			}
-			if (!this.order.isEmpty()) {
+//			if (this.queryList != null && this.queryList.isEmpty()) {
+			if (!this.orderList.isEmpty()) {
 				sb.append(" order by ");
-				for (int i = 0, len = this.order.size(); i < len; i++) {
+				for (int i = 0, len = this.orderList.size(); i < len; i++) {
 					if (i > 0) {
 						sb.append(",");
 					}
-					Entity e = this.order.get(i);
+					Entity e = this.orderList.get(i);
 					sb.append(e.name);
 					if (X.isSame(e.value, -1)) {
 						sb.append(" desc");
 					}
 				}
 			}
+//			}
+
 //			sql.append("(").append(sb.toString()).append(")");
+//			if (!sb.isEmpty()) {
 			sql.append(sb.toString());
+//			}
 
 		}
 
@@ -1426,10 +1617,10 @@ public final class Helper implements Serializable {
 						sb.append(" and ");
 					} else if (clause.cond == OR) {
 						sb.append(" or ");
-					} else if (clause.cond == NOT) {
-						sb.append(" and not ");
+//					} else if (clause.cond == NOT) {
+//						sb.append(" and not ");
 					}
-				} else if (clause.cond == NOT) {
+				} else if (clause.not) {
 					sb.append(" not ");
 				}
 
@@ -1442,21 +1633,25 @@ public final class Helper implements Serializable {
 					sb.append(")");
 				}
 			}
-			if (!this.order.isEmpty()) {
+//			if (this.queryList != null && this.queryList.isEmpty()) {
+			if (!this.orderList.isEmpty()) {
 				sb.append(" order by ");
-				for (int i = 0, len = this.order.size(); i < len; i++) {
+				for (int i = 0, len = this.orderList.size(); i < len; i++) {
 					if (i > 0) {
 						sb.append(",");
 					}
-					Entity e = this.order.get(i);
+					Entity e = this.orderList.get(i);
 					sb.append(e.name);
 					if (X.isSame(e.value, -1)) {
 						sb.append(" desc");
 					}
 				}
 			}
+//			}
 //			sql.append("(").append(sb.toString()).append(")");
+//			if (!sb.isEmpty()) {
 			sql.append(sb.toString());
+//			}
 
 		}
 
@@ -1470,7 +1665,7 @@ public final class Helper implements Serializable {
 		@Comment(text = "and条件", demo = ".and('a=1 or b=2')")
 		public W and(@Comment(text = "sql") String sql) throws SQLException {
 //			try {
-			W q = SQL.where(sql);
+			W q = SQL.parse(sql);
 			if (!q.isEmpty()) {
 				// System.out.println(q);
 				this.and(q);
@@ -1492,7 +1687,7 @@ public final class Helper implements Serializable {
 		@Comment(text = "or条件", demo = ".or('a=1 and b=1')")
 		public W or(@Comment(text = "sql") String sql) throws SQLException {
 //			try {
-			W q = SQL.where(sql);
+			W q = SQL.parse(sql);
 			if (!q.isEmpty()) {
 //					if (this.isEmpty()) {
 //						this.copy(q);
@@ -1520,171 +1715,180 @@ public final class Helper implements Serializable {
 				this.queryList.add(e);
 			}
 
-			for (Entity e : q.order) {
+			for (Entity e : q.orderList) {
 				Entity e1 = e.copy();
 //				e1.container = this;
-				this.order.add(e1);
+				this.orderList.add(e1);
 			}
 
 			return this;
 		}
 
-		/**
-		 * set a "or (...)" conditions
-		 *
-		 * @param w the w
-		 * @return W
-		 */
+//		/**
+//		 * set a "or (...)" conditions
+//		 *
+//		 * @param w the w
+//		 * @return W
+//		 */
+//		@Comment()
+//		public W or(@Comment(text = "query") W w) {
+//			return or(w, W.OR);
+//		}
+
+//		@Comment(text = "or (not ...)")
+//		public W ornot(@Comment(text = "query") W w) {
+//			return or(w, W.NOT);
+//		}
+
 		@Comment()
 		public W or(@Comment(text = "query") W w) {
-			return or(w, W.OR);
-		}
-
-		@Comment(text = "or (not ...)")
-		public W ornot(@Comment(text = "query") W w) {
-			return or(w, W.NOT);
-		}
-
-		@Comment()
-		public W or(@Comment(text = "query") W w, int cond) {
 			if (w.isEmpty())
 				return this;
 
-			if (this.size() > 1 && queryList.get(queryList.size() - 1).cond != cond) {
-				W e = W.create();
-				e.queryList = queryList;
-				this.queryList = new ArrayList<W>();
-				this.queryList.add(e);
+			w.cond = OR;
+
+			if (queryList.isEmpty()) {
+				// 自己空的， 自己put所有子条件
+				if (w instanceof Entity) {
+					queryList.add(w);
+				} else if (!w.queryList.isEmpty()) {
+					queryList.addAll(w.queryList);
+				}
+			} else {
+				// 先整理本身查询条件， 把or条件的包裹起来
+				if (this.size() > 1 && queryList.get(queryList.size() - 1).cond != w.cond) {
+					W e = W.create();
+					e.queryList = queryList;
+					this.queryList = new ArrayList<W>();
+					this.queryList.add(e);
+				}
+				if (w instanceof Entity) {
+					this.queryList.add(w);
+				} else if (w.queryList.size() == 1) {
+					// 去“括弧”
+					this.queryList.add(w.queryList.get(0));
+				} else if (w.queryList.size() > 1) {
+					if (this.queryList.size() == 1 && w.queryList.get(1).cond == w.cond) {
+						// 去“括弧”
+						this.queryList.addAll(w.queryList);
+					} else {
+						this.queryList.add(w);
+					}
+				}
 			}
-			if (w.size() == 1) {
-				w = w.queryList.get(0);
+
+			// 复制分组条件
+			if (!X.isEmpty(w.groupby)) {
+				if (X.isEmpty(this.groupby)) {
+					this.groupby = w.groupby;
+				} else {
+					List<String> l1 = X.asList(X.split(this.groupby, "[, ]"), s -> s.toString());
+					List<String> l2 = X.asList(X.split(w.groupby, "[, ]"), s -> s.toString());
+					for (String s2 : l2) {
+						if (!l1.contains(s2)) {
+							l1.add(s2);
+						}
+					}
+					this.groupby = X.join(l1, ",");
+				}
 			}
-			w.cond = cond;
-//			if (w instanceof Entity) {
-//				((Entity) w).container = this;
-//			}
-			queryList.add(w);
+
+			// 复制排序字段
+			if (!w.orderList.isEmpty()) {
+				for (Entity e : w.orderList) {
+					if (!this.ordered(e.name)) {
+						this.orderList.add(e);
+					}
+				}
+				w.orderList.clear();
+			}
+
 			return this;
 		}
 
-		private void _and(List<LinkedHashMap<String, Object>> l1, Entity e) {
-			if (e.op == W.OP.like || e.op == W.OP.like_ || e.op == W.OP.like_$) {
-				return;
-			}
-
-			if (l1.isEmpty()) {
-				l1.add(new LinkedHashMap<String, Object>());
-			}
-
-			for (LinkedHashMap<String, Object> r : l1) {
-				if (!r.containsKey(e.name)) {
-					if (X.isSame(e.value, -1)) {
-						r.put(e.name.toLowerCase(), -1);
-					} else {
-						r.put(e.name.toLowerCase(), 1);
-					}
-				}
-			}
-		}
-
-		private void _and(List<LinkedHashMap<String, Object>> l1, W e) {
-			if (l1.isEmpty()) {
-				l1.add(new LinkedHashMap<String, Object>());
-			}
-
-			List<LinkedHashMap<String, Object>> l2 = e.sortkeys();
-
-			for (LinkedHashMap<String, Object> r : l1) {
-				for (LinkedHashMap<String, Object> r2 : l2) {
-					for (String name : r2.keySet()) {
-						if (!r.containsKey(name)) {
-							r.put(name.toLowerCase(), 1);
-						}
-					}
-				}
-			}
-
-		}
-
-		private void _or(List<LinkedHashMap<String, Object>> l1, Entity e) {
-
-			if (e.op == W.OP.like || e.op == W.OP.like_ || e.op == W.OP.like_$) {
-				return;
-			}
-
-			LinkedHashMap<String, Object> r = new LinkedHashMap<String, Object>();
-			if (X.isSame(e.value, -1)) {
-				r.put(e.name.toLowerCase(), -1);
-			} else {
-				r.put(e.name.toLowerCase(), 1);
-			}
-			l1.add(r);
-		}
-
-		private void _or(List<LinkedHashMap<String, Object>> l1, W e) {
-			l1.addAll(e.sortkeys());
-		}
+//		/**
+//		 * 获取复杂优化索引排列， 性能比sortkeys 弱
+//		 *
+//		 * @return List keys
+//		 */
+//		public List<LinkedHashMap<String, Object>> sortkeys2() {
+//
+//			String sql = this.toSQL().trim().toLowerCase();
+//			try {
+//				if (X.isEmpty(sql)) {
+//					return new ArrayList<>();
+//				}
+//				if (sql.startsWith("order ")) {
+//					sql = "select * from t " + sql;
+//				} else {
+//					sql = "select * from t where " + sql;
+//				}
+//				JSqlParserSqlAnalyzer.SqlAnalyzeResult result = JSqlParserSqlAnalyzer.analyzeSql(sql);
+//				return JSqlParserSqlAnalyzer.buildIndexScript(result);
+//			} catch (Exception err) {
+//				log.error(sql, err);
+//			}
+//			return new ArrayList<>();
+//
+//		}
 
 		/**
-		 * get all keys.
-		 *
-		 * @return List keys
+		 * 获取复杂优化索引排列
+		 * 
+		 * @return
 		 */
 		public List<LinkedHashMap<String, Object>> sortkeys() {
 
-			List<LinkedHashMap<String, Object>> l1 = new ArrayList<LinkedHashMap<String, Object>>();
+			try {
 
-			if (!queryList.isEmpty()) {
-				for (W e : queryList) {
-					if (e instanceof Entity) {
-						if (e.cond == AND) {
-							_and(l1, (Entity) e);
+				List<LinkedHashMap<String, Object>> scripts = this._sortkeys();
+
+				if (this.orderList != null && !this.orderList.isEmpty()) {
+					for (var f : this.orderList) {
+						if (scripts.isEmpty()) {
+							LinkedHashMap<String, Object> idMap = new LinkedHashMap<>();
+							idMap.put(f.name, f.value);
+							scripts.add(idMap);
 						} else {
-							_or(l1, (Entity) e);
-						}
-					} else {
-						if (e.cond == AND) {
-							_and(l1, e);
-						} else {
-							_or(l1, e);
-						}
-					}
-				}
-			}
-
-			List<LinkedHashMap<String, Object>> l2 = new ArrayList<LinkedHashMap<String, Object>>();
-			if (!l1.isEmpty()) {
-				for (LinkedHashMap<String, Object> e : l1) {
-					l2.add(X.clone(e));
-				}
-			}
-
-			// index order too
-			if (!X.isEmpty(order)) {
-				if (l1.isEmpty()) {
-					l1.add(new LinkedHashMap<String, Object>());
-				}
-
-				for (Entity e : order.toArray(new Entity[order.size()])) {
-
-					for (LinkedHashMap<String, Object> m : l1) {
-						m.remove(e.name);
-						if (X.isSame(e.name, "geo")) {
-							m.put(e.name, 2);
-						} else {
-							int i = X.toInt(e.value);
-							if (i < 0) {
-								m.put(e.name.toLowerCase(), -1);
-							} else {
-								m.put(e.name.toLowerCase(), 1);
+							for (var e : scripts) {
+								if (!e.containsKey(f.name)) {
+									e.put(f.name, f.value);
+								}
 							}
 						}
 					}
 				}
-				l2.addAll(l1);
+
+				return scripts;
+			} catch (Exception err) {
+				log.error(this.toSQL(), err);
+			}
+			return new ArrayList<>();
+
+		}
+
+		protected List<LinkedHashMap<String, Object>> _sortkeys() {
+
+			List<LinkedHashMap<String, Object>> list = new ArrayList<>();
+
+			for (W clause : this.queryList) {
+				List<LinkedHashMap<String, Object>> l1 = clause._sortkeys();
+				if (list.isEmpty() || clause.cond == W.OR) {
+					list.addAll(l1);
+				} else {
+					for (var e : list) {
+						for (var e2 : l1) {
+							for (var f : e2.keySet()) {
+								if (!e.containsKey(f)) {
+									e.put(f, e2.get(f));
+								}
+							}
+						}
+					}
+				}
 			}
 
-			return l2;
+			return list;
 		}
 
 		/**
@@ -1693,7 +1897,7 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@Comment()
-		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v) {
+		public W and(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v) {
 			return and(name, v, W.OP.eq);
 		}
 
@@ -1704,7 +1908,7 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@Comment()
-		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op) {
 			return and(name, v, op, 1);
 		}
@@ -1717,7 +1921,7 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', 10)")
-		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			if (v instanceof String) {
 				String[] ss = X.split(v.toString(), "[ ]");
@@ -1762,15 +1966,15 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * and a group conditions
+		 * 一组and条件。多个字段列表时，内部或条件；多个值列表时，内部 and 条件。
 		 * 
-		 * @param name  string/array
-		 * @param v     object/array
-		 * @param boost object/array
+		 * @param name  字段/列表
+		 * @param v     值/列表
+		 * @param boost 分组权重
 		 * @return
 		 */
-		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', [1000, 100])")
-		public W and(@Comment(text = "name") Object name, @Comment(text = "value") Object v,
+		@Comment(text = "and", demo = ".and(['a', 'b', 'c'], 'a', [1000, 100])")
+		public W and(@Comment(text = X.NAME) Object name, @Comment(text = "value") Object v,
 				@Comment(text = "boost") Object boost) {
 			List<String> nn = X.asList(name, s -> s.toString());
 			List<Object> vv = X.asList(v, s -> s);
@@ -1789,8 +1993,28 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Comment(text = "or", demo = ".or(['a', 'b', 'c'], 'a', [1000, 100])")
+		public W or(@Comment(text = X.NAME) Object name, @Comment(text = "value") Object v,
+				@Comment(text = "boost") Object boost) {
+			List<String> nn = X.asList(name, s -> s.toString());
+			List<Object> vv = X.asList(v, s -> s);
+			List<Integer> bb = X.asList(boost, s -> X.toInt(s));
+
+			int len = vv.size();
+			for (int i = 0; i < len; i++) {
+				Object v1 = vv.get(i);
+				W q = W.create();
+				for (String n1 : nn) {
+					q.or(n1, v1, bb.size() > i ? bb.get(i) : 1);
+				}
+				this.or(q);
+			}
+			return this;
+
+		}
+
 		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', [1000, 100])")
-		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op, @Comment(text = "boost") int[] boost) {
 			if (v instanceof String) {
 				String[] ss = X.split(v.toString(), " ");
@@ -1832,8 +2056,8 @@ public final class Helper implements Serializable {
 				return and(name, v, W.OP.lte);
 			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
 				return and(name, v, W.OP.neq);
-			} else if (X.isIn(op, "not like", "!like")) {
-				return and(W.create().and(name, v, W.OP.like), W.NOT);
+//			} else if (X.isIn(op, "not like", "!like")) {
+//				return and(W.create().and(name, v, W.OP.like), W.NOT);
 			} else if (X.isSame("like", op)) {
 				return and(name, v, W.OP.like);
 			} else if (X.isSame("like_", op)) {
@@ -1875,8 +2099,8 @@ public final class Helper implements Serializable {
 				return or(name, v, W.OP.lte, boost);
 			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
 				return or(name, v, W.OP.neq, boost);
-			} else if (X.isIn(op, "not like", "!like")) {
-				return or(W.create().and(name, v, W.OP.like, boost), W.NOT);
+//			} else if (X.isIn(op, "not like", "!like")) {
+//				return or(W.create().and(name, v, W.OP.like, boost), W.NOT);
 			} else if (X.isSame("like", op)) {
 				return or(name, v, W.OP.like, boost);
 			}
@@ -1892,7 +2116,7 @@ public final class Helper implements Serializable {
 		 * @return the W
 		 */
 		@Comment()
-		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op) {
 			return and(name, v, op, 1);
 		}
@@ -1928,16 +2152,15 @@ public final class Helper implements Serializable {
 
 			}
 
-			for (int i = order.size() - 1; i >= 0; i--) {
-				Entity e1 = order.get(i);
+			for (int i = orderList.size() - 1; i >= 0; i--) {
+				Entity e1 = orderList.get(i);
 
-				String name = e1.name;
 				Object value = e1.value;
 
 				func.accept(e1);
 
-				if (!X.isSame(e1.value, value) || !X.isSame(name, e1.name)) {
-					e1.replace(e1.value);
+				if (!X.isSame(value, e1.value)) {
+					e1.replace(value);
 				}
 			}
 
@@ -1953,7 +2176,7 @@ public final class Helper implements Serializable {
 
 		@SuppressWarnings({ "rawtypes" })
 		@Comment()
-		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+		public W and(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			if (X.isEmpty(name))
 				return this;
@@ -1964,34 +2187,14 @@ public final class Helper implements Serializable {
 				v = null;
 			}
 
-			if (v != null && v instanceof Collection) {
-				Collection l1 = (Collection) v;
+			if (v != null && X.isArray(v)) {
+
+				List l1 = X.asList(v, s -> s);
 
 				if (l1.isEmpty()) {
 					this.and(name, null, op);
 				} else if (l1.size() == 1) {
-					this.and(name, l1.iterator().next(), op);
-				} else {
-					W q = W.create();
-					for (Object o : l1) {
-						if (o instanceof W) {
-							o = ((W) o).query();
-						}
-						if (op.equals(OP.neq)) {
-							q.and(name, o, OP.neq);
-						} else {
-							q.or(name, o, op);
-						}
-					}
-					this.and(q);
-				}
-			} else if (v != null && v.getClass().isArray()) {
-				Object[] l1 = (Object[]) v;
-
-				if (l1 == null || l1.length == 0) {
-					this.and(name, null, op);
-				} else if (l1.length == 1) {
-					this.and(name, l1[0], op);
+					this.and(name, l1.get(0), op);
 				} else {
 					W q = W.create();
 					for (Object o : l1) {
@@ -2009,6 +2212,12 @@ public final class Helper implements Serializable {
 			} else {
 				if (v instanceof W) {
 					v = ((W) v).query();
+				}
+				if (queryList.size() > 1 && queryList.get(queryList.size() - 1).cond != AND) {
+					W e = W.create();
+					e.queryList = queryList;
+					this.queryList = new ArrayList<W>();
+					this.queryList.add(e);
 				}
 				queryList.add(new Entity(name, v, op, AND, boost));
 			}
@@ -2037,18 +2246,18 @@ public final class Helper implements Serializable {
 		}
 
 		@Comment()
-		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v) {
+		public W or(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v) {
 			return or(name, v, W.OP.eq);
 		}
 
 		@Comment()
-		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+		public W or(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op) {
 			return or(name, v, op, 1);
 		}
 
 		@Comment()
-		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+		public W or(@Comment(text = X.NAME) String[] name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			for (String s : name) {
 				this.or(s, v, op, boost);
@@ -2064,12 +2273,12 @@ public final class Helper implements Serializable {
 		 * @return W
 		 */
 		@Comment()
-		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v) {
+		public W or(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v) {
 			return or(name, v, 1);
 		}
 
 		@Comment()
-		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+		public W or(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v,
 				@Comment(text = "boost") int boost) {
 			return or(name, v, OP.eq, boost);
 		}
@@ -2083,14 +2292,14 @@ public final class Helper implements Serializable {
 		 * @return W
 		 */
 		@Comment()
-		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+		public W or(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v,
 				@Comment(text = "op") OP op) {
 			return or(name, v, op, 1);
 		}
 
 		@SuppressWarnings({ "rawtypes" })
 		@Comment()
-		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v, @Comment(text = "op") OP op,
+		public W or(@Comment(text = X.NAME) String name, @Comment(text = "value") Object v, @Comment(text = "op") OP op,
 				@Comment(text = "boost") int boost) {
 
 			if (X.isEmpty(name))
@@ -2105,32 +2314,14 @@ public final class Helper implements Serializable {
 				v = null;
 			}
 
-			if (v != null && v instanceof Collection) {
-				Collection l1 = (Collection) v;
+			if (v != null && X.isArray(v)) {
+
+				List l1 = X.asList(v, s -> s);
+
 				if (l1.isEmpty()) {
 					this.or(name, null, op);
 				} else if (l1.size() == 1) {
-					this.or(name, l1.iterator().next(), op);
-				} else {
-					W q = W.create();
-					for (Object o : l1) {
-						if (o instanceof W) {
-							o = ((W) o).query();
-						}
-						if (op.equals(OP.neq)) {
-							q.and(name, o, OP.neq);
-						} else {
-							q.or(name, o, op);
-						}
-					}
-					this.or(q);
-				}
-			} else if (v != null && v.getClass().isArray()) {
-				Object[] l1 = (Object[]) v;
-				if (l1 == null || l1.length == 0) {
-					this.or(name, null, op);
-				} else if (l1.length == 1) {
-					this.or(name, l1[0], op);
+					this.or(name, l1.get(0), op);
 				} else {
 					W q = W.create();
 					for (Object o : l1) {
@@ -2179,7 +2370,7 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * copy the value in jo, the format of name is: ["name", "table field name" ].
+		 * copy the value in jo, the format of name is: [X.NAME, "table field name" ].
 		 *
 		 * @param jo    the json
 		 * @param op    the op
@@ -2244,6 +2435,9 @@ public final class Helper implements Serializable {
 			return XY.create(x, y, distance);
 		}
 
+		/**
+		 * 二维地理位置查询
+		 */
 		public static class XY {
 
 			public double x;
@@ -2272,6 +2466,9 @@ public final class Helper implements Serializable {
 
 		}
 
+		/**
+		 * 向量条件
+		 */
 		public static class Vector {
 
 			@SuppressWarnings("rawtypes")
@@ -2282,6 +2479,11 @@ public final class Helper implements Serializable {
 				Vector e = new Vector();
 				e.value = l1;
 				return e;
+			}
+
+			@Override
+			public String toString() {
+				return "Vector [value=" + value + "]";
 			}
 
 		}
@@ -2415,9 +2617,9 @@ public final class Helper implements Serializable {
 				_queryList.remove(_idx);
 			}
 
-			public int getCondition() {
-				return cond;
-			}
+//			public int getCondition() {
+//				return cond;
+//			}
 
 			private List<Object> args(List<Object> list) {
 
@@ -2460,8 +2662,23 @@ public final class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public static Entity fromJSON(JSON j1) {
-				return new Entity(j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
+				return new Entity(j1.getString(X.NAME), j1.get("value"), OP.valueOf(j1.getString("op")),
 						j1.getInt("cond"), j1.getInt("boost", 1));
+			}
+
+			protected List<LinkedHashMap<String, Object>> _sortkeys() {
+
+				List<LinkedHashMap<String, Object>> result = new ArrayList<>();
+
+				LinkedHashMap<String, Object> idmap = new LinkedHashMap<>();
+				if (op == OP.lt || op == OP.lte || X.isSame(value, -1)) {
+					idmap.put(name, -1);
+				} else {
+					idmap.put(name, 1);
+				}
+				result.add(idmap);
+				return result;
+
 			}
 
 			public BasicDBObject query() {
@@ -2472,7 +2689,7 @@ public final class Helper implements Serializable {
 					}
 				}
 
-				if (this.cond == NOT) {
+				if (this.not) {
 					if (op == OP.eq) {
 						if (value == null) {
 							BasicDBList l1 = new BasicDBList();
@@ -2494,14 +2711,22 @@ public final class Helper implements Serializable {
 					} else if (op == OP.lte) {
 						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$lte", value)));
 					} else if (op == OP.like) {
-						Pattern p1 = Pattern.compile(value.toString());
+						value = _escapeRegex(value.toString());
+						String s = value.toString();
+						if (!s.startsWith(".*") && !s.startsWith("^")) {
+							s = ".*" + s;
+						}
+						if (!s.endsWith(".*") && !s.endsWith("$")) {
+							s += ".*";
+						}
+						Pattern p1 = Pattern.compile(s);
 						return new BasicDBObject(name, new BasicDBObject("$not", p1));
-					} else if (op == OP.like_) {
-						Pattern p1 = Pattern.compile("^" + value);
-						return new BasicDBObject(name, new BasicDBObject("$not", p1));
-					} else if (op == OP.like_$) {
-						Pattern p1 = Pattern.compile(value + "$");
-						return new BasicDBObject(name, new BasicDBObject("$not", p1));
+//					} else if (op == OP.like_) {
+//						Pattern p1 = Pattern.compile("^" + value);
+//						return new BasicDBObject(name, new BasicDBObject("$not", p1));
+//					} else if (op == OP.like_$) {
+//						Pattern p1 = Pattern.compile(value + "$");
+//						return new BasicDBObject(name, new BasicDBObject("$not", p1));
 					} else if (op == OP.neq) {
 						if (value == null) {
 							BasicDBList l1 = new BasicDBList();
@@ -2551,17 +2776,23 @@ public final class Helper implements Serializable {
 						return new BasicDBObject(name, new BasicDBObject("$lte", value));
 					} else if (op == OP.like) {
 						value = _escapeRegex(value.toString());
-						Pattern p1 = Pattern.compile(".*" + value.toString() + ".*");
-//						System.out.println(p1);
+						String s = value.toString();
+						if (!s.startsWith(".*") && !s.startsWith("^")) {
+							s = ".*" + s;
+						}
+						if (!s.endsWith(".*") && !s.endsWith("$")) {
+							s += ".*";
+						}
+						Pattern p1 = Pattern.compile(s);
 						return new BasicDBObject(name, p1);
-					} else if (op == OP.like_) {
-						value = _escapeRegex(value.toString());
-						Pattern p1 = Pattern.compile("^" + value + ".*");
-						return new BasicDBObject(name, p1);
-					} else if (op == OP.like_$) {
-						value = _escapeRegex(value.toString());
-						Pattern p1 = Pattern.compile(".*" + value + "$");
-						return new BasicDBObject(name, p1);
+//					} else if (op == OP.like_) {
+//						value = _escapeRegex(value.toString());
+//						Pattern p1 = Pattern.compile("^" + value + ".*");
+//						return new BasicDBObject(name, p1);
+//					} else if (op == OP.like_$) {
+//						value = _escapeRegex(value.toString());
+//						Pattern p1 = Pattern.compile(".*" + value + "$");
+//						return new BasicDBObject(name, p1);
 					} else if (op == OP.neq) {
 						if (value == null) {
 							BasicDBList l1 = new BasicDBList();
@@ -2614,7 +2845,7 @@ public final class Helper implements Serializable {
 					}
 				}
 
-				return sb.toString();
+				return sb.toString().replaceAll("%", ".*");
 			}
 
 			/**
@@ -2624,7 +2855,7 @@ public final class Helper implements Serializable {
 			 */
 			public JSON toJSON() {
 				JSON jo = JSON.create();
-				jo.put("name", name);
+				jo.put(X.NAME, name);
 				jo.put("value", value);
 				jo.put("op", op.toString());
 				jo.put("cond", cond);
@@ -2704,12 +2935,16 @@ public final class Helper implements Serializable {
 //				return sb.toString();
 			}
 
+			public boolean isEmpty() {
+				return false;
+			}
+
 			public String where(Map<String, String> tansfers) {
 				// TODO, for "null" value, some db "is null"
 
 				StringBuilder sb = new StringBuilder();
 
-				if (this.getCondition() == NOT) {
+				if (this.not) {
 					sb.append("not ");
 				}
 				if (tansfers != null && tansfers.containsKey(name)) {
@@ -2768,13 +3003,17 @@ public final class Helper implements Serializable {
 
 					sb.append(value);
 
-					if (this.cond == W.NOT) {
+					if (this.not) {
 						tostring = "not " + sb.toString();
 					} else {
 						tostring = sb.toString();
 					}
 				}
 				return tostring;
+			}
+
+			public Entity() {
+
 			}
 
 			private Entity(String name, Object v, OP op, int cond, int boost) {
@@ -2798,62 +3037,32 @@ public final class Helper implements Serializable {
 			if (_query == null) {
 				BasicDBList list = new BasicDBList();
 
-				int cond = -1;
 				for (W clause : queryList) {
-					if (!list.isEmpty() && cond != clause.getCondition()) {
-						if (cond == AND) {
-							if (list.size() > 1) {
-								BasicDBObject q = new BasicDBObject("$and", list.clone());
-								list.clear();
-								list.add(q);
-							}
-						} else if (cond == OR) {
-							if (list.size() > 1) {
-								BasicDBObject q = new BasicDBObject("$or", list.clone());
-								list.clear();
-								list.add(q);
-							}
-						}
-					}
-
-					int c1 = clause.getCondition();
-					if (c1 == W.NOT) {
-						if (clause instanceof W) {
-							BasicDBObject o = ((W) clause).query();
-							String key = o.keySet().iterator().next();
-							Object v1 = o.get(key);
-							if (v1 instanceof List) {
-								BasicDBObject q = new BasicDBObject("$not", o);
-								list.add(q);
-							} else {
-								BasicDBObject q = new BasicDBObject(key, v1);// new BasicDBObject("$not", v1));
-								list.add(q);
-							}
-						} else {
-							BasicDBObject q = new BasicDBObject("$ne", clause);
-							list.add(q);
-						}
-
-					} else {
-						cond = c1;
-
-						if (clause instanceof W) {
-							list.add(((W) clause).query());
-						} else {
-							list.add(clause);
-						}
-					}
+					list.add(clause.query());
 				}
 
 				if (list.isEmpty()) {
 					_query = new BasicDBObject();
 				} else if (list.size() == 1) {
-					_query = (BasicDBObject) list.get(0);
-				} else {
-					if (cond == OR) {
-						_query = new BasicDBObject().append("$or", list);
+					if (this.not && !this.queryList.get(0).not) {
+						// 外面有not， 里面没有
+						_query = new BasicDBObject("$ne", list.get(0));
 					} else {
-						_query = new BasicDBObject().append("$and", list);
+						_query = (BasicDBObject) list.get(0);
+					}
+				} else {
+					if (queryList.get(1).cond == OR) {
+						if (this.not) {
+							_query = new BasicDBObject("$not", new BasicDBObject().append("$or", list));
+						} else {
+							_query = new BasicDBObject().append("$or", list);
+						}
+					} else {
+						if (this.not) {
+							_query = new BasicDBObject("$not", new BasicDBObject().append("$and", list));
+						} else {
+							_query = new BasicDBObject().append("$and", list);
+						}
 					}
 				}
 			}
@@ -2870,8 +3079,8 @@ public final class Helper implements Serializable {
 		public BasicDBObject order() {
 			if (_order == null) {
 				BasicDBObject q = new BasicDBObject();
-				if (order != null && order.size() > 0) {
-					for (Entity e : order) {
+				if (orderList != null && orderList.size() > 0) {
+					for (Entity e : orderList) {
 						q.append(e.name, e.value);
 					}
 				}
@@ -2887,15 +3096,15 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@Comment()
-		public W sort(@Comment(text = "name") String name) {
+		public W sort(@Comment(text = X.NAME) String name) {
 			return sort(name, 1);
 		}
 
 		@Comment()
 		public W sort(@Comment(text = "q") W q) {
-			for (Entity e : q.order) {
+			for (Entity e : q.orderList) {
 				if (!this.ordered(e.name)) {
-					this.order.add(e);
+					this.orderList.add(e);
 				}
 			}
 			return this;
@@ -2903,12 +3112,12 @@ public final class Helper implements Serializable {
 
 		@Comment(text = "clear sort")
 		public W clearSort() {
-			order.clear();
+			orderList.clear();
 			return this;
 		}
 
 		@Comment()
-		public W sort(@Comment(text = "name") String name, @Comment(text = "type") String type) {
+		public W sort(@Comment(text = X.NAME) String name, @Comment(text = "type") String type) {
 			return sort(name, 1, type);
 		}
 
@@ -2920,17 +3129,17 @@ public final class Helper implements Serializable {
 		 * @return the w
 		 */
 		@Comment()
-		public W sort(@Comment(text = "name") String name, @Comment(text = "i") int i) {
+		public W sort(@Comment(text = X.NAME) String name, @Comment(text = "i") int i) {
 			return sort(name, i, null);
 		}
 
 		@Comment()
-		public W sort(@Comment(text = "name") String name, @Comment(text = "i") int i,
+		public W sort(@Comment(text = X.NAME) String name, @Comment(text = "i") int i,
 				@Comment(text = "type") String type) {
 			if (X.isEmpty(name))
 				return this;
 
-			for (Entity e : order) {
+			for (Entity e : orderList) {
 				if (X.isSame(e.name, name)) {
 					return this;
 				}
@@ -2938,7 +3147,7 @@ public final class Helper implements Serializable {
 
 			Entity e = new Entity(name, i, OP.eq, AND, 0);
 			e.type = type;
-			order.add(e);
+			orderList.add(e);
 			return this;
 		}
 
@@ -2951,6 +3160,8 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public boolean exists() throws SQLException {
 
 			if (log.isDebugEnabled())
@@ -2969,11 +3180,15 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public boolean stream(Function<Data, Boolean> func) throws Exception {
 			return stream(0, func);
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		@Deprecated
+		@Comment(hide = true)
 		public boolean stream(long offset, Function<Data, Boolean> func) throws Exception {
 
 			if (access != null) {
@@ -3001,6 +3216,8 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T load() throws SQLException {
 
 			if (access != null) {
@@ -3043,6 +3260,8 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T load(boolean trace) throws SQLException {
 
 			if (access != null) {
@@ -3083,6 +3302,8 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T load(Consumer<T> func) throws SQLException {
 
 			if (access != null) {
@@ -3127,6 +3348,8 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T load(int offset) throws SQLException {
 			Beans<?> l1 = load(offset, 1);
 			return (T) (l1 == null || l1.isEmpty() ? null : l1.get(0));
@@ -3140,26 +3363,36 @@ public final class Helper implements Serializable {
 		 * @return the T
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T get(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? null : (T) b.get(name);
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public long getLong(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? 0 : b.getLong(name);
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public long getLong(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? 0 : b.getLong(name);
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public double getDouble(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? 0 : b.getDouble(name);
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public double getDouble(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? 0 : b.getDouble(name);
@@ -3178,6 +3411,8 @@ public final class Helper implements Serializable {
 		 * @return the Object
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T get(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? null : (T) b.get(name);
@@ -3193,6 +3428,8 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T extends Bean> Beans<T> load(int s, int n) throws SQLException {
 
 			if (access != null) {
@@ -3240,6 +3477,8 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Deprecated
+		@Comment(hide = true)
 		public <T extends Bean> Beans<T> load(int s, int n, Consumer<Beans<T>> func) throws SQLException {
 
 			if (access != null) {
@@ -3286,7 +3525,8 @@ public final class Helper implements Serializable {
 			return l1;
 		}
 
-		@Comment(text = "按照当前条件统计条数")
+		@Deprecated
+		@Comment(text = "按照当前条件统计条数", hide = true)
 		public long count() throws SQLException {
 
 			if (access != null) {
@@ -3307,6 +3547,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T sum(String name) throws SQLException {
 
 			if (access != null) {
@@ -3326,6 +3568,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T avg(String name) throws SQLException {
 
 			if (access != null) {
@@ -3346,6 +3590,8 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T min(String name) throws SQLException {
 
 			if (access != null) {
@@ -3373,6 +3619,8 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings("unchecked")
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T max(String name) throws SQLException {
 
 			if (access != null) {
@@ -3398,6 +3646,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public <T> T median(String name) throws SQLException {
 
 			if (access != null) {
@@ -3418,6 +3668,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public int delete() throws SQLException {
 
 			if (access != null) {
@@ -3437,6 +3689,8 @@ public final class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public int update(Object o) throws SQLException {
 
 			V v = null;
@@ -3465,6 +3719,8 @@ public final class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public List<?> distinct(String name) throws SQLException {
 
 			if (access != null) {
@@ -3483,6 +3739,8 @@ public final class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public List<JSON> count(String group, int n) throws SQLException {
 
 			if (access != null) {
@@ -3502,6 +3760,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public List<JSON> count(String name, String group, int n) throws SQLException {
 
 			if (access != null) {
@@ -3521,6 +3781,8 @@ public final class Helper implements Serializable {
 
 		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public List<JSON> sum(String name, String group) throws SQLException {
 
 			if (access != null) {
@@ -3548,6 +3810,8 @@ public final class Helper implements Serializable {
 		 * @return
 		 * @throws SQLException
 		 */
+		@Deprecated
+		@Comment(hide = true)
 		public List<JSON> aggregate(String name, String group) throws SQLException {
 
 			if (access != null) {
@@ -3631,6 +3895,8 @@ public final class Helper implements Serializable {
 //
 //		}
 
+		@Deprecated
+		@Comment(hide = true)
 		public List<JSON> avg(String name, String group) throws SQLException {
 
 			if (access != null) {
@@ -3689,6 +3955,15 @@ public final class Helper implements Serializable {
 
 		public int limit() {
 			return limit;
+		}
+
+		public W not() {
+			if (this.not) {
+				this.not = false;
+			} else {
+				this.not = true;
+			}
+			return this;
 		}
 
 	}
@@ -3753,10 +4028,10 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.load(table, q, t, trace);
 
@@ -3774,9 +4049,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.load(table, q, s, n, t);
 
@@ -3842,10 +4117,10 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.updateTable(table, q, values);
 
@@ -3869,9 +4144,9 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.inc(table, q, name, n, v);
 		} finally {
@@ -3884,9 +4159,9 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.inc(table, q, incvalue, v);
 		} finally {
@@ -3918,9 +4193,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.count(table, q);
 		} finally {
@@ -3942,9 +4217,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.count(table, q, name);
 		} finally {
@@ -3965,9 +4240,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.median(table, q, name);
 		} finally {
@@ -3990,9 +4265,9 @@ public final class Helper implements Serializable {
 		} finally {
 			read.add(t1.pastms(), "table=%s, name=%s, q=%s", table, name, q);
 
-			if (t1.pastms() > Optimizer.MIN && monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (t1.pastms() > Optimizer.MIN && monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 		}
 	}
@@ -4010,10 +4285,10 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.sum(table, q, name);
 		} finally {
@@ -4032,6 +4307,7 @@ public final class Helper implements Serializable {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T max(String table, String name, W q) {
+		@SuppressWarnings("deprecation")
 		Data d = load(table, q.copy().sort(name, -1), Data.class);
 		if (d != null) {
 			return (T) d.get(name);
@@ -4051,6 +4327,7 @@ public final class Helper implements Serializable {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T min(String table, String name, W q) {
+		@SuppressWarnings("deprecation")
 		Data d = load(table, q.copy().sort(name), Data.class);
 		if (d != null) {
 			return (T) d.get(name);
@@ -4074,9 +4351,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.avg(table, q, name);
 		} finally {
@@ -4090,9 +4367,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.avg(table, q, name, group);
 		} finally {
@@ -4115,9 +4392,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.distinct(table, name, q);
 
@@ -4193,24 +4470,78 @@ public final class Helper implements Serializable {
 	}
 
 	/**
-	 * the DBHelper interface
+	 * 数据助手接口
 	 * 
 	 * @author wujun
+	 * @since 3.3
 	 *
 	 */
 	public interface DBHelper {
 
+		/**
+		 * 修复数据表
+		 * 
+		 * @param table - 数据表
+		 * @since 3.3
+		 */
 		void repair(String table);
 
+		/**
+		 * 获取数据表的所有索引
+		 * 
+		 * @param table - 数据表
+		 * @return
+		 * @since 3.3
+		 */
 		List<Map<String, Object>> getIndexes(String table);
 
+		/**
+		 * 删除索引
+		 * 
+		 * @param table - 数据表
+		 * @param name  - 索引名
+		 * @since 3.3
+		 */
 		void dropIndex(String table, String name);
 
+		/**
+		 * 创建索引
+		 * 
+		 * @param table  - 数据表
+		 * @param ss     - 索引字段
+		 * @param unique - True，唯一
+		 * @since 3.3
+		 */
 		void createIndex(String table, LinkedHashMap<String, Object> ss, boolean unique);
 
+		/**
+		 * 装载数据
+		 * 
+		 * @param <T>
+		 * @param table - 数据表
+		 * @param q     - 查询条件
+		 * @param s     - 起始位置
+		 * @param n     - 条数
+		 * @param t     - 映射类
+		 * @return
+		 * @throws SQLException
+		 * @since 3.3
+		 */
 		<T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) throws SQLException;
 
-		@Deprecated
+		/**
+		 * 流式访问数据
+		 * 
+		 * @param <T>
+		 * @param table  - 数据表
+		 * @param q      - 查询条件
+		 * @param offset - 起始位置
+		 * @param func   - 回调函数
+		 * @param t      - 映射类
+		 * @return
+		 * @throws SQLException
+		 * @since 3.3
+		 */
 		<T extends Bean> boolean stream(String table, W q, long offset, Function<T, Boolean> func, Class<T> t)
 				throws SQLException;
 
@@ -4230,7 +4561,8 @@ public final class Helper implements Serializable {
 
 		int insertTable(String table, JSON value) throws SQLException;
 
-		int insertTable(String table, List<V> values) throws SQLException;
+		@SuppressWarnings("rawtypes")
+		int insertTable(String table, List values) throws SQLException;
 
 		int updateTable(String table, W q, V values) throws SQLException;
 
@@ -4246,17 +4578,11 @@ public final class Helper implements Serializable {
 
 		long count(String table, W q) throws SQLException;
 
-		List<JSON> count(String table, W q, String[] group, int n) throws SQLException;
-
-		List<JSON> count(String table, W q, String name, String[] group, int n) throws SQLException;
-
 		<T> T max(String table, W q, String name);
 
 		<T> T min(String table, W q, String name);
 
 		<T> T sum(String table, W q, String name);
-
-		List<JSON> sum(String table, W q, String name, String[] group);
 
 		<T> T avg(String table, W q, String name) throws SQLException;
 
@@ -4264,9 +4590,15 @@ public final class Helper implements Serializable {
 
 		<T> T median(String table, W q, String name);
 
+		List<?> distinct(String table, String name, W q) throws SQLException;
+
+		List<JSON> sum(String table, W q, String name, String[] group);
+
 		List<JSON> avg(String table, W q, String name, String[] group);
 
-		List<?> distinct(String table, String name, W q) throws SQLException;
+		List<JSON> count(String table, W q, String[] group, int n) throws SQLException;
+
+		List<JSON> count(String table, W q, String name, String[] group, int n) throws SQLException;
 
 		List<JSON> aggregate(String table, String[] func, W q, String[] group);
 
@@ -4283,39 +4615,44 @@ public final class Helper implements Serializable {
 		void killOp(Object id);
 
 		/**
-		 * copy data
+		 * 复制数据
 		 * 
-		 * @param src
-		 * @param dest
+		 * @param src    - 源数据表
+		 * @param dest   - 目的数据表
+		 * @param filter - 查询条件
+		 * @since 3.3
 		 */
 		void copy(String src, String dest, W filter) throws SQLException;
 
 		/**
-		 * create table
+		 * 创建表
 		 * 
-		 * @param tablename
-		 * @param memo
-		 * @param cols
-		 * @param properties
+		 * @param tablename  - 数据表名称
+		 * @param memo       - 备注
+		 * @param cols       - 列定义
+		 * @param properties - 扩展熟悉
 		 * @throws SQLException
+		 * @since 3.3
 		 */
 		void createTable(String tablename, String memo, List<JSON> cols, JSON properties) throws SQLException;
 
 		/**
-		 * delete colname
+		 * 修改表， 删除列
 		 * 
-		 * @param tablename
-		 * @param colname
+		 * @param tablename - 数据表
+		 * @param colname   - 列名称
 		 * @throws SQLException
+		 * @since 3.3
 		 */
 		void delColumn(String tablename, String colname) throws SQLException;
 
 		/**
-		 * add colname
+		 * 修改表， 添加列
 		 * 
-		 * @param tablename
-		 * @param colname
+		 * @param tablename - 数据表
+		 * @param colname   - 列信息
 		 * @throws SQLException
+		 * @since 3.3
 		 */
 		void addColumn(String tablename, JSON col) throws SQLException;
 
@@ -4342,6 +4679,7 @@ public final class Helper implements Serializable {
 		 * @param table
 		 * @return
 		 * @throws SQLException
+		 * @since 3.3
 		 */
 		List<JSON> listColumns(String table) throws SQLException;
 
@@ -4349,6 +4687,7 @@ public final class Helper implements Serializable {
 		 * 获取优化器
 		 * 
 		 * @return
+		 * @since 3.3
 		 */
 		Optimizer getOptimizer();
 
@@ -4356,6 +4695,7 @@ public final class Helper implements Serializable {
 		 * 当前操作
 		 * 
 		 * @return
+		 * @since 3.3
 		 */
 		List<JSON> listOp();
 
@@ -4364,6 +4704,7 @@ public final class Helper implements Serializable {
 		 * 
 		 * @param sql
 		 * @return
+		 * @since 3.3
 		 */
 		Object run(String sql) throws SQLException;
 
@@ -4372,6 +4713,7 @@ public final class Helper implements Serializable {
 		 * 
 		 * @param table
 		 * @return
+		 * @since 3.3
 		 */
 		long size(String table);
 
@@ -4380,6 +4722,7 @@ public final class Helper implements Serializable {
 		 * 
 		 * @param table
 		 * @return
+		 * @since 3.3
 		 */
 		JSON stats(String table);
 
@@ -4387,6 +4730,7 @@ public final class Helper implements Serializable {
 		 * get the database status
 		 * 
 		 * @return
+		 * @since 3.3
 		 */
 		JSON status();
 
@@ -4395,10 +4739,87 @@ public final class Helper implements Serializable {
 		 * 
 		 * @param table
 		 * @return
+		 * @since 3.3
 		 */
 		boolean distributed(String table, String key);
 
+		/**
+		 * 获取数据库时间
+		 * 
+		 * @return
+		 * @since 3.3
+		 */
 		long getTime();
+
+		/**
+		 * 分组统计最小值
+		 * 
+		 * @param table
+		 * @param q
+		 * @param name
+		 * @param group
+		 * @return
+		 * @since 3.3
+		 */
+		List<JSON> min(String table, W q, String name, String[] group);
+
+		/**
+		 * 分组统计最大值
+		 * 
+		 * @param table
+		 * @param q
+		 * @param name
+		 * @param group
+		 * @return
+		 * @since 3.3
+		 */
+		List<JSON> max(String table, W q, String name, String[] group);
+
+		/**
+		 * 获取结果流
+		 * 
+		 * @param <T>
+		 * @param table
+		 * @param q
+		 * @param offset
+		 * @param t1
+		 * @return
+		 * @throws SQLException
+		 * @since 3.4
+		 */
+		public <T extends Bean> Stream<T> stream(String table, W q, long offset, Class<T> t1) throws SQLException;
+
+		/**
+		 * 表是否存在
+		 * 
+		 * @param tablename - 表名
+		 * @return True：存在
+		 */
+		boolean exists(String tablename);
+
+		/**
+		 * 数据库查询
+		 * 
+		 * @param <T>
+		 * @param sql - SQL语句
+		 * @param t
+		 * @return
+		 */
+		public <T extends Bean> Beans<T> query(String sql, Class<T> t) throws SQLException;
+
+	}
+
+	/**
+	 * 结果流
+	 * 
+	 * @author joe
+	 *
+	 * @param <T>
+	 * @since 3.4
+	 */
+	public interface Stream<T> extends Iterator<T>, Closeable {
+
+		long size();
 
 	}
 
@@ -4436,9 +4857,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.count(table, q, group, n);
 		} finally {
@@ -4460,9 +4881,9 @@ public final class Helper implements Serializable {
 	public static List<JSON> count(String table, String name, W q, String[] group, int n) throws SQLException {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.count(table, q, name, group, n);
 		} finally {
@@ -4487,10 +4908,10 @@ public final class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.sum(table, q, name, group);
 		} finally {
@@ -4512,9 +4933,9 @@ public final class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
+//			if (monitor != null) {
+//				monitor.query(table, q);
+//			}
 
 			return primary.aggregate(table, func, q, group);
 		} finally {
@@ -4617,13 +5038,13 @@ public final class Helper implements Serializable {
 	 */
 	public static void init(String name) {
 
-		for (String key : new String[] { "id" }) {
+		for (String key : new String[] { X.ID }) {
 			LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 			m.put(key, 1);
 			Helper.createIndex(name, m, true);
 		}
 
-		for (String key : new String[] { "created", "updated" }) {
+		for (String key : new String[] { X.CREATED, "updated" }) {
 			LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 			m.put(key, 1);
 			Helper.createIndex(name, m, false);
@@ -4698,29 +5119,130 @@ public final class Helper implements Serializable {
 			e.add(costms, "table=%s", table);
 		}
 
+		/**
+		 * 分布式读性能
+		 * 
+		 * @param table
+		 * @return
+		 */
 		public static Counter.Stat read(String table) {
 
-			String name = "read/" + table;
-			Counter e = counter.get(name);
-			if (e == null) {
-				e = new Counter(table);
-				counter.put(name, e);
+			// 读取分布式环境中，所有的数据
+			Counter.Stat r = new Counter.Stat();
+			r.name = table;
+
+			try {
+
+				Task.call("stat/read", table, req -> {
+
+					String from = req.from;
+
+					if (log.isDebugEnabled()) {
+						log.debug("list stat [" + table + "], from=" + from);
+					}
+
+					try {
+
+						Counter.Stat s = req.get();
+						r.merge(s);
+
+					} catch (Exception e) {
+						GLog.applog.error("task", "stat", "from=" + from + ", error=" + e.getMessage(), e);
+					}
+					return true;
+				});
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
-			return e.get();
+
+			return r;
+
 		}
 
+		/**
+		 * 分布式写性能
+		 * 
+		 * @param table
+		 * @return
+		 */
 		public static Counter.Stat write(String table) {
 
-			String name = "write/" + table;
+			// 读取分布式环境中，所有的数据
+			Counter.Stat r = new Counter.Stat();
+			r.name = table;
+
+			try {
+
+				Task.call("stat/write", table, req -> {
+
+					String from = req.from;
+
+					if (log.isDebugEnabled()) {
+						log.debug("list stat [" + table + "], from=" + from);
+					}
+
+					try {
+
+						Counter.Stat s = req.get();
+						r.merge(s);
+
+					} catch (Exception e) {
+						GLog.applog.error("task", "stat", "from=" + from + ", error=" + e.getMessage(), e);
+					}
+
+					return true;
+				});
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+
+			return r;
+
+		}
+
+		/**
+		 * 单节点读性能
+		 * 
+		 * @param table
+		 * @return
+		 */
+		public static Counter.Stat read0(String table) {
+
+			String name = "read/" + table;
+
 			Counter e = counter.get(name);
 			if (e == null) {
 				e = new Counter(table);
 				counter.put(name, e);
 			}
-			return e.get();
+			Counter.Stat s = e.get();
+			return s;
+		}
+
+		/**
+		 * 单节点写性能
+		 * 
+		 * @param table
+		 * @return
+		 */
+		public static Counter.Stat write0(String table) {
+
+			String name = "write/" + table;
+
+			Counter e = counter.get(name);
+			if (e == null) {
+				e = new Counter(table);
+				counter.put(name, e);
+			}
+			Counter.Stat s = e.get();
+			return s;
 		}
 
 		static Map<String, Counter> counter = new HashMap<String, Counter>();
+	}
+
+	public static <T extends Bean> Beans<T> query(String sql, Class<T> t) throws SQLException {
+		return primary.query(sql, t);
 	}
 
 }

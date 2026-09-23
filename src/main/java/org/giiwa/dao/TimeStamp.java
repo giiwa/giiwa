@@ -81,7 +81,7 @@ public final class TimeStamp implements Serializable {
 			return s + "ms";
 		}
 		s /= 1000;
-		return s + "s";
+		return s + X.S;
 	}
 
 	/**

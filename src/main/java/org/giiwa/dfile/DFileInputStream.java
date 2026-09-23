@@ -20,6 +20,8 @@ import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Disk;
+import org.giiwa.dao.TimeStamp;
 
 public class DFileInputStream extends InputStream {
 
@@ -27,25 +29,38 @@ public class DFileInputStream extends InputStream {
 
 	DFile file;
 	InputStream in;
+	Disk disk;
+	Disk.Counter read;
 
-	public static DFileInputStream create(DFile file, InputStream in) {
+	public static DFileInputStream create(Disk disk, DFile file, InputStream in) {
 		DFileInputStream d = new DFileInputStream();
 		d.file = file;
+		d.disk = disk;
 		d.in = in;
+		d.read = Disk.Counter.read(disk);
 
 		return d;
 	}
 
 	@Override
 	public int read() throws IOException {
-		return in.read();
+		TimeStamp t = TimeStamp.create();
+		try {
+			return in.read();
+		} finally {
+			read.add(1, t.pastms());
+		}
 	}
 
 	@Override
 	public int read(byte[] b) throws IOException {
 		int len = 0;
+		TimeStamp t = TimeStamp.create();
 		try {
 			len = in.read(b);
+			if (len > 0) {
+				read.add(len, t.pastms());
+			}
 		} catch (IOException e) {
 			log.error("disk=" + file.getDisk_obj() + ", filename=" + file.filename, e);
 			throw e;
@@ -56,8 +71,12 @@ public class DFileInputStream extends InputStream {
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
 		int len1 = 0;
+		TimeStamp t = TimeStamp.create();
 		try {
 			len1 = in.read(b, off, len);
+			if (len1 > 0) {
+				read.add(len1, t.pastms());
+			}
 		} catch (IOException e) {
 			log.error("disk=" + file.getDisk_obj() + ", filename=" + file.filename, e);
 			throw e;
@@ -68,19 +87,35 @@ public class DFileInputStream extends InputStream {
 
 	@Override
 	public byte[] readAllBytes() throws IOException {
+
+		TimeStamp t = TimeStamp.create();
 		byte[] bb = in.readAllBytes();
+		if (bb != null && bb.length > 0) {
+			read.add(bb.length, t.pastms());
+		}
+
 		return bb;
 
 	}
 
 	@Override
 	public byte[] readNBytes(int len) throws IOException {
-		return in.readNBytes(len);
+		TimeStamp t = TimeStamp.create();
+		byte[] bb = in.readNBytes(len);
+		if (bb != null && bb.length > 0) {
+			read.add(bb.length, t.pastms());
+		}
+		return bb;
 	}
 
 	@Override
 	public int readNBytes(byte[] b, int off, int len) throws IOException {
-		return in.readNBytes(b, off, len);
+		TimeStamp t = TimeStamp.create();
+		int len1 = in.readNBytes(b, off, len);
+		if (len1 > 0) {
+			read.add(len1, t.pastms());
+		}
+		return len1;
 	}
 
 	@Override
@@ -120,7 +155,12 @@ public class DFileInputStream extends InputStream {
 
 	@Override
 	public long transferTo(OutputStream out) throws IOException {
-		return in.transferTo(out);
+		TimeStamp t = TimeStamp.create();
+		long n = in.transferTo(out);
+		if (n > 0) {
+			read.add(n, t.pastms());
+		}
+		return n;
 	}
 
 }

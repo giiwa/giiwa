@@ -18,13 +18,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
 import java.util.Hashtable;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.*;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 
 import com.google.zxing.BarcodeFormat;
@@ -429,27 +429,37 @@ public class GImage {
 	 * @param h      the height
 	 * @throws IOException
 	 */
-	public static void scale(InputStream src, OutputStream dest, final int w, final int h) throws IOException {
+	public static void scale(InputStream src, OutputStream dest, int w, int h) throws IOException {
+
+		TimeStamp t = TimeStamp.create();
 
 		try {
 			BufferedImage img = ImageIO.read(src);
-			if (img == null || w < 0 || h < 0) {
-				throw new IOException("bad [src=" + src + ", w=" + w + ", h=" + h + "]");
+//			if (img == null || w < 0 || h < 0) {
+//				throw new IOException("bad [src=" + src + ", w=" + w + ", h=" + h + "]");
+//			}
+			if (log.isInfoEnabled()) {
+				log.info("read.image, cost=" + t.past());
 			}
+			t.reset();
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
 
-			// if (w > w1 || h > h1)
-			// return -1;
+			if (w <= 0 && h <= 0) {
+				// 传递无效参数， 保持图片大小
+				w = w1;
+				h = h1;
+			} else if (w <= 0) {
+				// 设置高度， 宽度按比例
+				w = w1 * h / h1;
+			} else if (h <= 0) {
+				// 设置了宽度， 高度按比例
+				h = h1 * w / w1;
+			}
 
 			int w0 = w;
 			int h0 = h;
-
-			if (h <= 0)
-				h0 = h1;
-			if (w <= 0)
-				w0 = w1;
 
 			float fh = ((float) h1) / h;
 			float fw = ((float) w1) / w;
@@ -468,11 +478,22 @@ public class GImage {
 
 			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
 
-			int ox = (w - w0) / 2;
-			int oy = (h - h0) / 2;
+			int ox = (w - w0) / 2; // 左右留空
+			int oy = (h - h0) / 2; // 上下留空
 
 			g.drawImage(tmp, ox, oy, w0, h0, null);
+
+			if (log.isInfoEnabled()) {
+				log.info("scale.image, cost=" + t.past());
+			}
+			t.reset();
+
 			ImageIO.write(out, "jpg", dest);
+
+			if (log.isInfoEnabled()) {
+				log.info("save.image, cost=" + t.past());
+			}
+
 		} finally {
 			X.close(src, dest);
 		}
@@ -513,7 +534,7 @@ public class GImage {
 				log.debug("w=" + w + ", h=" + h + ", h1=" + h1 + ", w1=" + w1 + ", f1=" + f1);
 			}
 
-			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);//
 			// TYPE_4BYTE_BGR);
 			Graphics g = out.getGraphics();
 
@@ -534,8 +555,66 @@ public class GImage {
 
 			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
 			g.drawImage(tmp, ow, oh, w, h, null);
-			ImageIO.write(out, "png", dest);
-			
+			ImageIO.write(out, "jpeg", dest);
+
+		} finally {
+			X.close(src, dest);
+		}
+
+	}
+
+	public static void scale(InputStream src, OutputStream dest, int w, int h, String ext) throws IOException {
+
+		try {
+
+			BufferedImage img = ImageIO.read(src);
+			if (img == null) {
+				throw new IOException("bad [src=" + src + "]");
+			}
+
+			// BufferedImage out = Scalr.resize(img, Scalr.Method.ULTRA_QUALITY,
+			// w, h);// , Scalr.OP_ANTIALIAS);
+
+			float h1 = img.getHeight();
+			float w1 = img.getWidth();
+
+			float f1 = h1 / w1;
+			if (h <= 0)
+				h = X.toInt(w * f1);
+			if (w <= 0)
+				w = X.toInt(h / f1);
+
+			if (log.isDebugEnabled()) {
+				log.debug("w=" + w + ", h=" + h + ", h1=" + h1 + ", w1=" + w1 + ", f1=" + f1);
+			}
+
+			BufferedImage out = X.isSame(ext, "png") ? new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR)
+					: new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
+			Graphics g = out.getGraphics();
+
+			float fh = ((float) h1) / h;
+			float fw = ((float) w1) / w;
+			int oh = 0;
+			int ow = 0;
+
+			if (fh > fw) {
+				int w2 = (int) (w1 / fh);
+				ow = (w - w2) / 2;
+				w = w2;
+			} else {
+				int h2 = (int) (h1 / fw);
+				oh = (h - h2) / 2;
+				h = h2;
+			}
+
+			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+			g.drawImage(tmp, ow, oh, w, h, null);
+			if (X.isSame(ext, "png")) {
+				ImageIO.write(out, "png", dest);
+			} else {
+				ImageIO.write(out, "jpeg", dest);
+			}
+
 		} finally {
 			X.close(src, dest);
 		}

@@ -17,7 +17,12 @@ package org.giiwa.bean;
 import java.awt.Color;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -27,6 +32,8 @@ import org.giiwa.bean.Session.SID;
 import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.Base32;
+import org.giiwa.crypto.Digest;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
@@ -39,8 +46,6 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Base32;
-import org.giiwa.misc.Digest;
 import org.giiwa.misc.GImage;
 import org.giiwa.web.Language;
 
@@ -75,7 +80,12 @@ public final class User extends Bean {
 
 	private static Log log = LogFactory.getLog(User.class);
 
+	@Deprecated
 	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
+
+	public final static String NAME = X.NAME;
+	public final static String PASSWORD = "password";
+	public final static String DELETED = "deleted";
 
 	@Column(memo = "主键", unique = true)
 	public long id;
@@ -89,6 +99,12 @@ public final class User extends Bean {
 	@Column(memo = "称谓", size = 50)
 	public String title;
 
+	@Column(memo = "电话", size = 50)
+	public String phone;
+
+	@Column(memo = "电子邮箱", size = 50)
+	public String email;
+
 	@Column(memo = "用户组", value = "unit.id")
 	public long unitid;
 
@@ -97,6 +113,9 @@ public final class User extends Bean {
 
 	@Column(memo = "密码设置时间")
 	public long passwordtime;
+
+	@Column(memo = "mysql_native_password", size = 128)
+	private String mysql_native_password;
 
 	@Column(memo = "删除", value = "1:yes")
 	int deleted;
@@ -120,6 +139,12 @@ public final class User extends Bean {
 	@Column(memo = "创建用户ID")
 	private long createdby;
 
+	@Column(memo = "上次登录时间")
+	public long lastlogintime;
+
+	@Column(memo = "会话ID")
+	public String sid;
+
 	transient User createdby_obj;
 
 	public User getCreatedby_obj() {
@@ -127,6 +152,10 @@ public final class User extends Bean {
 			createdby_obj = dao.load(createdby);
 		}
 		return createdby_obj;
+	}
+
+	public boolean isOnline() {
+		return Session.exists(sid);
 	}
 
 	public String getPhoto() {
@@ -144,6 +173,10 @@ public final class User extends Bean {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public void touch() {
+		dao.update(id, V.create().append("lastlogintime", Global.now()));
 	}
 
 	/**
@@ -170,7 +203,7 @@ public final class User extends Bean {
 	 * @return String
 	 */
 	public String getPhone() {
-		return this.getString("phone");
+		return phone;
 	}
 
 	/**
@@ -179,7 +212,7 @@ public final class User extends Bean {
 	 * @return String
 	 */
 	public String getEmail() {
-		return this.getString("email");
+		return email;
 	}
 
 	/**
@@ -197,7 +230,7 @@ public final class User extends Bean {
 	 * @see org.giiwa.core.bean.Bean.toString()
 	 */
 	public String toString() {
-		return "User@{id=" + this.getId() + ",name=" + this.getString("name") + "}";
+		return "User@{id=" + this.getId() + ",name=" + this.getString(X.NAME) + "}";
 	}
 
 	/**
@@ -228,13 +261,13 @@ public final class User extends Bean {
 
 		for (String s : ss) {
 			String o = (String) v.value(s);
-			if (X.isSame("name", s)) {
-				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+			if (X.isSame(X.NAME, s)) {
+				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{3,16}$");
 				if (!X.isEmpty(rule) && !o.matches(rule)) {
-					throw new Exception(Global.getString("user.name.rule.tips", "name MUST 4+ char or digital"));
+					throw new Exception(Global.getString("user.name.rule.tips", "name MUST 3+ char or digital"));
 				}
 			} else if (X.isSame("password", s)) {
-				String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
+				String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9@#]{6,16}$");
 				if (X.isEmpty(o) || (!X.isEmpty(rule) && !o.matches(rule))) {
 					throw new Exception(Global.getString("user.passwd.rule.tips", "password MUST 6+ char or digital"));
 				}
@@ -249,7 +282,7 @@ public final class User extends Bean {
 	 * @throws Exception
 	 */
 	public synchronized static long create(V v) throws Exception {
-		String name = v.value("name").toString();
+		String name = v.value(X.NAME).toString();
 		return create(name, v);
 	}
 
@@ -264,21 +297,26 @@ public final class User extends Bean {
 	 */
 	public synchronized static long create(String name, V v) throws Exception {
 
-		if (dao.exists(W.create().and("name", name))) {
+		if (dao.exists(W.create().and(X.NAME, name))) {
 			throw new Exception(Language.getLanguage().get("user.name.exists"));
 		}
+		if (X.isIn(name, "public", "i", "r", "python", "c", "user")) {
+			// keyword
+			throw new Exception("[" + name + "] " + Language.getLanguage().get("is.keyword"));
+		}
 
-		v.append("name", name);
+		v.append(X.NAME, name);
 		// check name and password
-		_check(v, "name", "password");
+		_check(v, X.NAME, "password");
 
 		String s = (String) v.value("password");
 		if (s != null) {
-			v.force("password", encrypt2(s));
 			v.append("passwordtime", Global.now());
+			v.force("password", encrypt2(s));
+			v.force("mysql_native_password", mysql_native_password(s));
 		}
 
-		Long id = (Long) v.value("id");
+		Long id = (Long) v.value(X.ID);
 		if (id == null) {
 			id = UID.next("user.id");
 			try {
@@ -298,8 +336,15 @@ public final class User extends Bean {
 
 		v.append("deleted", 0);
 
-		dao.insert(v.append(X.ID, id).append(X.CREATED, Global.now()).append(X.UPDATED,
-				Global.now()));
+//		for (String s1 : new String[] { "phone", "email" }) {
+//			String v1 = (String) v.value(s1);
+//			if (!X.isEmpty(v1)) {
+//				v1 = SM4.encode(v1, Key.get("giiwa", 24));
+//				v.force(s1, v1);
+//			}
+//		}
+
+		dao.insert(v.append(X.ID, id).append(X.CREATED, Global.now()).append(X.UPDATED, Global.now()));
 
 		GLog.securitylog.warn(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
 				(String) v.value("createdip"));
@@ -326,8 +371,8 @@ public final class User extends Bean {
 			char c = nickname.toString().charAt(0);
 
 			Language lang = Language.getLanguage();
-			DFile f = Disk.seek("/user/photo/auto/" + lang.format(Global.now(), "yyyy/MM/dd") + "/"
-					+ Global.now() + ".png");
+			DFile f = Disk
+					.seek("/user/photo/auto/" + lang.format(Global.now(), "yyyy/MM/dd") + "/" + Global.now() + ".png");
 
 			if (f != null) {
 				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
@@ -351,9 +396,11 @@ public final class User extends Bean {
 	public static User load(String name, String password, String ip) throws Exception {
 
 		String password2 = encrypt2(password);
-		W q = W.create().and("name", name).and("password", password2).and("deleted", 1, W.OP.neq);
+		W q = W.create().and(X.NAME, name).and("password", password2).and("deleted", 1, W.OP.neq);
 		User e = dao.load(q);
-//		log.warn("q=" + q + ", e=" + e);
+		if (log.isWarnEnabled()) {
+			log.warn("q=" + q + ", e=" + e);
+		}
 
 		if (e != null) {
 			if (e.id == 0 && !X.isIn(Config.getConf().getString("root.login", "no"), "yes", "true")) {
@@ -363,7 +410,7 @@ public final class User extends Bean {
 		}
 
 		String password1 = encrypt1(password);
-		e = dao.load(W.create().and("name", name).and("password", password1).and("deleted", 1, W.OP.neq));
+		e = dao.load(W.create().and(X.NAME, name).and("password", password1).and("deleted", 1, W.OP.neq));
 		if (e != null) {
 
 			dao.update(e.id, V.create().append("password", password2));
@@ -377,7 +424,7 @@ public final class User extends Bean {
 
 		// Compatible old giiwa, 1, manual clean the password in database, 2, using this
 		// method to reset the password
-		e = dao.load(W.create().and("name", name).and("password", "").and("deleted", 1, W.OP.neq));
+		e = dao.load(W.create().and(X.NAME, name).and("password", "").and("deleted", 1, W.OP.neq));
 		if (e != null) {
 			dao.update(e.id, V.create().append("password", password2));
 
@@ -402,7 +449,7 @@ public final class User extends Bean {
 	 * @return User
 	 */
 	public static User load(String name) {
-		return dao.load(W.create().and("name", name).and("deleted", 1, W.OP.neq).sort(X.UPDATED, -1));
+		return dao.load(W.create().and(X.NAME, name).and("deleted", 1, W.OP.neq).sort(X.UPDATED, -1));
 	}
 
 	/**
@@ -436,7 +483,7 @@ public final class User extends Bean {
 		}
 
 		Beans<User> us = dao.load(
-				W.create().and("id", l1).and("deleted", 1, W.OP.neq).and("locked", 1, W.OP.neq).sort("name", 1), 0,
+				W.create().and(X.ID, l1).and("deleted", 1, W.OP.neq).and("locked", 1, W.OP.neq).sort(X.NAME, 1), 0,
 				Integer.MAX_VALUE);
 		return us;
 
@@ -584,6 +631,96 @@ public final class User extends Bean {
 	}
 
 	/**
+	 * 生成服务端存储的密码哈希：SHA1(SHA1(plainPassword)) <br>
+	 * 对应mysql user表 authentication_string
+	 * 
+	 * @param plainPassword 明文密码
+	 * @return 20字节二进制哈希
+	 */
+	private static String mysql_native_password(String plainPassword) throws NoSuchAlgorithmException {
+		if (plainPassword == null) {
+			return null;
+		}
+		MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+		// first sha1: SHA1(明文)
+		byte[] sha1Pass = sha1.digest(plainPassword.getBytes(StandardCharsets.UTF_8));
+		// second sha1: SHA1(SHA1(明文)) → 这就是服务端要存储的值
+		return toHex(sha1.digest(sha1Pass));
+	}
+
+	/**
+	 * 将20字节转为40位十六进制字符串，方便存数据库varchar <br>
+	 */
+	private static String toHex(byte[] bytes) {
+		if (bytes == null)
+			return null;
+		StringBuilder sb = new StringBuilder(bytes.length * 2);
+		for (byte b : bytes) {
+			sb.append(String.format("%02x", b & 0xff));
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 十六进制字符串转回20字节hash
+	 */
+	private byte[] fromHex(String hex) {
+		if (hex == null || hex.length() != 40) {
+			return null;
+		}
+		byte[] res = new byte[20];
+		for (int i = 0; i < 20; i++) {
+			int pos = i * 2;
+			res[i] = (byte) Integer.parseInt(hex.substring(pos, pos + 2), 16);
+		}
+		return res;
+	}
+
+	/**
+	 * 登录校验：mysql_native_password 挑战应答
+	 * 
+	 * @param clientScramble411 客户端发来的scramble（20字节）
+	 * @param salt              服务端握手下发的随机salt(20字节)
+	 * @param storedSha2        服务端存储 SHA1(SHA1(明文)) 20字节
+	 * @return true=密码正确
+	 */
+	public boolean verify(byte[] clientScramble411, byte[] salt) {
+		if (clientScramble411 == null || clientScramble411.length != 20) {
+			return false;
+		}
+		if (salt == null || salt.length != 20) {
+			return false;
+		}
+
+		byte[] storedSha2 = fromHex(mysql_native_password);
+		if (storedSha2 == null || storedSha2.length != 20) {
+			return false;
+		}
+
+		try {
+			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+			// temp = SHA1( salt + storedSha2 )
+			sha1.reset();
+			sha1.update(salt);
+			sha1.update(storedSha2);
+			byte[] temp = sha1.digest();
+
+			// XOR 得到客户端计算出的 SHA1(plainPassword)
+			byte[] sha1Plain = new byte[20];
+			for (int i = 0; i < 20; i++) {
+				sha1Plain[i] = (byte) (clientScramble411[i] ^ temp[i]);
+			}
+
+			// 二次sha1，和服务端存储的storedSha2对比
+			byte[] calcStored = sha1.digest(sha1Plain);
+			return Arrays.equals(calcStored, storedSha2);
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
+		}
+		return false;
+	}
+
+	/**
 	 * @deprecated
 	 * 
 	 * @param passwd
@@ -613,7 +750,9 @@ public final class User extends Bean {
 	 * @return Beans
 	 */
 	public static Beans<User> load(W q, int offset, int limit) {
-		return dao.load(q.and(X.ID, 0, W.OP.gt), offset, limit);
+		q.and(X.ID, 0, W.OP.gt);
+		dao.optimize(q);
+		return dao.load(q, offset, limit);
 	}
 
 	/**
@@ -642,20 +781,28 @@ public final class User extends Bean {
 	 */
 	public static int update(long id, V v) throws Exception {
 
-		v.remove("name");
+		v.remove(X.NAME);
 
 		String passwd = (String) v.value("password");
 		if (!X.isEmpty(passwd)) {
 
 			_check(v, "password");
-			passwd = encrypt2(passwd);
-			v.force("password", passwd);
+			v.force("password", encrypt2(passwd));
+			v.force("mysql_native_password", mysql_native_password(passwd));
 
 		} else {
 			v.remove("password");
 		}
 
 		_checkphoto(id, v);
+
+//		for (String s1 : new String[] { "phone", "email" }) {
+//			String v1 = (String) v.value(s1);
+//			if (!X.isEmpty(v1)) {
+//				v1 = SM4.encode(v1, Key.get("giiwa.user", 16));
+//				v.force(s1, v1);
+//			}
+//		}
 
 		return dao.update(id, v);
 	}
@@ -670,15 +817,15 @@ public final class User extends Bean {
 	 */
 	public static int update(W q, V v) throws Exception {
 
-		v.remove("name");
+		v.remove(X.NAME);
 
 		String passwd = (String) v.value("password");
 		if (!X.isEmpty(passwd)) {
 
 			_check(v, "password");
 
-			passwd = encrypt2(passwd);
-			v.force("password", passwd);
+			v.force("password", encrypt2(passwd));
+			v.force("mysql_native_password", mysql_native_password(passwd));
 		} else {
 			v.remove("password");
 		}
@@ -750,9 +897,8 @@ public final class User extends Bean {
 		 */
 		dao.update(W.create().and("sid", sid), V.create("sid", X.EMPTY));
 
-		return dao.inc(W.create().and(X.ID, getId()), "logintimes", 1,
-				v.append("lastlogintime", Global.now()).append("ip", ip).append("locked", 0)
-						.append("lockexpired", 0).append("sid", sid));
+		return dao.inc(W.create().and(X.ID, getId()), "logintimes", 1, v.append("lastlogintime", Global.now())
+				.append(X.IP, ip).append("locked", 0).append("lockexpired", 0).append("sid", sid));
 
 	}
 
@@ -821,9 +967,8 @@ public final class User extends Bean {
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
 
-			return Lock.dao.insert(V.create("uid", uid).append(X.ID, UID.id(uid, sid, Global.now()))
-					.append("sid", sid).append("host", host).append("useragent", useragent)
-					.append(X.CREATED, Global.now()));
+			return Lock.dao.insert(V.create("uid", uid).append(X.ID, UID.id(uid, sid, Global.now())).append("sid", sid)
+					.append("host", host).append("useragent", useragent).append(X.CREATED, Global.now()));
 		}
 
 		/**
@@ -916,8 +1061,8 @@ public final class User extends Bean {
 	public static int delete(long id) {
 
 		Lock.cleanup(id);
+		return dao.update(id, V.create().append("locked", 1));
 
-		return dao.delete(id);
 	}
 
 	public static User loadByToken(String token, long expired) {
@@ -992,12 +1137,21 @@ public final class User extends Bean {
 
 		if (Helper.isConfigured()) {
 			try {
+				/**
+				 * 不存在超级用户
+				 */
 				if (!dao.exists(0L)) {
+					/**
+					 * 是否存在系统管理用户
+					 */
 					List<User> list = User.loadByAccess("access.config.admin");
 					if (list == null || list.size() == 0) {
 						try {
+							/**
+							 * 创建一个
+							 */
 							String passwd = UID.random(16);
-							User.create("root", V.create("id", 0L).append("name", "root").append("password", passwd)
+							User.create("root", V.create(X.ID, 0L).append(X.NAME, "root").append("password", passwd)
 									.append("nickname", "root"));
 
 							File temp = new File(Temp.ROOT);
@@ -1065,19 +1219,35 @@ public final class User extends Bean {
 
 	public static void repair() throws Exception {
 
-		Beans<User> bs = User.dao.load(W.create().sort("created", 1), 0, 1000);
-		if (bs != null) {
-			for (User u : bs) {
-				if (X.isEmpty(u.getPhoto())) {
-					V v = V.create();
-					v.append("name", u.getName());
-					v.append("nickname", u.getNickname());
+		W q = W.create().sort(X.CREATED);
+		int s = 0;
+		Beans<User> bs = User.dao.load(q, s, 100);
+		while (bs != null && !bs.isEmpty()) {
+			bs.forEach(u -> {
+				/**
+				 * 检查用户头像
+				 */
+				DFile f1 = null;
+				try {
+					if (!X.isEmpty(u.getPhoto())) {
+						f1 = Disk.seek(u.getPhoto());
+					}
 
-					_checkphoto(u.getId(), v);
+					if (f1 == null || !f1.exists()) {
+						V v = V.create();
+						v.append(X.NAME, u.getName());
+						v.append("nickname", u.getNickname());
 
-					dao.update(u.getId(), v);
+						_checkphoto(u.getId(), v);
+
+						dao.update(u.getId(), v);
+					}
+				} catch (Exception err) {
+					log.error(u.name, err);
 				}
-			}
+			});
+			s += bs.size();
+			bs = User.dao.load(q, s, 100);
 		}
 
 	}
@@ -1098,7 +1268,7 @@ public final class User extends Bean {
 	@Override
 	public JSON json() {
 		JSON j1 = super.json();
-		j1.remove("_.*", "password", "md4passwd", "md5passwd", "sid", "passwd", "passwordtime", "createdua");
+		j1.remove("_.*", ".*passwd", ".*password", "sid", "passwordtime", "createdua");
 
 		if (this.expired()) {
 			j1.append("passwordexpired", 1);
@@ -1124,10 +1294,10 @@ public final class User extends Bean {
 		if (time < 1) {
 			time = 1;
 		}
-		String mode = Global.getString("user.login.failed.mode", "ip");
+		String mode = Global.getString("user.login.failed.mode", X.IP);
 
 		W q = W.create().and("uid", id).and(X.CREATED, Global.now() - time * X.AHOUR, W.OP.gt);
-		if (X.isSame(mode, "ip")) {
+		if (X.isSame(mode, X.IP)) {
 			q.and("host", host);
 		}
 
@@ -1146,10 +1316,10 @@ public final class User extends Bean {
 		if (time <= 0) {
 			time = 1;
 		}
-		String mode = Global.getString("user.login.failed.mode", "ip");
+		String mode = Global.getString("user.login.failed.mode", X.IP);
 
-		W q = W.create().and("uid", id).and("created", Global.now() - time * X.AHOUR, W.OP.gt);
-		if (X.isSame(mode, "ip")) {
+		W q = W.create().and("uid", id).and(X.CREATED, Global.now() - time * X.AHOUR, W.OP.gt);
+		if (X.isSame(mode, X.IP)) {
 			q.and("host", host);
 		}
 
@@ -1179,6 +1349,18 @@ public final class User extends Bean {
 			unit_obj = Unit.dao.load(unitid);
 		}
 		return unit_obj;
+	}
+
+	public static User load(long id) {
+		return dao.load(id);
+	}
+
+	public static boolean exists(W q) throws SQLException {
+		return dao.exists(q);
+	}
+
+	public static void delete(W q) {
+		dao.delete(q);
 	}
 
 }

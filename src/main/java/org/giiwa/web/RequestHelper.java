@@ -50,7 +50,7 @@ public class RequestHelper {
 	 */
 	public HttpServletRequest req;
 
-	private static String ENCODING = "UTF-8";
+	private static String ENCODING = X.UTF8;
 
 	private boolean _multipart;
 
@@ -98,8 +98,9 @@ public class RequestHelper {
 	 */
 	private JSON _files = null;
 	private JSON _jsons = null;
+	private String _reqstring = null;
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes" })
 	public final synchronized String getHtml(final String name) {
 
 		if (X.isEmpty(name)) {
@@ -115,14 +116,25 @@ public class RequestHelper {
 		try {
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (_jsons == null) {
-					String s = X.IO.read(req.getReader());
-					_jsons = JSON.fromObject(s);
+					if (_reqstring == null) {
+						_reqstring = X.IO.read(req.getReader());
+					}
+					_jsons = JSON.fromObject(_reqstring);
+					if (_jsons == null) {
+						// bad content type
+						log.error("Content-Type=" + c1 + "\n" + _reqstring);
+					}
 				}
 				if (_jsons != null) {
 					Object v1 = _get(name);
 					if (v1 != null) {
 						return v1.toString().trim();
 					}
+				}
+			} else if (c1 != null && c1.indexOf("text/xml") > -1) {
+				// soap
+				if (_reqstring == null) {
+					_reqstring = X.IO.read(req.getReader());
 				}
 			}
 
@@ -137,7 +149,7 @@ public class RequestHelper {
 				}
 			}
 		} catch (Exception e) {
-			log.error(this.getRequestURI(), e);
+			log.error("Content-Type=" + c1, e);
 		}
 
 		// get from body
@@ -361,18 +373,27 @@ public class RequestHelper {
 
 		if (_names == null) {
 			_names = new ArrayList<String>();
-			String c1 = req.getContentType();
-			if (c1 != null && c1.indexOf("application/json") > -1) {
-				this.getString("1");// initialize uploads
-				if (_jsons != null && !_jsons.isEmpty()) {
-					_names.addAll(_jsons.keySet());
+			try {
+				String c1 = req.getContentType();
+				if (c1 != null && c1.indexOf("application/json") > -1) {
+					this.getString("1");// initialize uploads
+					if (_jsons != null && !_jsons.isEmpty()) {
+						_names.addAll(_jsons.keySet());
+					}
+				} else if (c1 != null && c1.indexOf("text/xml") > -1) {
+					// SOAP
+					if (_reqstring == null) {
+						_reqstring = X.IO.read(req.getReader());
+					}
 				}
-			}
-			if (this._multipart) {
-				_parse_files();
-				if (_files != null && !_files.isEmpty()) {
-					_names.addAll(_files.keySet());
+				if (this._multipart) {
+					_parse_files();
+					if (_files != null && !_files.isEmpty()) {
+						_names.addAll(_files.keySet());
+					}
 				}
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
 			}
 
 			Map<String, String[]> e = req.getParameterMap();
@@ -510,7 +531,7 @@ public class RequestHelper {
 				// do nothing
 				// log.debug("get s=" + s);
 
-			} else if (t.indexOf("UTF-8") > -1) {
+			} else if (t.indexOf(X.UTF8) > -1) {
 				// velocity bug fix
 
 			} else if (t.indexOf("urlencoded") > -1) {
@@ -558,19 +579,41 @@ public class RequestHelper {
 
 	private JSON _json;
 
+	@SuppressWarnings("rawtypes")
 	public final JSON json() {
 		if (_json == null) {
 			_json = JSON.create();
 			for (String name : this.names()) {
-
 				String s = this.getHtml(name);
-				_json.put(name, s);
+				if (s != null) {
+					_json.put(name, s);
+				} else {
+					FileItem f = this.file(name);
+					if (f != null) {
+						_json.put(name, f);
+					}
+				}
 			}
-//			_json.put("ip", this.ip());
+//			_json.put(X.IP, this.ip());
 //			_json.put("useragent", this.browser());
 
 		}
 		return _json;
+	}
+
+	public final List<JSON> jsons() {
+		if (_reqstring == null) {
+			this.getHtml("1");
+		}
+		return JSON.fromObjects(_reqstring);
+	}
+
+	public final String body() {
+
+		if (_reqstring == null) {
+			this.getHtml("1");
+		}
+		return _reqstring;
 	}
 
 	public String getMethod() {

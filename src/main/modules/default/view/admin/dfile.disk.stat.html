@@ -2,6 +2,18 @@
 <div id='disk_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
 
 <script>
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let index = 0;
+    let value = bytes;
+    while (value >= 1024 && index < units.length - 1) {
+        value /= 1024;
+        index++;
+    }
+    // 保留2位小数，去除末尾多余0
+    return value.toFixed(2).replace(/\.00$/, '') + ' ' + units[index];
+}
 $(function(){
 	Highcharts.stockChart('disk_$!requestid', {
 		rangeSelector: {
@@ -12,7 +24,12 @@ $(function(){
 	       },
 	       plotOptions: {
 	           series: {
-	        		turboThreshold: 0
+	        		turboThreshold: 0,
+                    type: 'spline',  // 关键：line → spline 平滑曲线
+                    lineWidth: 1,
+                    marker: {
+                        enabled: false // stock图表一般关闭圆点标记，避免点太多卡顿
+                    }                    
 	           }
 	       },
 		   title: {
@@ -22,14 +39,36 @@ $(function(){
 				enabled: false
 	       },
            legend: {
-               enabled: false
+               enabled: true
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.y}</b>(B/s)'
+	    	   formatter: function() {
+	    		   var arr = [];
+	    	        // this.x 毫秒时间戳格式化
+	    	        var date = new Date(this.x - 8 * 3600 * 1000);
+	    	        var y = date.getFullYear();
+	    	        var m = (date.getMonth() + 1).toString().padStart(2, '0');
+	    	        var d = date.getDate().toString().padStart(2, '0');
+	    	        var h = date.getHours().toString().padStart(2, '0');
+	    	        var mi = date.getMinutes().toString().padStart(2, '0');
+	    	        var timeStr = y + "-" + m + "-" + d + " " + h + ":" + mi;
+
+	    	        arr.push(timeStr);
+
+	    	        if (this.points && this.points.length > 0) {
+	    	            for(var i = 0; i < this.points.length; i++) {
+	    	                var p = this.points[i];
+	    	                if(!p || !p.point) continue;
+	    	                var byteVal = p.point.y;
+	    	                arr.push(p.series.name + ': ' + formatBytes(byteVal) + '/s');
+	    	            }
+	    	        }
+	    	        return arr.join('<br/>');
+	    	    }
 	       },
 	    series: [
-				{name: "$lang.get('disk.stat.read')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.n0},#end]},
-				{name: "$lang.get('disk.stat.write')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.n1},#end]}
+				{name: "$lang.get('disk.stat.read')", type:'spline',color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.n0},#end]},
+				{name: "$lang.get('disk.stat.write')", type:'spline',color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.n1},#end]}
 	    		], 
 	});
 

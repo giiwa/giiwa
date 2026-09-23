@@ -1,28 +1,56 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.server;
 
 import java.io.File;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
-import org.giiwa.dao.X;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.web.Controller;
 import org.giiwa.web.GiiwaServlet;
 
+/**
+ * WEB服务器
+ * 
+ * @author joe
+ *
+ */
 public class Server {
 
 	private static boolean STARTED = false;
 
+	/**
+	 * bin/startup.sh 入口
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
-
 		startup();
-
 	}
 
+	/**
+	 * 启动
+	 */
 	public synchronized static void startup() {
 
 		if (STARTED) {
@@ -37,55 +65,63 @@ public class Server {
 		_init();
 
 		System.out.println("startup ...");
-		_startup();
+		try {
+			_startup();
+		} catch (Exception err) {
+			err.printStackTrace();
+			try {
+				Log log = LogFactory.getLog(Server.class);
+				log.error("startup failed!", err);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.exit(2);
+		}
 
 	}
 
-	private static void _startup() {
+	private static void _startup() throws Exception {
 
-		try {
-			Configuration conf = Config.getConf();
+		Configuration conf = Config.getConf();
 
-			// Server
-			org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
+		// fix bug
+		// X.IO.delete(new File("/\""));
+		// end of fix
 
-//			server.setServerInfo("giiwa(3.3)");
+		// Server
+		org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
 
-			// fix bug
-			X.IO.delete(new File("/\""));
-			//end of fix
+//			server.setServerInfo("giiwa3.4");
 
-			HttpConfiguration httpconf = new HttpConfiguration();
-			httpconf.setSendServerVersion(false);
+		HttpConfiguration httpconf = new HttpConfiguration();
+		httpconf.setSendServerVersion(false);
 
-			// HTTP connector
-			ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(httpconf));
-			http.setHost("0.0.0.0");
-			http.setPort(conf.getInt("http.port", 8080));
-			http.setIdleTimeout(30000);
+		// HTTP connector
+		ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(httpconf));
+		http.setHost("0.0.0.0");
+		http.setPort(conf.getInt("http.port", 8080));
+		http.setIdleTimeout(30000);
+		http.setAcceptQueueSize(2048);
 
-			// 设置 connector
-			server.addConnector(http);
+		// 设置 connector
+		server.addConnector(http);
 
-			ServletContextHandler context = new ServletContextHandler();
-			context.setContextPath("/");
-			context.setWelcomeFiles(new String[] { "index", "index.html", "index.htm" });
+		ServletContextHandler context = new ServletContextHandler();
+		context.setContextPath("/");
+		context.setWelcomeFiles(new String[] { "index", "index.html", "index.htm" });
 
-			// Add servlet to produce output
-			context.addServlet(org.giiwa.web.GiiwaServlet.class, "/*");
+		// Add servlet to produce output
+		context.addServlet(org.giiwa.web.GiiwaServlet.class, "/*");
 
-			GiiwaServlet.s️ervletContext = context.getServletContext();
+		GiiwaServlet.s️ervletContext = context.getServletContext();
 
-			server.setHandler(context);
+		server.setHandler(context);
 
-			// 启动 Server
-			server.start();
+		// 启动 Server
+		server.start();
 
-			server.join();
+		server.join();
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public static boolean INITED = false;
@@ -156,6 +192,8 @@ public class Server {
 			org.giiwa.web.Controller.init(conf);
 
 			org.giiwa.web.view.View.init();
+
+			GLog.applog.info("sys", "init", "init success!");
 
 		} catch (Throwable e) {
 			e.printStackTrace();

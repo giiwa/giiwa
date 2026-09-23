@@ -28,25 +28,31 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.GlobalLock;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.dao.Helper;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
+import org.giiwa.json.JSON;
 import org.giiwa.misc.Host;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ.Mode;
 import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.task.Task.State;
+import org.giiwa.web.Processing;
 
 public final class Runner {
 
 	private static Log log = LogFactory.getLog(Runner.class);
 
-	/** The is shutingdown. */
+	/**
+	 * 正中关闭
+	 */
 	public static boolean isShutingdown = false;
 
 	/**
@@ -54,23 +60,52 @@ public final class Runner {
 	 */
 	// public static int MAX_TASK_SIZE = 10000;
 
+	/**
+	 * 本地系统线程池
+	 */
 	static ScheduledThreadPoolExecutor syslocal;
 
+	/**
+	 * 全局系统线程池
+	 */
 	static ScheduledThreadPoolExecutor sysglobal;
 
-	/** The executor. */
+	/**
+	 * 本地用户线程池
+	 */
 	static ScheduledThreadPoolExecutor local;
 
-	/** The executor. */
+	/**
+	 * 全局用户线程池
+	 */
 	static ScheduledThreadPoolExecutor global;
 
 //	private static Lock door = new ReentrantLock();
 
-	/** The pending queue. */
+	/**
+	 * 等待队列
+	 */
 	static HashMap<String, Task> pendingQueue = new HashMap<String, Task>();
 
-	/** The running queue. */
+	/**
+	 * 运行队列
+	 */
 	static HashMap<String, Task> runningQueue = new HashMap<String, Task>();
+
+	/**
+	 * CPU核心数量
+	 */
+	public static int cores = 1;
+
+	/**
+	 * CPU算力， 核心数 * 主频
+	 */
+	public static int computingpower = 1;
+
+	/**
+	 * CPU主频基数
+	 */
+	public static double ghz = 1;
 
 	static Configuration conf = null;
 	static boolean inited = false;
@@ -141,6 +176,55 @@ public final class Runner {
 
 	}
 
+	static void kill(String name) {
+
+		synchronized (pendingQueue) {
+
+			if (pendingQueue.containsKey(name)) {
+
+				Task t = pendingQueue.remove(name);
+				if (t != null) {
+
+					if (log.isDebugEnabled()) {
+						log.debug("removing task [" + name + "]");
+					}
+
+					if (t.sf != null) {
+						t.sf.cancel(true);
+					}
+					t.stop(true);
+				}
+			}
+
+			synchronized (runningQueue) {
+
+				if (runningQueue.containsKey(name)) {
+
+					Task t = runningQueue.remove(name);
+					if (t != null) {
+
+						if (log.isDebugEnabled()) {
+							log.debug("killing task [" + name + "]");
+						}
+
+						if (t.sf != null) {
+							t.sf.cancel(true);
+						}
+
+						t.stop(true);
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * 检测任务是否运行状态
+	 * 
+	 * @param name - 任务名称
+	 * @return True - 正在运行
+	 */
 	public static boolean isRunning(String name) {
 		return runningQueue.containsKey(name);
 	}
@@ -165,6 +249,12 @@ public final class Runner {
 
 	}
 
+	/**
+	 * 任务在运行状态的数量
+	 * 
+	 * @param types - 任务类型
+	 * @return
+	 */
 	public static int tasksInRunning(String... types) {
 
 		int n = 0;
@@ -215,8 +305,6 @@ public final class Runner {
 				l1.add(pendingQueue.get(name));
 			}
 
-			l1.remove(null);
-
 			for (String name : runningQueue.keySet()) {
 				l1.add(runningQueue.get(name));
 			}
@@ -228,6 +316,12 @@ public final class Runner {
 
 	}
 
+	/**
+	 * 获取任务对象
+	 * 
+	 * @param name - 任务名称
+	 * @return 任务对象
+	 */
 	public static Task get(String name) {
 		Task t = Runner.runningQueue.get(name);
 		if (t != null)
@@ -236,26 +330,42 @@ public final class Runner {
 		return Runner.pendingQueue.get(name);
 	}
 
+	/**
+	 * 检测任务属否在被调度中，包括正在运行
+	 * 
+	 * @param t - 任务对象
+	 * @return True - 正在本被调度中
+	 */
 	public static boolean isScheduled(Task t) {
 
-		if (runningQueue.containsKey(t.getName())) {
-			return true;
-		}
-
 		synchronized (pendingQueue) {
-			Task t1 = pendingQueue.get(t.getName());
-			if (t1 != null) {
-				if (t1.sf == null || t1.sf.isDone()) {
-					pendingQueue.remove(t.getName());
-				} else {
-					return true;
-				}
+
+			if (runningQueue.containsKey(t.getName())) {
+				return true;
 			}
+
+			return pendingQueue.containsKey(t.getName());
+
+//			Task t1 = pendingQueue.get(t.getName());
+//			if (t1 != null) {
+//				if (t1.sf == null || t1.sf.isDone()) {
+//					// 执行句柄丢失，或已经执行完成，从pending中移除
+//					pendingQueue.remove(t.getName());
+//				} else {
+//					return true;
+//				}
+//			}
 		}
 
-		return false;
+//		return false;
 	}
 
+	/**
+	 * 检测任务是否正在运行
+	 * 
+	 * @param t - 任务对象
+	 * @return True - 正在运行
+	 */
 	public static boolean isRunning(Task t) {
 
 		if (runningQueue.containsKey(t.getName())) {
@@ -265,6 +375,12 @@ public final class Runner {
 		return false;
 	}
 
+	/**
+	 * 切换一个任务的队列， 从pending -> running
+	 * 
+	 * @param task
+	 * @return
+	 */
 	static boolean _switch(Task task) {
 
 		if (isShutingdown) {
@@ -285,6 +401,8 @@ public final class Runner {
 
 			runningQueue.put(name, task);
 
+			pendingQueue.notifyAll();
+
 		}
 
 		// log.debug(getName() + " is running");
@@ -292,8 +410,18 @@ public final class Runner {
 
 	}
 
-	public static void init(int usernum) {
+	private static boolean _inited = false;
 
+	@SuppressWarnings("deprecation")
+	public static synchronized void init(int usernum) {
+
+		if (_inited) {
+			return;
+		}
+
+		log.warn("Task init ... [" + usernum + "]");
+
+		_inited = true;
 		conf = Config.getConf();
 
 		local = new ScheduledThreadPoolExecutor(usernum, new ThreadFactory() {
@@ -313,9 +441,11 @@ public final class Runner {
 		OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 		int n = os.getAvailableProcessors();
 
-		Task.cores = n * (conf != null ? conf.getInt("global.turbo", 1) : 1);
-		Task.ghz = Host.getCpuGHz();
-		Task.computingpower = (int) (Task.cores * Task.ghz);
+		Runner.cores = n * (conf != null ? conf.getInt("global.turbo", 1) : 1);
+		Task.cores = Runner.cores;
+
+		Runner.ghz = Host.getCpuGHz();
+		Runner.computingpower = (int) (Runner.cores * Runner.ghz);
 
 		syslocal = new ScheduledThreadPoolExecutor(n, new ThreadFactory() {
 
@@ -326,6 +456,7 @@ public final class Runner {
 				Thread th = new Thread(r);
 				th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
 				th.setName("gi-syslocal-" + i.incrementAndGet());
+				// 设置系统线程为最高优先级
 				th.setPriority(Thread.MAX_PRIORITY);
 				return th;
 			}
@@ -341,13 +472,14 @@ public final class Runner {
 				Thread th = new Thread(r);
 				th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
 				th.setName("gi-sysglobal-" + i.incrementAndGet());
+				// 设置系统线程为最高优先级
 				th.setPriority(Thread.MAX_PRIORITY);
 				return th;
 			}
 
 		});
 
-		global = new ScheduledThreadPoolExecutor(Task.computingpower / 2, new ThreadFactory() {
+		global = new ScheduledThreadPoolExecutor(Runner.computingpower / 2, new ThreadFactory() {
 
 			AtomicInteger i = new AtomicInteger(1);
 
@@ -364,6 +496,8 @@ public final class Runner {
 //		_recover();
 
 		_initMQ();
+
+		log.warn("Task inited.");
 
 	}
 
@@ -391,27 +525,43 @@ public final class Runner {
 				}
 
 				if (!task.isSys()) {
+					/**
+					 * 非系统任务，检查任务槽
+					 */
 
-					// not system task, check pause state
 					if (pause) {
 						return false;
 					}
 
+					/**
+					 * 是否本地禁止该类型的任务 ？
+					 */
 					String forbidden = conf.getString("task.forbidden", X.EMPTY);
-
 					if (!X.isEmpty(forbidden) && name.matches(forbidden)) {
-						log.info("the task[" + name + "] is forbidden in this node");
+						log.warn("the task[" + name + "] is forbidden in this node");
 						return false;
 					}
 
-					// check number of task
-					if (Task.numOfTasks() > local.getCorePoolSize() * 10) {
-						// ignore
-						log.error(
-								"too many task, pending=" + Task.tasksInQueue() + ", poolsize="
-										+ local.getCorePoolSize() + ", pending=" + Runner.pendingQueue.keySet(),
-								new Exception("the task[" + name + "] will not be scheduled"));
-						return false;
+					/**
+					 * 本地任务队列 > 本地任务槽线程数 * 10
+					 */
+					if (pendingQueue.size() > local.getPoolSize() * 10) {
+						// 如果队列大于 本地执行池的10倍
+						if (task.interruptable()) {
+							// 允许中断的线程
+							throw new Exception("Too many task, task=" + task.getName() + ", pending="
+									+ pendingQueue.size() + ", cores=" + local.getPoolSize());
+						} else {
+							// waiting ...
+							// TODO, 有bug，可能会导致整个锁死
+							// 放慢1分钟
+							TimeStamp t = TimeStamp.create();
+							while (pendingQueue.size() > local.getPoolSize() && t.pastms() < X.AMINUTE) {
+//								synchronized (pendingQueue) {
+								pendingQueue.wait(1000);
+//								}
+							}
+						}
 					}
 
 				}
@@ -419,7 +569,7 @@ public final class Runner {
 				// scheduled
 				if (pendingQueue.containsKey(name)) {
 					if (task.debug || log.isDebugEnabled()) {
-						log.info("the task is scheduled, rescheduling [" + name + "]");
+						log.info("The task is scheduled, rescheduling [" + name + "]");
 					}
 				}
 
@@ -429,7 +579,7 @@ public final class Runner {
 					task.scheduledtime = Global.now();
 				}
 
-				task.e = new Exception("lanuch trace");
+//				task.e = new Exception("lanuch trace");
 
 				Task old = pendingQueue.put(name, task);
 				if (old != null && old != task) {
@@ -451,18 +601,23 @@ public final class Runner {
 				task.scheduledtime = Global.now() + ms;
 
 				if (g) {
+					// 全局任务
 					if (task.isSys()) {
+						// 全局系统级， 使用全局系统槽来执行
 						task._t = Task.SYSGLOBAL;
 						task.sf = sysglobal.schedule(task, ms, TimeUnit.MILLISECONDS);
 					} else {
+						// 全局普通， 使用全局普通任务槽来执行
 						task._t = Task.GLOBAL;
 						task.sf = global.schedule(task, ms, TimeUnit.MILLISECONDS);
 					}
 				} else {
 					if (task.isSys()) {
+						// 本地系统级，使用本地系统任务槽来执行
 						task._t = Task.SYSLOCAL;
 						task.sf = syslocal.schedule(task, ms, TimeUnit.MILLISECONDS);
 					} else {
+						// 本地普通，使用本地普通任务槽来执行
 						task._t = X.EMPTY;
 						task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
 					}
@@ -539,6 +694,12 @@ public final class Runner {
 		}
 	}
 
+	/**
+	 * 检测任务是否被调度中，包括运行状态
+	 * 
+	 * @param name - 任务名称
+	 * @return True - 被调度中
+	 */
 	public static Task isScheduled(String name) {
 		synchronized (pendingQueue) {
 
@@ -680,7 +841,7 @@ public final class Runner {
 							// o
 							fireWatch(name, o);
 
-						} else if (X.isSame(cmd, "list")) {
+						} else if (X.isSame(cmd, X.LIST)) {
 							// 任务列表
 							Node n = Node.dao.load(Local.id());
 							TaskStatus s = new TaskStatus(n);
@@ -692,11 +853,37 @@ public final class Runner {
 							List<GlobalLock._Lock> l1 = GlobalLock.getLocks();
 							req.reply(Request.create().put(l1));
 
-						} else if (X.isSame(cmd, "kill")) {
-							// 杀掉一个任务
+						} else if (X.isSame(cmd, "kill") || X.isSame(cmd, "cacnel")) {
+							// 取消一个任务, 如果还没运行
 							String name = o.toString();
 							Runner.remove(name, -1);
 
+						} else if (X.isSame(cmd, "force")) {
+							// 强制杀掉一个任务，即使在运行
+							String name = o.toString();
+							Runner.kill(name);
+
+						} else if (X.isSame(cmd, "stat/read")) {
+							// 数据库读性能监测
+							String table = o.toString();
+							req.reply(Request.create().put(Helper.Stat.read0(table)));
+
+						} else if (X.isSame(cmd, "stat/write")) {
+							// 数据库写性能监测
+							String table = o.toString();
+							req.reply(Request.create().put(Helper.Stat.write0(table)));
+
+						} else if (X.isSame(cmd, "processing")) {
+							// 请求任务列表
+							List<JSON> l1 = Processing.getAll();
+							req.reply(Request.create().put(l1));
+						} else if (X.isSame(cmd, "disk/counter")) {
+							// 文件仓库读写性能
+							long id = X.toLong(o);
+//							log.info("disk/counter reply:" + req.from + ", seq=" + req.seq);
+
+							req.reply(Request.create()
+									.put(new long[] { Disk.Counter.read(id).avg(), Disk.Counter.write(id).avg() }));
 						} else {
 							log.warn("error command [" + cmd + "] and task, from=" + req.from);
 						}
@@ -717,13 +904,29 @@ public final class Runner {
 
 	static Map<String, Consumer<Object>> watch_map = new HashMap<String, Consumer<Object>>();
 
-	public static int number(Class<?> cc) {
-		List<Task> l1 = Runner.getAll();
+	/**
+	 * 获取本地节点相同任务类型的数量
+	 * 
+	 * @param cc - 任务类型
+	 * @return
+	 */
+	public static int number(String cc) {
+
 		int n = 0;
 
-		for (Task t : l1) {
-			Object o = t.attach("cc");
-			n += (X.isSame(o, cc) ? 1 : 0);
+		synchronized (pendingQueue) {
+			for (Task t : pendingQueue.values()) {
+				Object o = t._type;
+				if (o != null && cc.equals(o)) {
+					n++;
+				}
+			}
+			for (Task t : runningQueue.values()) {
+				Object o = t._type;
+				if (o != null && cc.equals(o)) {
+					n++;
+				}
+			}
 		}
 
 		return n;
@@ -738,9 +941,44 @@ public final class Runner {
 
 	}
 
-	public synchronized static void await(long timeout) throws InterruptedException {
+	public static void await(long timeout) throws InterruptedException {
 		synchronized (pendingQueue) {
 			pendingQueue.wait(timeout);
+		}
+	}
+
+	/**
+	 * 定时巡检运行中队列任务 清理超时/卡死任务，中断并终止任务执行
+	 */
+	public static void checkAndKill() {
+
+		Task[] taskArr = null;
+		// 加锁读取运行中队列快照，缩短锁持有时长
+		synchronized (pendingQueue) {
+			if (!runningQueue.isEmpty()) {
+				taskArr = runningQueue.values().toArray(new Task[runningQueue.size()]);
+			}
+		}
+
+		// 遍历处理超时、卡死任务
+		if (taskArr != null) {
+			for (Task t : taskArr) {
+				// 任务超时 或 任务卡死
+				boolean expired = t.expired();
+				boolean hung = t.isHunging();
+				if (expired || hung) {
+
+					GLog.applog.warn("sys", "kill",
+							"kill task=" + t.getName() + ", expired=" + expired + ", hung=" + hung);
+
+					// 取消底层调度任务
+					if (t.sf != null) {
+						t.sf.cancel(true);
+					}
+					// 强制终止当前任务
+					t.stop(true);
+				}
+			}
 		}
 	}
 

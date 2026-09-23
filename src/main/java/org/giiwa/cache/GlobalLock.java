@@ -143,8 +143,8 @@ public class GlobalLock implements Lock, Serializable {
 		return "GlobalLock [name=" + name + "]";
 	}
 
-	public void touch() {
-		Cache.expire(name, 12000);
+	public boolean touch() {
+		return Cache.expire(name, 60000);
 	}
 
 	@Override
@@ -262,7 +262,11 @@ public class GlobalLock implements Lock, Serializable {
 			}
 			if (ll != null) {
 				for (_Lock e : ll) {
-					((GlobalLock) e.lock).touch();
+					if (!((GlobalLock) e.lock).touch()) {
+						// 锁失败
+						log.error("lock refresh failed: " + e.name);
+						locked.remove(e.name);
+					}
 				}
 			}
 		}

@@ -31,6 +31,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@Deprecated
 public class GiiwaFilter implements Filter {
 
 	static Log log = LogFactory.getLog(GiiwaFilter.class);

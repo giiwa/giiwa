@@ -18,7 +18,6 @@ import java.security.*;
 
 import javax.crypto.*;
 import javax.crypto.spec.DESKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -26,6 +25,7 @@ import org.giiwa.dao.X;
 /**
  * The Class Digest.
  */
+@Deprecated
 public class Digest {
 
 	/** The md. */
@@ -60,7 +60,7 @@ public class Digest {
 		try {
 			messageDigest = MessageDigest.getInstance("MD5");
 			messageDigest.reset();
-			messageDigest.update(str.getBytes("UTF-8"));
+			messageDigest.update(str.getBytes(X.UTF8));
 		} catch (Exception e) {
 			return null;
 		}
@@ -128,31 +128,7 @@ public class Digest {
 	 * @throws Exception
 	 */
 	public static byte[] decode(byte[] content, String seed) throws Exception {
-
-		KeyGenerator kgen = KeyGenerator.getInstance("AES");
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.setSeed(seed.getBytes());
-		kgen.init(128, random);
-		SecretKey secretKey = kgen.generateKey();
-		byte[] enCodeFormat = secretKey.getEncoded();
-		SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-
-		try {
-			// 兼容老的解密方式
-
-			Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, key);
-			byte[] result = cipher.doFinal(content);
-			return result;
-		} catch (Exception e) {
-			// 新的解密方式
-
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, key);
-			byte[] result = cipher.doFinal(content);
-			return result;
-		}
-
+		return AES.decode(content, seed.getBytes());
 	}
 
 	/**
@@ -164,22 +140,7 @@ public class Digest {
 	 * @throws Exception
 	 */
 	public static byte[] encode(byte[] content, String seed) throws Exception {
-
-		KeyGenerator kgen = KeyGenerator.getInstance("AES");
-
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-
-		random.setSeed(seed.getBytes());
-		kgen.init(128, random);
-		SecretKey secretKey = kgen.generateKey();
-		byte[] enCodeFormat = secretKey.getEncoded();
-		SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-		Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
-
-		cipher.init(Cipher.ENCRYPT_MODE, key);
-		byte[] result = cipher.doFinal(content);
-		return result;
-
+		return AES.encode(content, seed.getBytes());
 	}
 
 	/**

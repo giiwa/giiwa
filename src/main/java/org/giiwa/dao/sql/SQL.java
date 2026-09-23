@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,13 +14,6 @@
 */
 package org.giiwa.dao.sql;
 
-import java.sql.Date;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -28,755 +21,794 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.giiwa.bean.GLog;
 import org.giiwa.bean.Stat;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.sql.SqlParser.ColumnsContext;
-import org.giiwa.dao.sql.SqlParser.DescContext;
-import org.giiwa.dao.sql.SqlParser.ExprContext;
-import org.giiwa.dao.sql.SqlParser.GroupContext;
-import org.giiwa.dao.sql.SqlParser.LimitContext;
-import org.giiwa.dao.sql.SqlParser.NowContext;
-import org.giiwa.dao.sql.SqlParser.NullContext;
-import org.giiwa.dao.sql.SqlParser.ObjectidContext;
-import org.giiwa.dao.sql.SqlParser.OffsetContext;
-import org.giiwa.dao.sql.SqlParser.OrderContext;
-import org.giiwa.dao.sql.SqlParser.SelectContext;
-import org.giiwa.dao.sql.SqlParser.SetContext;
-import org.giiwa.dao.sql.SqlParser.SetvalueContext;
-import org.giiwa.dao.sql.SqlParser.ShowContext;
-import org.giiwa.dao.sql.SqlParser.ShowoptionsContext;
-import org.giiwa.dao.sql.SqlParser.StatContext;
-import org.giiwa.dao.sql.SqlParser.TablenameContext;
-import org.giiwa.dao.sql.SqlParser.TimeContext;
-import org.giiwa.dao.sql.SqlParser.TodateContext;
-import org.giiwa.dao.sql.SqlParser.TodayContext;
-import org.giiwa.dao.sql.SqlParser.TolongContext;
-import org.giiwa.dao.sql.SqlParser.TostringContext;
-import org.giiwa.dao.sql.SqlParser.UuidContext;
-import org.giiwa.dao.sql.SqlParser.ValContext;
-import org.giiwa.json.JSON;
+import org.giiwa.dao.sql.SqlParser.*;
 import org.giiwa.web.Language;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SQL {
 
-	private static final Log log = LogFactory.getLog(SQL.class);
+//	private static final Log log = LogFactory.getLog(SQL.class);
+	private static final Language lang = Language.getLanguage("zh_cn");
+//	private static final String DUMMY_TABLE = "t___";
 
-	private static Language lang = Language.getLanguage("zh_cn");
+	// 线程安全日期格式化器，替换非线程安全SimpleDateFormat
+//	private static DateTimeFormatter getFormatter(String pattern) {
+//		return DateTimeFormatter.ofPattern(pattern);
+//	}
 
+	/**
+	 * 对外入口：解析SQL生成W查询条件
+	 */
 	public static W parse(String sql) throws SQLException {
 
-		SqlLexer lexer = new SqlLexer(CharStreams.fromString(sql));
-		SqlParser parser = new SqlParser(new CommonTokenStream(lexer));
+		if (X.isEmpty(sql)) {
+			return W.create();
+		}
 
-		SQLException[] ex = new SQLException[] { null };
+		SqlLexer lexer = new SqlLexer(CharStreams.fromString(sql));
+		CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+		SqlParser parser = new SqlParser(tokenStream);
+
+		// 使用原子引用存储异常，替代数组写法
+		AtomicReference<SQLException> errorRef = new AtomicReference<>();
+		parser.removeErrorListeners();
 		parser.addErrorListener(new BaseErrorListener() {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line,
 					int charPositionInLine, String msg, RecognitionException e) {
-				ex[0] = new SQLException(msg + "\n" + sql);
+				String errMsg = String.format("Line %d, position %d: %s \nSQL: %s", line, charPositionInLine, msg, sql);
+				errorRef.set(new SQLException(errMsg, e));
 			}
-
 		});
-		StatContext s1 = parser.stat();
-		if (ex[0] != null) {
-			throw ex[0];
+
+		SelectContext statCtx = parser.select();
+		if (errorRef.get() != null) {
+			throw errorRef.get();
 		}
 
-		SQLVisitor sv = new SQLVisitor();
-		return (W) sv.visit(s1);
-
+		SQLVisitor visitor = new SQLVisitor();
+		return visitor.visit(statCtx);
 	}
 
-	static class SQLVisitor extends SqlBaseVisitor<Object> {
-
-		private W q = W.create();
-		private ValVisitor vv = new ValVisitor();
-
-		@Override
-		public W visitStat(StatContext ctx) {
-			super.visitStat(ctx);
-			return q;
+	/**
+	 * 仅解析WHERE条件片段，拼接成完整SELECT语句解析
+	 */
+	@Deprecated
+	public static W where(String sql) throws SQLException {
+		if (X.isEmpty(sql)) {
+			return W.create();
 		}
-
-		@Override
-		public Object visitDesc(DescContext ctx) {
-			q.command = "desc";
-			q.params = Arrays.asList(ctx.tablename().getText());
-			return q;
+//		String lowerSql = sql.toLowerCase().trim();
+//		String fullSql;
+//		if (lowerSql.startsWith("order ")) {
+//			fullSql = "SELECT * FROM " + DUMMY_TABLE + " " + sql;
+//		} else {
+//			fullSql = "SELECT * FROM " + DUMMY_TABLE + " WHERE " + sql;
+//		}
+		try {
+			return parse(sql);
+		} catch (SQLException e) {
+			throw new SQLException("Parse where clause failed: " + sql, e);
 		}
+	}
 
-		@Override
-		public W visitShow(ShowContext ctx) {
-			q.command = "show";
-			ShowoptionsContext ssc = ctx.showoptions();
-			if (ssc != null) {
-				TablenameContext tc = ssc.tablename();
-				if (tc != null) {
-					q.query(tc.getText());
-				}
-			}
-			q.params = new ArrayList<Object>();
-			for (int i = 0; i < ssc.getChildCount(); i++) {
-				q.params.add(ssc.getChild(i).getText());
-			}
+	/**
+	 * 废弃兼容方法
+	 * 
+	 * @deprecated use {@link #where(String)}
+	 */
+	@Deprecated
+	public static W where2W(String sql) throws SQLException {
+		return where(sql);
+	}
 
-			return q;
+	/**
+	 * 去除单/双引号包裹 'xxx' / "xxx" -> xxx
+	 */
+	private static String unwrapString(String text) {
+		if ((text.startsWith("'") && text.endsWith("'")) || (text.startsWith("\"") && text.endsWith("\""))) {
+			return text.substring(1, text.length() - 1);
 		}
+		return text;
+	}
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public Object visitSet(SetContext ctx) {
-
-			q.command = "set";
-
-			SetvalueContext val = ctx.setvalue();
-			if (val != null) {
-				q.params = (List<Object>) this.visitSetvalue(val);
-			}
-			return q;
+	/**
+	 * 去除反引号包裹 `xxx` -> xxx
+	 */
+	private static String unwrapName(String text) {
+		if (text.startsWith("`") && text.endsWith("`")) {
+			return text.substring(1, text.length() - 1);
 		}
+		return text;
+	}
 
-		@SuppressWarnings("unchecked")
-		@Override
-		public Object visitSetvalue(SetvalueContext ctx) {
-			// NAME (NAME|val) (',' setvalue)*
-
-			Object value = null;
-			List<TerminalNode> ns = ctx.NAME();
-			String name = ns.get(0).getText();
-
-			if (ns.size() > 1) {
-				value = ns.get(1).getText();
-			} else {
-				ValContext val = ctx.val();
-				if (val != null) {
-					value = vv.visitVal(val);
-				}
-			}
-
-			List<JSON> l1 = JSON.createList();
-			l1.add(JSON.create().append(name, value));
-			List<SetvalueContext> l2 = ctx.setvalue();
-			if (l2 != null) {
-				for (SetvalueContext s : l2) {
-					Object v = this.visitSetvalue(s);
-					if (v != null) {
-						l1.addAll((List<JSON>) v);
-					}
-				}
-			}
-
-			return l1;
-		}
+	// ===================== SQL顶层访问器：处理SELECT、条件、分组、排序等 =====================
+	static class SQLVisitor extends SqlBaseVisitor<W> {
 
 		@Override
 		public W visitSelect(SelectContext ctx) {
-			q.command = "select";
+			W query = W.create();
+//			query.command = "select";
 
-			ValContext val = ctx.val();
-			if (val != null) {
-				q.params = Arrays.asList(vv.visitVal(val));
-				return q;
-			} else {
-				return (W) super.visitSelect(ctx);
-			}
-		}
-
-		@Override
-		public W visitGroup(GroupContext ctx) {
-			q.groupby(ctx.getText());
-			return q;
-		}
-
-		@Override
-		public W visitColumns(ColumnsContext ctx) {
-			q.fields(ctx.getText());
-			return q;
-		}
-
-		@Override
-		public W visitTablename(TablenameContext ctx) {
-			String table = ctx.NAME().getText();
-			if (!X.isIn(table, dump)) {
-				q.query(table);
-			}
-			return q;
-		}
-
-		@Override
-		public W visitExpr(ExprContext ctx) {
-
-			if (q == null) {
-				q = W.create();
+			// 1. 解析表名
+			TablenameContext tableCtx = ctx.tablename();
+			if (tableCtx != null) {
+				query.table = resolveTableName(tableCtx);
 			}
 
-			List<ExprContext> l1 = ctx.expr();
-			if (l1.size() == 2) {
-				// expr and|or expr
-				W q0 = this.q;
-				this.q = null;
-				W q1 = (W) l1.get(0).accept(this);
-				this.q = null;
-				W q2 = (W) l1.get(1).accept(this);
-				String cond = ctx.cond == null ? "AND" : ctx.cond.getText();
-				if (X.isIn(cond, "and")) {
-					q1.command = q0.command;
-					q1.params = q0.params;
-					q1.table = q0.table;
-					q1.fields(q0.fields());
-					q0 = q1;
-					q0.and(q2);
-				} else {
-					q1.command = q0.command;
-					q1.params = q0.params;
-					q1.table = q0.table;
-					q1.fields(q0.fields());
-					q0 = q1;
-					q0.or(q2);
+			// 2. 解析查询字段
+			ColumnsContext columnsCtx = ctx.columns();
+			if (columnsCtx != null) {
+				String fieldStr = columnsCtx.accept(new ColumnVisitor());
+				query.fields(fieldStr);
+				if (X.isEmpty(query.table)) {
+					query.params = X.asList(X.split(fieldStr, ","), s -> s.toString());
 				}
-				this.q = q0;
 
-			} else if (l1.size() == 1) {
+			}
 
-				Token not = ctx.not;
-				if (not != null) {
-					// not expr
-					W q0 = this.q;
-					this.q = null;
-					W q1 = (W) l1.get(0).accept(this);
-					if (!q1.isEmpty()) {
-						q0.and(q1, W.NOT);
-					}
-					this.q = q0;
-				} else {
-					// (expr)
-					W q0 = this.q;
-					this.q = null;
-					W q1 = (W) l1.get(0).accept(this);
-					if (q0 == null || q0.isEmpty()) {
-						q1.command = q0.command;
-						q1.params = q0.params;
-						q1.table = q0.table;
-						q1.fields(q0.fields());
-						q0 = q1;
-					} else if (!q1.isEmpty()) {
-						q0.and(q1);
-					}
-					this.q = q0;
-				}
-			} else {
-
-				String cond = ctx.cond == null ? "AND" : ctx.cond.getText();
-				String op = ctx.op == null ? null : ctx.op.getText();
-
-				try {
-					if (op != null) {
-
-						ValContext val = ctx.val();
-						Object v = val.accept(vv);
-
-						W.OP op1 = null;
-						int op2 = W.AND;
-
-						if (X.isIn(op, ">")) {
-							op1 = W.OP.gt;
-						} else if (X.isIn(op, ">=")) {
-							op1 = W.OP.gte;
-						} else if (X.isIn(op, "<")) {
-							op1 = W.OP.lt;
-						} else if (X.isIn(op, "<=")) {
-							op1 = W.OP.lte;
-						} else if (X.isIn(op, "like")) {
-							op1 = W.OP.like;
-							if (X.isEmpty(v)) {
-								// skip
-								return q;
-							}
-						} else if (X.isIn(op, "!like", "not like")) {
-							op1 = W.OP.like;
-							op2 = W.NOT;
-							if (X.isEmpty(v)) {
-								// skip
-								return q;
-							}
-						} else if (X.isIn(op, "!=")) {
-							op1 = W.OP.neq;
-						} else {
-							// =, ==
-							op1 = W.OP.eq;
-						}
-
-						String name = ctx.NAME().getText();
-						if (name.startsWith("$") || name.startsWith("\\")) {
-							name = name.substring(1);
-						}
-
-						if (X.isIn(cond, "AND")) {
-							if (op2 == W.NOT) {
-								q.and(W.create().and(name, v, op1), W.NOT);
-							} else {
-								q.and(name, v, op1);
-							}
-						} else {
-							if (op2 == W.NOT) {
-								q.or(W.create().and(name, v, op1), W.NOT);
-							} else {
-								q.or(name, v, op1);
-							}
-						}
-					}
-
-				} catch (Exception e) {
-//					e.printStackTrace();
-					log.error(e.getMessage());
-					GLog.applog.error("sql", "parse", e.getMessage(), e);
-
+			// 3. 解析WHERE条件表达式
+			ExprContext exprCtx = ctx.expr();
+			if (exprCtx != null) {
+				W exprObj = exprCtx.accept(new ExprVisitor());
+				if (!exprObj.isEmpty()) {
+					query.and(exprObj);
 				}
 			}
 
-			return q;
-		}
-
-		@Override
-		public W visitOrder(OrderContext ctx) {
-
-			String name = ctx.NAME().getText();
-			String by = ctx.by == null ? "asc" : ctx.by.getText();
-			if (X.isIn(by, "asc")) {
-				q.sort(name);
-			} else {
-				q.sort(name, -1);
+			// 4. 解析GROUP BY
+			GroupContext groupCtx = ctx.group();
+			if (groupCtx != null) {
+				String groupStr = groupCtx.accept(new ColumnVisitor());
+				query.groupby(groupStr);
 			}
-			return q;
 
+			// 5. 解析ORDER BY（修复原循环遍历BUG）
+			List<OrderContext> orderList = ctx.order();
+			if (orderList != null && !orderList.isEmpty()) {
+				for (OrderContext orderCtx : orderList) {
+					String field = unwrapName(orderCtx.NAME().getText());
+					if (orderCtx.DESC() == null) {
+						query.sort(field);
+					} else {
+						query.sort(field, -1);
+					}
+				}
+			}
+
+			// 6. OFFSET 分页偏移
+			if (ctx.offset() != null) {
+				long offsetVal = X.toLong(ctx.offset().LONG().getText());
+				query.offset((int) offsetVal);
+			}
+
+			// 7. LIMIT 条数限制
+			if (ctx.limit() != null) {
+				long limitVal = X.toLong(ctx.limit().LONG().getText());
+				query.limit((int) limitVal);
+			}
+
+			return query;
 		}
 
-		@Override
-		public W visitOffset(OffsetContext ctx) {
-			q.offset(X.toInt(ctx.LONG().getText()));
-			return q;
-		}
+		/**
+		 * 解析表名，兼容 NAME / STRING / STRING.STRING 三级格式
+		 */
+		private String resolveTableName(TablenameContext ctx) {
 
-		@Override
-		public W visitLimit(LimitContext ctx) {
-			q.limit(X.toInt(ctx.LONG().getText()));
-			return q;
+			List<TerminalNode> nameNodes = ctx.NAME();
+			if (nameNodes.size() == 1) {
+				return unwrapName(nameNodes.get(0).getText());
+			} else if (nameNodes.size() == 2) {
+				// 处理 `aaa`.`y1_data` 两个NAME用点连接
+				String db = unwrapName(nameNodes.get(0).getText());
+				String tbl = unwrapName(nameNodes.get(1).getText());
+				return db + "." + tbl;
+			}
+
+			List<TerminalNode> strNodes = ctx.STRING();
+			if (strNodes.size() == 1) {
+				return unwrapString(strNodes.get(0).getText());
+			} else if (strNodes.size() == 2) {
+				return unwrapString(strNodes.get(0).getText()) + "." + unwrapString(strNodes.get(1).getText());
+			}
+			return "";
 		}
 
 	}
 
+	// ===================== 字段列访问器：解析 select a,b,c / count(*) =====================
+	static class ColumnVisitor extends SqlBaseVisitor<String> {
+
+		@Override
+		public String visitColumns(ColumnsContext ctx) {
+			List<String> colList = new ArrayList<>();
+			for (ColumnItemContext item : ctx.columnItem()) {
+				if (item.COUNT() != null) {
+					if (item.columnItem() != null) {
+						colList.add("count(" + unwrapName(item.columnItem().getText()) + ")");
+					} else {
+						colList.add("count(*)");
+					}
+				} else if (item.NAME() != null) {
+					colList.add(unwrapName(item.NAME().getText()));
+				} else if (item.HELP() != null) {
+					colList.add(
+							"""
+									类SQL语句，支持简单SQL，不支持统计函数、表链接和嵌套；
+									select * from tablename where a=1 and (b between 1 and 2) and (c=1 or c>2) and d in (1,2,3) and e in [1,2,3] and  (not f like 'a') group by `g` order by `c` offset 1 limit 10;
+									函数：
+										count(*) - 条数；
+										todate(time, [format]) - 转换为时间格式；
+											todate(now()) - 时间对象；
+											todate('2026-01-01 10:11', 'yyyy-MM-dd HH:mm') - 时间对象；
+										today() - 今天凌晨0点时间, 整数；
+											today() - 今天凌晨0点毫秒整数；
+											today(‘yyyyMMdd’) - 20260606；
+										now() - 当前时间, 整数；
+											now() - 当前时间毫秒整数；
+											now('yyyyMMddHHmmss') - 20260606100101；
+										tostring() - 对象/浮点/整数转换为字符串；
+											tostring(now())
+										todouble() - 对象/浮点/字符串/整数转换为双精度；
+											todouble('11.11') - 11.11；
+											todouble('11.11', '.1') - 11.1, 保留一位小数；
+										tofloat() - 对象/浮点/字符串/整数转换为浮点；
+											tofloat('11.11') - 11.11；
+											tofloat('11.11', '.1') - 11.1, 保留一位小数；
+										tolong() - 对象/浮点/字符串/整数转换为整数；
+											tolong('11.111') - 11；
+											tolong('一贰') - 12；
+											tolong(now(), 'yyyyMMdd') - 20260606；
+										uuid() - 生成新的uuid，或字符串转换为uuid对象；
+											uuid() - 生成新的uuid；
+											uuid('ae87e44c-9f07-4fd9-a164-cb8111bcf0a9') - 转换字符串为uuid对象；
+										objectid() - 生成新的objectid对象，或转换字符串为objectid对象；
+											objectid() - 生成新的objectid；
+											objectid('6a8b9194ec71df4b5c0250b2') - 转换字符串为objectid对象；
+										format() - 格式化时间对象为字符串；
+											format(now(), 'yyyy-MM-dd') - '20260606'；
+										""");
+				} else if (item.val() != null) {
+					Object valObj = item.val().accept(new ValVisitor());
+					colList.add(String.valueOf(valObj));
+				}
+			}
+			if (colList.isEmpty()) {
+				return "*";
+			}
+			return String.join(",", colList);
+		}
+
+		@Override
+		public String visitGroup(GroupContext ctx) {
+			List<String> groupList = new ArrayList<>();
+			for (TerminalNode nameNode : ctx.NAME()) {
+				groupList.add(unwrapName(nameNode.getText()));
+			}
+			return String.join(",", groupList);
+		}
+	}
+
+	// ===================== 条件表达式访问器：解析 AND/OR/BETWEEN/IN/LIKE/NOT
+	static class ExprVisitor extends SqlBaseVisitor<W> {
+
+		private final ValVisitor valVisitor = new ValVisitor();
+
+		@Override
+		public W visitExprParen(ExprParenContext ctx) {
+			Object q = ctx.expr().accept(this);
+			if (q instanceof W) {
+				return (W) q;
+			}
+			return W.create();
+		}
+
+		@Override
+		public W visitExprNot(ExprNotContext ctx) {
+			Object q = ctx.expr().accept(this);
+			if (q instanceof W) {
+				return ((W) q).not();
+			}
+			return W.create();
+		}
+
+		@Override
+		public W visitExprBetween(ExprBetweenContext ctx) {
+			W q = W.create();
+			String field = unwrapName(ctx.NAME().getText());
+			Object v1 = ctx.val(0).accept(valVisitor);
+			Object v2 = ctx.val(1).accept(valVisitor);
+
+			if (X.compareTo(v1, v2) > 1) {
+				Object temp = v1;
+				v1 = v2;
+				v2 = temp;
+			}
+
+			q.and(field, v1, W.OP.gte);
+			q.and(field, v2, W.OP.lte);
+			return q;
+		}
+
+		@Override
+		public W visitExprIn(ExprInContext ctx) {
+			W q = W.create();
+			String field = unwrapName(ctx.NAME().getText());
+			InValueListContext valNodes = ctx.inValueList();
+			if (valNodes != null) {
+				var l1 = valNodes.val();
+				for (var val : l1) {
+					var v = val.accept(valVisitor);
+					q.or(field, v);
+				}
+			}
+			return q;
+		}
+
+		@Override
+		public W visitExprCompare(ExprCompareContext ctx) {
+
+			String opRaw = ctx.op.getText().toUpperCase();
+			String field = unwrapName(ctx.NAME().getText());
+
+			// 获取 valOrList 下所有 val 节点
+			List<ValContext> valCtxList = ctx.valOrList().val();
+			// 先解析所有值
+			List<Object> values = new ArrayList<>();
+			for (ValContext vCtx : valCtxList) {
+				Object v = vCtx.accept(valVisitor);
+				values.add(v);
+			}
+
+			// 场景1：单个值，走原有比较逻辑
+			if (values.size() == 1) {
+				W.Entity entity = new W.Entity();
+				entity.name = field;
+				entity.value = values.get(0);
+				switch (opRaw) {
+				case "LIKE":
+					entity.op = W.OP.like;
+					break;
+				case ">":
+					entity.op = W.OP.gt;
+					break;
+				case ">=":
+					entity.op = W.OP.gte;
+					break;
+				case "<":
+					entity.op = W.OP.lt;
+					break;
+				case "<=":
+					entity.op = W.OP.lte;
+					break;
+				case "!=":
+				case "<>":
+					entity.op = W.OP.neq;
+					break;
+				case "=":
+				case "==":
+				default:
+					entity.op = W.OP.eq;
+					break;
+				}
+				return entity;
+			}
+
+			// 场景2：多个值 a=1|2|3 等价于 a IN (1,2,3)，仅对 = / == 生效
+			if ("=".equals(opRaw) || "==".equals(opRaw)) {
+				W q = W.create();
+				for (Object val : values) {
+					q.or(field, val);
+				}
+				return q;
+			}
+
+			// 场景3：多个值 a like '1'|'2'|'4'
+			if ("LIKE".equals(opRaw)) {
+				W q = W.create();
+				for (Object val : values) {
+					q.or(field, val, W.OP.like);
+				}
+				return q;
+			}
+
+			// 其他运算符（> < >= <= != LIKE）不支持多值|列表，抛异常
+			throw new RuntimeException("Operator " + opRaw + " does not support | multi-value list, only =/== allowed");
+
+		}
+
+		@Override
+		public W visitExprAnd(ExprAndContext ctx) {
+			W q = W.create();
+			for (ExprContext child : ctx.expr()) {
+				Object childObj = child.accept(this);
+				if (childObj instanceof W) {
+					q.and((W) childObj);
+				}
+			}
+			return q;
+		}
+
+		@Override
+		public W visitExprOr(ExprOrContext ctx) {
+			W q = W.create();
+			for (ExprContext child : ctx.expr()) {
+				Object childObj = child.accept(this);
+				if (childObj instanceof W) {
+					q.or((W) childObj);
+				}
+			}
+			return q;
+		}
+		
+	}
+
+	// ===================== 值计算访问器：四则运算、函数、时间转换、类型解析 =====================
 	static class ValVisitor extends SqlBaseVisitor<Object> {
 
 		@Override
 		public Object visitVal(ValContext ctx) {
-
-			// val: STRING ('|' FLOAT)*
-			// | FLOAT ('|' FLOAT)*
-			// | LONG ('|' LONG)*
-			// | null
-			// | time
-			// | todate
-			// | today
-			// | now
-			// | uuid
-			// | objectid
-			// | val op=('+'|'-'|'*'|'/') val
-			// ;
-
-			{
-				List<TerminalNode> l1 = ctx.STRING();
-				if (l1 != null && l1.size() > 0) {
-					List<String> l2 = new ArrayList<String>();
-					for (TerminalNode t : l1) {
-						String s = t.getText();
-						s = s.substring(1, s.length() - 1);
-						l2.add(s);
-					}
-					return l2.toArray();
-				}
+			// 1. 字符串 'a'|'b'
+			TerminalNode str = ctx.STRING();
+			if (str != null) {
+				return unwrapString(str.getText());
 			}
 
-			{
-				List<TerminalNode> l1 = ctx.LONG();
-				if (l1 != null && l1.size() > 0) {
-					if (l1.size() > 1) {
-						return X.asList(l1, t1 -> X.toLong(((TerminalNode) t1).getText()));
-					} else {
-						return X.toLong(l1.get(0).getText());
-					}
-				}
+			// 2. LONG 1
+			TerminalNode lon = ctx.LONG();
+			if (lon != null) {
+				return X.toLong(lon.getText());
 			}
 
-			{
-				List<TerminalNode> l1 = ctx.FLOAT();
-				if (l1 != null && l1.size() > 0) {
-					if (l1.size() > 1) {
-						return X.asList(l1, t1 -> X.toDouble(((TerminalNode) t1).getText()));
-					} else {
-						return X.toDouble(l1.get(0).getText());
-					}
-				}
+			// 3. FLOAT 1.1
+			TerminalNode flo = ctx.FLOAT();
+			if (flo != null) {
+				return X.toFloat(flo.getText());
 			}
 
-			{
-				NullContext n1 = ctx.null_();
-				if (n1 != null) {
-					return n1.accept(this);
-				}
+			// 4. NULL
+			if (ctx.NULL() != null) {
+				return null;
 			}
 
-			{
-				TimeContext tc = ctx.time();
-				if (tc != null) {
-					return tc.accept(this);
+			// 5. 内置函数优先级
+			if (ctx.format() != null)
+				return visitFormat(ctx.format());
+			if (ctx.todate() != null)
+				return visitTodate(ctx.todate());
+			if (ctx.tostring() != null)
+				return visitTostring(ctx.tostring());
+			if (ctx.tolong() != null)
+				return visitTolong(ctx.tolong());
+			if (ctx.uuid() != null)
+				return visitUuid(ctx.uuid());
+			if (ctx.objectid() != null)
+				return visitObjectid(ctx.objectid());
+			if (ctx.time() != null)
+				return visitTime(ctx.time());
+			if (ctx.todouble() != null)
+				return visitTodouble(ctx.todouble());
+			if (ctx.tofloat() != null)
+				return visitTofloat(ctx.tofloat());
+
+			// 6. 四则运算 val op val
+			List<ValContext> valChildren = ctx.val();
+			if (valChildren != null && valChildren.size() == 2) {
+				Token opToken = ctx.op;
+				if (opToken == null) {
+					throw new RuntimeException("Missing operator for calculate");
 				}
+				String op = opToken.getText();
+				Object v1 = valChildren.get(0).accept(this);
+				Object v2 = valChildren.get(1).accept(this);
+
+				return calculateNumber(v1, v2, op);
 			}
 
-			{
-				TodateContext tc = ctx.todate();
-				if (tc != null) {
-					return tc.accept(this);
-				}
-			}
-
-			{
-				TostringContext tc = ctx.tostring();
-				if (tc != null) {
-					return tc.accept(this);
-				}
-			}
-
-			{
-				TolongContext tc = ctx.tolong();
-				if (tc != null) {
-					return tc.accept(this);
-				}
-			}
-
-			{
-				UuidContext uc = ctx.uuid();
-				if (uc != null) {
-					return uc.accept(this);
-				}
-			}
-
-			{
-				ObjectidContext oc = ctx.objectid();
-				if (oc != null) {
-					return oc.accept(this);
-				}
-			}
-
-			{
-				TodayContext t1 = ctx.today();
-				if (t1 != null) {
-					return t1.accept(this);
-				}
-			}
-
-			{
-				NowContext t1 = ctx.now();
-				if (t1 != null) {
-					return t1.accept(this);
-				}
-			}
-
-			// val op=('+'|'-'|'*'|'/') val
-			List<ValContext> l2 = ctx.val();
-			if (l2 != null && l2.size() > 1) {
-				Token op = ctx.op;
-				if (op == null) {
-					throw new RuntimeException("operation (*/+-) missed!");
-				}
-				String o = op.getText();
+			// 7. 正负号 +val / -val
+			Token fgToken = ctx.fg;
+			if (fgToken != null) {
 				Object v1 = ctx.val(0).accept(this);
-				Object v2 = ctx.val(1).accept(this);
-				if (X.isSame(o, "+")) {
-					// 1 + 1
-					if (v1 instanceof Integer && v2 instanceof Number) {
-						return X.toInt(v1) + X.toInt(v2);
-					} else if (v1 instanceof Long && v2 instanceof Number) {
-						return X.toLong(v1) + X.toLong(v2);
-					}
-				} else if (X.isSame(o, "-")) {
-					// 1 - 1
-					if (v1 instanceof Integer && v2 instanceof Number) {
-						return X.toInt(v1) - X.toInt(v2);
-					} else if (v1 instanceof Long && v2 instanceof Number) {
-						return X.toLong(v1) - X.toLong(v2);
-					}
-				} else if (X.isSame(o, "*")) {
-					// 1 * 1
-					if (v1 instanceof Integer && v2 instanceof Number) {
-						return X.toInt(v1) - X.toInt(v2);
-					} else if (v1 instanceof Long && v2 instanceof Number) {
-						return X.toLong(v1) - X.toLong(v2);
-					}
-				} else if (X.isSame(o, "/")) {
-					// 1/1
-					if (v1 instanceof Integer && v2 instanceof Number) {
-						return X.toInt(v1) / X.toInt(v2);
-					} else if (v1 instanceof Long && v2 instanceof Number) {
-						return X.toLong(v1) / X.toLong(v2);
-					}
+				String fg = fgToken.getText();
+				if ("-".equals(fg)) {
+					if (v1 instanceof Long)
+						return -((Long) v1);
+					if (v1 instanceof Double)
+						return -((Double) v1);
+					if (v1 instanceof Float)
+						return -((Float) v1);
+
+					throw new RuntimeException(
+							"Negative sign unsupported type: " + v1.getClass().getName() + ", val=" + v1);
 				}
-				throw new RuntimeException("bad operation(" + o + ")!");
+				return v1;
 			}
 
-			{
-				Token fg = ctx.fg;
-				if (fg != null) {
-					ValContext val = ctx.val(0);
-					String s = fg.getText();
-					if (X.isSame(s, "+")) {
-						return val.accept(this);
-					} else if (X.isSame(s, "-")) {
-						Object o = val.accept(this);
-						if (o instanceof Long) {
-							return -X.toLong(o);
-						} else if (o instanceof Double) {
-							return -X.toDouble(o);
-						} else {
-							throw new RuntimeException("bad flag [" + s + "] on " + o);
-						}
-					}
-				}
-			}
 			return null;
 		}
 
-		@Override
-		public Object visitUuid(UuidContext ctx) {
-			TerminalNode str = ctx.STRING();
-			if (str == null) {
-				return UUID.randomUUID();
-			}
+		/**
+		 * 统一数字四则运算（修复原*写成-的致命BUG）
+		 */
+		private Object calculateNumber(Object o1, Object o2, String op) {
+			long l1 = X.toLong(o1);
+			long l2 = X.toLong(o2);
+			double d1 = X.toDouble(o1);
+			double d2 = X.toDouble(o2);
 
-			String s = str.getText();
-			return UUID.fromString(s.substring(1, s.length() - 1));
-		}
+			boolean isLong = (o1 instanceof Long || o1 instanceof Integer)
+					&& (o2 instanceof Long || o2 instanceof Integer);
 
-		@Override
-		public Object visitObjectid(ObjectidContext ctx) {
-			String s = ctx.STRING().getText();
-			return new ObjectId(s.substring(1, s.length() - 1));
-		}
-
-		@Override
-		public Object visitTodate(TodateContext ctx) {
-
-			TerminalNode t = ctx.STRING();
-			if (t != null) {
-				String format = t.getText();
-				format = format.substring(1, format.length() - 1);
-
-				TimeContext t2 = ctx.time();
-				String time = t2.accept(this).toString();
-				if (time.startsWith("'") || time.startsWith("\"")) {
-					// '2019-01-01'
-					time = time.substring(1, time.length() - 1);
-					return new Date(lang.parse(time, format));
+			switch (op) {
+			case "+":
+				return isLong ? l1 + l2 : d1 + d2;
+			case "-":
+				return isLong ? l1 - l2 : d1 - d2;
+			case "*":
+				return isLong ? l1 * l2 : d1 * d2;
+			case "/":
+				if (isLong) {
+					if (l2 == 0)
+						throw new ArithmeticException("Divide by zero");
+					return l1 / l2;
 				} else {
-					// 20190101
-					return new Date(lang.parse(time, format));
+					if (Math.abs(d2) < 1e-9)
+						throw new ArithmeticException("Divide by zero");
+					return d1 / d2;
 				}
-			} else {
-				TimeContext t2 = ctx.time();
-				Object time = t2.accept(this);
-				return new Date(X.toLong(time));
+			default:
+				throw new RuntimeException("Unsupported operator: " + op);
+			}
+		}
+
+		/**
+		 * FORMAT函数 数值保留小数 / 时间格式化
+		 */
+		@Override
+		public Object visitFormat(FormatContext ctx) {
+			Object valObj = ctx.val().accept(this);
+			String fmtRaw = unwrapString(ctx.STRING().getText());
+
+			// 数字格式化 format(123.456, ".2")
+			if (valObj instanceof Double || valObj instanceof Float) {
+				if (fmtRaw.startsWith(".")) {
+					int scale = X.toInt(fmtRaw.substring(1));
+					return BigDecimal.valueOf(X.toDouble(valObj)).setScale(scale, RoundingMode.HALF_UP).doubleValue();
+				}
 			}
 
+			// 时间戳格式化
+			if (valObj instanceof Long) {
+				return lang.format(valObj, fmtRaw);
+			} else if (valObj instanceof Date) {
+				return lang.format(((Date) valObj).getTime(), fmtRaw);
+			}
+			return valObj;
+		}
+
+		/**
+		 * TODATE 字符串转日期时间戳
+		 */
+		@Override
+		public Date visitTodate(TodateContext ctx) {
+
+			TimeContext timeCtx = ctx.time();
+			Object timeObj = timeCtx.accept(this);
+			TerminalNode strNode = ctx.STRING();
+
+			// TODATE(time, 'yyyyMMdd')
+			if (strNode != null) {
+				String fmt = unwrapString(strNode.getText());
+				String timeStr = String.valueOf(timeObj);
+				timeStr = unwrapString(timeStr);
+				long ts = lang.parse(timeStr, fmt);
+				return new Date(ts);
+			} else {
+				// TODATE(timestamp)
+				return new Date(X.toLong(timeObj));
+			}
 		}
 
 		@Override
-		public Object visitTostring(TostringContext ctx) {
-			// tostring: 'tostring(' val (',' val)* ')';
-			List<ValContext> l1 = ctx.val();
+		public String visitTostring(TostringContext ctx) {
 			StringBuilder sb = new StringBuilder();
-			if (l1 != null) {
-				for (ValContext e : l1) {
-					Object o = e.accept(this);
-					if (o instanceof List) {
-						X.asList(o, s -> sb.append(s));
-					} else {
-						sb.append(o);
-					}
-				}
+			ValContext v = ctx.val();
+			if (v != null) {
+				Object obj = v.accept(this);
+				sb.append(obj);
 			}
 			return sb.toString();
 		}
 
 		@Override
-		public Object visitTolong(TolongContext ctx) {
-			ValContext v = ctx.val();
-			if (v != null) {
-				Object o = v.accept(this);
-				if (o instanceof Date) {
-					return ((Date) o).getTime();
+		public Long visitTolong(TolongContext ctx) {
+			Object obj = ctx.val().accept(this);
+			if (obj instanceof Date) {
+				long n = ((Date) obj).getTime();
+				if (ctx.STRING() != null) {
+					// 时间格式转换为长整型
+					// tolong(todate(now()), 'yyyyMMdd')
+					return X.toLong(lang.format(n, ctx.STRING().getText()));
 				}
-				return X.toLong(o);
+				return n;
 			}
-			return 0;
+
+			long n = X.toLong(obj);
+			if (ctx.STRING() != null) {
+				// 长整数转换为长整型
+				// tolong(now(), 'yyyyMMdd')
+				return X.toLong(lang.format(n, ctx.STRING().getText()));
+			}
+			return n;
 		}
 
 		@Override
-		public Object visitNull(NullContext ctx) {
-			return null;
+		public Float visitTofloat(TofloatContext ctx) {
+			Object obj = ctx.val().accept(this);
+			float d = X.toFloat(obj);
+			if (ctx.STRING() != null) {
+				// ".2"
+				String s = ctx.STRING().getText();
+				int i = s.indexOf(".");
+				if (i > -1) {
+					s = s.substring(i + 1).trim();
+				}
+				d = BigDecimal.valueOf(d).setScale(X.toInt(s), RoundingMode.HALF_UP).floatValue();
+			}
+			return d;
+		}
+
+		@Override
+		public Double visitTodouble(TodoubleContext ctx) {
+			Object obj = ctx.val().accept(this);
+			double d = X.toDouble(obj);
+			if (ctx.STRING() != null) {
+				// ".2"
+				String s = ctx.STRING().getText();
+				int i = s.indexOf(".");
+				if (i > -1) {
+					s = s.substring(i + 1).trim();
+				}
+				d = BigDecimal.valueOf(d).setScale(X.toInt(s), RoundingMode.HALF_UP).doubleValue();
+			}
+			return d;
+		}
+
+		@Override
+		public UUID visitUuid(UuidContext ctx) {
+			TerminalNode strNode = ctx.STRING();
+			if (strNode == null) {
+				return UUID.randomUUID();
+			}
+			String uuidStr = unwrapString(strNode.getText());
+			return UUID.fromString(uuidStr);
+		}
+
+		@Override
+		public Object visitObjectid(ObjectidContext ctx) {
+			if (ctx.STRING() == null) {
+				return new ObjectId();
+			}
+			String oidStr = unwrapString(ctx.STRING().getText());
+			return new ObjectId(oidStr);
 		}
 
 		@Override
 		public Object visitToday(TodayContext ctx) {
 
-			TodayContext t1 = ctx.today();
-			if (t1 != null) {
-				return t1.accept(this).toString();
-			} else {
-
-				TerminalNode format = ctx.STRING();
-				if (format == null) {
-					return Stat.today();
-				} else {
-					// today('yyyyMMdd')
-					String fmt = format.getText();
-					fmt = fmt.substring(1, fmt.length() - 1);
-					String time = lang.format(Stat.today(), fmt);
-					if (X.isNumber(time)) {
-						return X.toLong(time);
-					}
-					return time;
-				}
+			TerminalNode fmtNode = ctx.STRING();
+			long todayTs = Stat.today();
+			if (fmtNode == null) {
+				return todayTs;
 			}
+			String fmt = unwrapString(fmtNode.getText());
+			return lang.format(todayTs, fmt);
+
 		}
 
+		/**
+		 * NOW() 修复递归死循环
+		 */
 		@Override
 		public Object visitNow(NowContext ctx) {
+			// 递归嵌套直接返回原始时间戳，终止递归
+			long nowTs = Global.now();
 
-			NowContext t1 = ctx.now();
-			if (t1 != null) {
-				return t1.accept(this).toString();
-			} else {
-
-				TerminalNode format = ctx.STRING();
-				if (format == null) {
-					return System.currentTimeMillis();
-				} else {
-					// now('yyyyMMdd')
-					String fmt = format.getText();
-					fmt = fmt.substring(1, fmt.length() - 1);
-					String time = lang.format(System.currentTimeMillis(), fmt);
-					if (X.isNumber(time)) {
-						return X.toLong(time);
-					}
-					return time;
-				}
+			TerminalNode fmtNode = ctx.STRING();
+			if (fmtNode == null) {
+				// 返回长整数
+				return nowTs;
 			}
+			String fmt = unwrapString(fmtNode.getText());
+			return lang.format(nowTs, fmt);
 		}
 
+		/**
+		 * TIME 时间运算 支持 7d/2h 偏移
+		 */
 		@Override
 		public Object visitTime(TimeContext ctx) {
 
-			/**
-			 * today(...) <br>
-			 * 'string' <br>
-			 * long <br>
-			 * (time) <br>
-			 * () * () <br>
-			 * () / () <br>
-			 * () + () <br>
-			 * () - () <br>
-			 * () - TIME <br>
-			 * TIME=7d
-			 */
-
-			Token op = ctx.op;
-			if (op == null) {
-				TodayContext today = ctx.today();
-				if (today != null) {
-					return today.accept(this);
+			Token opToken = ctx.op;
+			// 无运算符，直接取基础值
+			if (opToken == null) {
+				if (ctx.today() != null)
+					return visitToday(ctx.today());
+				if (ctx.now() != null)
+					return visitNow(ctx.now());
+				if (ctx.STRING() != null) {
+					return unwrapString(ctx.STRING().getText());
 				}
-
-				// sting or long
-				TerminalNode t = ctx.STRING();
-				if (t != null) {
-					String s = t.getText();
-					return s.substring(1, s.length() - 1);
+				if (ctx.LONG() != null) {
+					return X.toLong(ctx.LONG().getText());
 				}
-
-				t = ctx.LONG();
-				if (t != null) {
-					return X.toLong(t.getText());
+				if (ctx.todate() != null) {
+					return visitTodate(ctx.todate()).getTime();
 				}
-
 				return ctx.time(0).accept(this);
 			}
 
-			Object v1 = ctx.time(0).accept(this);
-			String o = op.getText();
-			Object v2 = null;
+			// 带运算符 time +/- time / time +/- TIME(7d)
+			String op = opToken.getText();
+			Object left = ctx.time(0).accept(this);
+			Object right;
 
-			TerminalNode t1 = ctx.TIME();
-			if (t1 != null) {
-				String s1 = t1.getText();
-				long v = X.toLong(s1);
-				char d = s1.charAt(s1.length() - 1);
-				if (d == 'd' || d == 'D') {
-					v2 = v * X.ADAY;
-				} else if (d == 'h' || d == 'H') {
-					v2 = v * X.AHOUR;
-				} else if (d == 'm' || d == 'M') {
-					v2 = v * X.AMINUTE;
-				} else if (d == 's' || d == 'S') {
-					v2 = v * 1000;
+			TerminalNode timeUnitNode = ctx.TIME();
+			if (timeUnitNode != null) {
+				String unitText = timeUnitNode.getText();
+				long num = X.toLong(unitText.substring(0, unitText.length() - 1));
+				char unit = unitText.charAt(unitText.length() - 1);
+				switch (unit) {
+				case 'w':
+				case 'W':
+					right = num * X.AWEEK;
+					break;
+				case 'd':
+				case 'D':
+					right = num * X.ADAY;
+					break;
+				case 'h':
+				case 'H':
+					right = num * X.AHOUR;
+					break;
+				case 'm':
+				case 'M':
+					right = num * X.AMINUTE;
+					break;
+				case 's':
+				case 'S':
+					right = num * 1000L;
+					break;
+				default:
+					throw new RuntimeException("Unsupported time unit: " + unit + ", only support [wWdWhHmMsS]");
 				}
-
 			} else {
-				v2 = ctx.time(1).accept(this);
+				right = ctx.time(1).accept(this);
 			}
 
-			if (X.isSame(o, "+")) {
-				return X.toLong(v1) + X.toLong(v2);
-			} else if (X.isSame(o, "-")) {
-				return X.toLong(v1) - X.toLong(v2);
+			long lLeft = X.toLong(left);
+			long lRight = X.toLong(right);
+			if ("+".equals(op)) {
+				return lLeft + lRight;
+			} else if ("-".equals(op)) {
+				return lLeft - lRight;
 			}
-			throw new RuntimeException("bad operation (" + o + ")!");
+			throw new RuntimeException("Time expression only support + / -");
 		}
-
-	}
-
-	private static final String dump = "t___";
-
-	/**
-	 * @param sql
-	 * @return
-	 * @throws SQLException
-	 */
-	public static W where(String sql) throws SQLException {
-		if (X.isEmpty(sql)) {
-			return W.create();
-		}
-		try {
-			if (sql.toLowerCase().startsWith("order ")) {
-				return parse("select * from " + dump + " " + sql);
-			}
-			return parse("select * from " + dump + " where " + sql);
-		} catch (SQLException e) {
-			throw new SQLException(sql, e);
-		}
-	}
-
-	/**
-	 * @deprecated
-	 * @param sql
-	 * @return
-	 * @throws SQLException
-	 */
-	public static W where2W(String sql) throws SQLException {
-		return where(sql);
 	}
 
 }

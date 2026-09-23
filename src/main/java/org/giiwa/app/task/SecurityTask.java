@@ -23,12 +23,13 @@ import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Shell;
-import org.giiwa.task.SysTask;
+import org.giiwa.task.Task;
 
 /**
- * The Class SecurityTask.
+ * 安全日志监测任务
  */
-public class SecurityTask extends SysTask {
+@Deprecated
+public class SecurityTask extends Task {
 
 	/**
 	 * The Constant serialVersionUID.
@@ -50,12 +51,19 @@ public class SecurityTask extends SysTask {
 		return "gi.security";
 	}
 
+	@Override
+	public boolean isEnabled() {
+		if (Global.getInt("security.task", 0) == 0) {
+			return Boolean.FALSE;
+		}
+		return Boolean.TRUE;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.giiwa.core.task.Task.onExecute()
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onExecute() {
 

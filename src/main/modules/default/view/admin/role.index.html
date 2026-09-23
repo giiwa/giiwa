@@ -3,9 +3,7 @@
 
 <div class='tabs'>
 	<a href='/admin/role?__node=$!__node' class='selected'>$lang.get('a.role')</a>
-	#if($me.hasAccess('access.config.debug'))
-	<a href='/admin/role/access?__node=$!__node'>$lang.get('a.role.access')</a>
-	#end
+	<!-- a href='/admin/role/access?__node=$!__node'>$lang.get('a.role.access')</a-->
 </div>
 
 #set($edit = $me.hasAccess('access.config.admin','access.config.role.admin'))

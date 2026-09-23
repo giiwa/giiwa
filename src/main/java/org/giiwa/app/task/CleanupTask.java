@@ -52,7 +52,7 @@ import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
 
 /**
- * The Class CleanupTask.
+ * 资源清理任务
  */
 public class CleanupTask extends Task {
 
@@ -199,7 +199,7 @@ public class CleanupTask extends Task {
 
 					GLog.applog.info("sys", "cleanup", "end of cleanup, n= " + n);
 
-				} else {
+				} else if (n > 0) {
 					GLog.applog.info("sys", "cleanup", "no in cleantime, clean code only, n= " + n);
 				}
 

@@ -38,21 +38,21 @@ public class cpu extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
 		if (n != null) {
-			this.set("name", n.label);
+			this.set(X.NAME, n.label);
 			this.set("cores", n.cores);
 			this.set("ghz", n.ghz);
 		} else {
-			this.set("name", id);
+			this.set(X.NAME, id);
 		}
 
-		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created",
+		W q = W.create().and(X.NODE, id).and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED,
 				-1);
 		_CPU.Record.dao.optimize(q);
 
@@ -63,7 +63,7 @@ public class cpu extends portlet {
 
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/cpu.html");
 	}
@@ -71,18 +71,18 @@ public class cpu extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.get("id");
+		String id = this.get(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 
-		int hours = this.getInt("n", 1);
+		int hours = this.getInt(X.N, 1);
 
 		Node n = Node.dao.load(id);
 
-		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR * hours, W.OP.gte)
-				.sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.CREATED, Global.now() - X.AHOUR * hours, W.OP.gte)
+				.sort(X.CREATED, -1);
 
 		Beans<_CPU.Record> bs = _CPU.Record.dao.load(q, 0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
@@ -92,7 +92,7 @@ public class cpu extends portlet {
 			Collections.reverse(bs);
 
 			JSON p = JSON.create();
-			p.append("name", (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("color", "#860606");
+			p.append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("color", "#860606");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getUsage()));
@@ -100,7 +100,7 @@ public class cpu extends portlet {
 			p.append("data", l1);
 
 			this.send(JSON.create().append(X.STATE, 200)
-					.append("name", (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("temp", temp)
+					.append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("temp", temp)
 					.append("data", Arrays.asList(p)));
 			return;
 		}
@@ -112,7 +112,7 @@ public class cpu extends portlet {
 
 		long time = Global.now() - X.ADAY * 2;
 
-		String id = this.get("id");
+		String id = this.get(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -120,11 +120,11 @@ public class cpu extends portlet {
 		Node n = Node.dao.load(id);
 		if (n != null) {
 			this.set("cores", n.cores);
-			this.set("name", n.label);
+			this.set(X.NAME, n.label);
 			this.set("ghz", n.ghz);
 		}
 
-		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1);
 
 		Beans<_CPU.Record> bs = _CPU.Record.dao.load(q, 0, 24 * 60 * 2);
 
@@ -133,7 +133,7 @@ public class cpu extends portlet {
 			this.set("temp", bs.get(0).temp);
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/cpu.more.html");
 

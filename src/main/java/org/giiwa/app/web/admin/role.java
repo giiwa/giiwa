@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.giiwa.bean.*;
+import org.giiwa.bean.User.UserRole;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
@@ -47,7 +48,7 @@ public class role extends Controller {
 	public void create() {
 		if (method.isPost()) {
 
-			String name = this.getString("name");
+			String name = this.getString(X.NAME);
 			String memo = this.getString("memo");
 			String url = this.getHtml("url");
 			String menu = this.getHtml("menu");
@@ -103,7 +104,7 @@ public class role extends Controller {
 		this.send(jo);
 	}
 
-	@Path(path = "cleanup", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "cleanup", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void cleanup() {
 
 		Map<String, List<Access>> m1 = Access.load();
@@ -132,13 +133,13 @@ public class role extends Controller {
 	public void edit() {
 		if (method.isPost()) {
 
-			long id = this.getLong("id");
-			String name = this.getString("name");
+			long id = this.getLong(X.ID);
+			String name = this.getString(X.NAME);
 			Role r = Role.dao.load(id);
 			if (r != null) {
 
 				if (Role.dao.update(id,
-						V.create("name", name).append("seq", this.getInt("seq")).append("url", this.getHtml("url"))
+						V.create(X.NAME, name).append("seq", this.getInt("seq")).append("url", this.getHtml("url"))
 								.append("menu", this.getHtml("menu")).append("memo", this.getString("memo"))) > 0) {
 
 					String s = this.getHtml("access");
@@ -156,7 +157,7 @@ public class role extends Controller {
 
 		} else {
 
-			long id = this.getLong("id");
+			long id = this.getLong(X.ID);
 			Role r = Role.dao.load(id);
 			this.set("r", r);
 
@@ -177,14 +178,20 @@ public class role extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.role.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.role.admin", oplog = true, loglevel="warn")
 	public void delete() {
-		String ids = this.getString("id");
+		String ids = this.getString(X.ID);
 		int updated = 0;
 		if (ids != null) {
 			String[] ss = ids.split(",");
 			for (String s : ss) {
 				long id = X.toLong(s);
+				if (UserRole.dao.exists2(W.create().and("rid", id))) {
+					// 如果存在，不能删除
+					this.set(X.ERROR, lang.get("role.used"));
+					onGet();
+					return;
+				}
 				Role r = Role.dao.load(id);
 				int i = Role.dao.delete(id);
 				if (i > 0) {
@@ -212,8 +219,8 @@ public class role extends Controller {
 	@Path(login = true, access = "access.config.admin|access.config.role.admin")
 	public void onGet() {
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
 		Beans<Role> bs = Role.load(s, n);
 		bs.count();
@@ -223,10 +230,10 @@ public class role extends Controller {
 		this.show("/admin/role.index.html");
 	}
 
-	@Path(path = "access", login = true, access = "access.config.debug")
+	@Path(path = "access", login = true, access = "access.config.admin")
 	public void access() {
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
 		Beans<Access> bs = Access.dao.load(W.create().sort(X.ID, 1), s, n);
 		bs.count();
@@ -236,9 +243,9 @@ public class role extends Controller {
 		this.show("/admin/role.access.html");
 	}
 
-	@Path(path = "accessdelete", login = true, access = "access.config.debug")
+	@Path(path = "accessdelete", login = true, access = "access.config.admin")
 	public void accessdelete() {
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		Access.dao.delete(id);
 
 		this.send(JSON.create().append(X.STATE, 200));

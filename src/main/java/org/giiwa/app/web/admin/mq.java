@@ -36,10 +36,10 @@ public class mq extends setting {
 	 */
 	@Path(path = "log", login = true, access = "access.config.admin")
 	public void log() {
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
-		W q = W.create().and("model", "admin.mq").sort("created", -1);
+		W q = W.create().and("model", "admin.mq").sort(X.CREATED, -1);
 
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
 		this.pages(bs, s, n);
@@ -50,14 +50,20 @@ public class mq extends setting {
 	public void set() {
 		Global.setConfig("mq.type", this.getString("mq.type"));
 
-		Global.setConfig("activemq.url", this.getString("activemq.url"));
-		Global.setConfig("activemq.user", this.getString("activemq.user"));
-		Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
+//		Global.setConfig("activemq.url", this.getString("activemq.url"));
+//		Global.setConfig("activemq.user", this.getString("activemq.user"));
+//		Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
 
 //		Global.setConfig("dubbomq.url", this.getString("dubbomq.url"));
-		Global.setConfig("rocketmq.url", this.getString("rocketmq.url"));
-		// Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
-		// Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
+//		Global.setConfig("rocketmq.url", this.getString("rocketmq.url"));
+
+		Global.setConfig("rabbitmq.url", this.getString("rabbitmq.url"));
+		Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
+		Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
+
+		Global.setConfig("redismq.url", this.getString("redismq.url"));
+		Global.setConfig("redismq.user", this.getString("redismq.user"));
+		Global.setConfig("redismq.passwd", this.getString("redismq.passwd"));
 
 //		Global.setConfig("kafkamq.url", this.getString("kafkamq.url"));
 //		Global.setConfig("zoo.url", this.getString("zoo.url"));

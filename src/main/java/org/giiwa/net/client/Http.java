@@ -14,14 +14,18 @@
 */
 package org.giiwa.net.client;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -35,9 +39,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -45,18 +47,22 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Temp;
+import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.MD5;
 import org.giiwa.dao.Comment;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
-import org.giiwa.misc.MD5;
 import org.giiwa.misc.StringFinder;
 import org.giiwa.misc.Url;
 import org.giiwa.task.Console;
+import org.giiwa.task.Consumer;
+import org.giiwa.task.Task;
 import org.giiwa.web.QueryString;
+import org.jsoup.nodes.Element;
 
 import okhttp3.Authenticator;
 import okhttp3.CookieJar;
@@ -68,10 +74,15 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.MultipartBody.Part;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okhttp3.Route;
+import okio.BufferedSink;
+import okio.BufferedSource;
+import okio.Okio;
+import okio.Source;
 
 /**
  * http utils
@@ -102,16 +113,31 @@ public final class Http {
 	 * @return
 	 */
 	public Http timeout(long timeout) {
-		if (timeout > 0) {
-			builder.callTimeout(timeout, TimeUnit.MILLISECONDS);
-			builder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
-			builder.writeTimeout(timeout, TimeUnit.MILLISECONDS);
-			builder.readTimeout(timeout, TimeUnit.MILLISECONDS);
+		if (timeout <= 0) {
+			timeout = X.AMINUTE;
 		}
+		builder.callTimeout(timeout, TimeUnit.MILLISECONDS);
+		builder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
+		builder.writeTimeout(timeout, TimeUnit.MILLISECONDS);
+		builder.readTimeout(timeout, TimeUnit.MILLISECONDS);
+
 		client = builder.build();
 		return this;
 	}
 
+	public Http protocol(Protocol protocol) {
+		builder.protocols(java.util.Collections.singletonList(protocol));
+		return this;
+	}
+
+	/**
+	 * 设置代理
+	 * 
+	 * @param proxy  - ip:port
+	 * @param user   - 代理账户
+	 * @param passwd - 账户密码
+	 * @return this
+	 */
 	public Http proxy(String proxy, String user, String passwd) {
 		if (X.isEmpty(proxy)) {
 			// clean proxy
@@ -145,6 +171,12 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 设置代理
+	 * 
+	 * @param proxy - ip:port
+	 * @return this
+	 */
 	public Http proxy(String proxy) {
 		return proxy(proxy, null, null);
 	}
@@ -172,7 +204,7 @@ public final class Http {
 				}
 			};
 
-			SSLContext sslContext = SSLContext.getInstance("SSL");
+			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(null, new TrustManager[] { manager }, new SecureRandom());
 			SSLSocketFactory socketFactory = sslContext.getSocketFactory();
 
@@ -188,9 +220,17 @@ public final class Http {
 				}
 
 			});
+			
+			builder.sslSocketFactory(socketFactory, manager);
+
 			if (!X.isEmpty(proxy)) {
 				builder.proxy(proxy);
 			}
+//			ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+//					.cipherSuites("TLS_RSA_WITH_AES_256_CBC_SHA256").tlsVersions(TlsVersion.TLS_1_2).build();
+//			builder.connectionSpecs(Arrays.asList(spec, ConnectionSpec.CLEARTEXT));
+			builder.hostnameVerifier((hostname, session) -> true);
+
 			builder.cookieJar(new CookieJar() {
 
 				@Override
@@ -214,13 +254,6 @@ public final class Http {
 					}
 				}
 
-			}).sslSocketFactory(socketFactory, manager).hostnameVerifier(new HostnameVerifier() {
-
-				@Override
-				public boolean verify(String hostname, SSLSession session) {
-					return true;
-				}
-
 			});
 
 			if (!X.isEmpty(user)) {
@@ -235,12 +268,17 @@ public final class Http {
 				});
 			}
 
-			if (timeout > 0) {
-				builder.callTimeout(timeout, TimeUnit.MILLISECONDS);
-				builder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
-				builder.writeTimeout(timeout, TimeUnit.MILLISECONDS);
-				builder.readTimeout(timeout, TimeUnit.MILLISECONDS);
+			if (timeout <= 0) {
+				timeout = X.AMINUTE;
 			}
+			if (timeout < 1000) {
+				log.warn("参数错误, timeout=" + timeout, new Exception("参数错误，毫秒timeout=" + timeout));
+			}
+
+			builder.callTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.writeTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.readTimeout(timeout, TimeUnit.MILLISECONDS);
 
 			client = builder.build();
 
@@ -258,27 +296,46 @@ public final class Http {
 	}
 
 	/**
-	 * create a default Http2 client
+	 * 新建Http对象
 	 * 
-	 * @return the Http2
+	 * @return 新Http
 	 */
 	public static Http create() {
 		return create(Global.getString("http.proxy", null), null, null);
 	}
 
+	/**
+	 * 新建对象，并使用代理
+	 * 
+	 * @param proxy - ip:port
+	 * @return 新Http对象
+	 */
 	public static Http create(String proxy) {
 		return create(proxy, null, null);
 	}
 
 	/**
-	 * create a Http2 with the proxy
+	 * 使用代理新建Http对象
 	 * 
-	 * @return the Http2
+	 * @param proxy  - ip:port
+	 * @param user   - 代理账号
+	 * @param passwd - 账号密码
+	 * @return 新Http对象
 	 */
 	public static Http create(String proxy, String user, String passwd) {
 		return create(proxy, user, passwd, X.AMINUTE);
 	}
 
+	/**
+	 * 
+	 * 使用代理新建Http对象
+	 * 
+	 * @param proxy   - ip:port
+	 * @param user    - 代理账号
+	 * @param passwd  - 账号密码
+	 * @param timeout - 请求超时，毫秒
+	 * @return 新Http对象
+	 */
 	public static Http create(String proxy, String user, String passwd, long timeout) {
 		if (X.isEmpty(proxy)) {
 			return new Http(null, user, passwd, timeout);
@@ -292,46 +349,163 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 发送GET请求
+	 * 
+	 * @param url - 链接
+	 * @return Response对象
+	 */
 	public Response get(String url) {
 		return get(url, null);
 	}
 
-	public Response get(String url, JSON head) {
+	public Response get(String url, JSON head, Consumer<String> func) {
+		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
 
-		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-				_UA());
-		request.addHeader("Connection", "close");
+		boolean hasAgent = false;
 
 		if (head != null) {
 			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					hasAgent = true;
+				}
 				request.addHeader(name, head.getString(name));
 			}
 		}
+		if (!hasAgent) {
+			request.addHeader("User-Agent", _UA());
+		}
+
+		okhttp3.Response response = null;
+
+		try {
+			response = client.newCall(request.get().build()).execute();
+			Response r = Response.create(response.code(), response.headers(), response);
+
+			BufferedSource source = response.body().source();
+			Task.schedule(t -> {
+				try {
+					// source.exhausted 有bug，3.16.4，死循环，高CPU
+					String line = null;
+					t.timeout = client.readTimeoutMillis();
+					while ((line = source.readUtf8Line()) != null) {
+						t.reset();
+						log.info("http.get, url=" + url + ", line=" + line);
+						func.accept(line);
+					}
+				} catch (Exception err) {
+					// ignore
+//					log.error(err.getMessage(), err);
+				} finally {
+					X.close(source);
+				}
+			});
+			return r;
+		} catch (Exception e) {
+			// be care for: okhttp4.12有bug， close的时候
+			log.error(url, e);
+			X.close(response);
+			return Response.create(e).url(url);
+		}
+
+	}
+
+	/**
+	 * 发送GET请求
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @return Response对象
+	 */
+	public Response get(String url, JSON head) {
+
+		Task curtask = Task.currentTask();
+		long oldtimeout = -1;
+		if (curtask != null) {
+			oldtimeout = curtask.timeout;
+			curtask.timeout = client.readTimeoutMillis();
+		}
+
+		boolean hasAgent = false;
+		boolean hasConnection = false;
 
 		okhttp3.Response response = null;
 
 		TimeStamp t = TimeStamp.create();
 		try {
+
+			/**
+			 * okhttp3 有bug， 这个地方可能出现高CPU，卡死， 不得不使用task.timeout 机制来防止卡死
+			 */
+			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
+
+			if (head != null) {
+				for (String name : head.keySet()) {
+					if (X.isSame(name, "user-agent")) {
+						hasAgent = true;
+					} else if (X.isSame(name, "connection")) {
+						hasConnection = true;
+					}
+					request.addHeader(name, head.getString(name));
+				}
+			}
+			if (!hasAgent) {
+				request.addHeader("User-Agent", _UA());
+			}
+			if (!hasConnection) {
+				request.addHeader("Connection", "close");
+			}
+
 			response = client.newCall(request.get().build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
-			log.error("cost=" + t.past() + ", url=" + url, e);
-			return Response.create(e);
+			String s = TimingCache.get(String.class, UID.id(url));
+			if (!X.isSame(s, url)) {
+				log.error("url=" + url + ", cost=" + t.past(), e);
+				TimingCache.set(String.class, UID.id(url), url, X.AMINUTE * 10);
+			} else {
+				log.error("url=" + url + ", error=" + e.getMessage());
+			}
+			return Response.create(e).url(url);
 		} finally {
 			X.close(response);
+			if (curtask != null) {
+				curtask.timeout = oldtimeout;
+			}
 		}
 	}
 
+	/**
+	 * 发送DELETE请求
+	 * 
+	 * @param url - 链接
+	 * @return Response对象
+	 */
 	public Response delete(String url) {
+		return delete(url, null);
+	}
+
+	public Response delete(String url, JSON body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
+
+		String s = "application/json; charset=utf-8";
+		MediaType _JSON = MediaType.parse(s);
+
+		request.addHeader("Content-Type", s);
 		request.addHeader("Connection", "close");
+		if (body == null || body.isEmpty()) {
+			request = request.delete();
+		} else {
+			RequestBody bb = RequestBody.create(body.toString(), _JSON);
+			request = request.delete(bb);
+		}
 
 		okhttp3.Response response = null;
 		try {
-			response = client.newCall(request.delete().build()).execute();
-			return Response.create(response);
+			response = client.newCall(request.build()).execute();
+			return Response.create(this, response);
 		} catch (Exception e) {
 			return Response.create(e);
 		} finally {
@@ -339,16 +513,34 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 发送POST请求
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response post(String url, JSON body) {
 		return form(url, body);
 	}
 
+	/**
+	 * 发送POST请求
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response form(String url, JSON body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
 
-		request.addHeader("Connection", "close");
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
 
 		if (body != null && !body.isEmpty()) {
 
@@ -377,7 +569,7 @@ public final class Http {
 
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -387,27 +579,49 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送POST请求， 使用application/json
+	 * 
+	 * @param url - 请求链接
+	 * @return
+	 */
+	public Response json(String url) {
+		return json(url, null);
+	}
+
+	/**
+	 * 发送POST请求， 使用application/json
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response json(String url, JSON body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
 
-		if (body != null && !body.isEmpty()) {
+		String s = "application/json; charset=utf-8";
+		MediaType _JSON = MediaType.parse(s);
 
-			String s = "application/json; charset=utf-8";
-			MediaType _JSON = MediaType.parse(s);
-
-			request.addHeader("Content-Type", s);
+		request.addHeader("Content-Type", s);
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
 			request.addHeader("Connection", "close");
+		}
+		if (body != null && !body.isEmpty()) {
 			RequestBody bb = RequestBody.create(body.toString(), _JSON);
 			request.post(bb);
+		} else {
+			request.post(RequestBody.create(new byte[0]));
 		}
 
 		okhttp3.Response response = null;
 
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -417,7 +631,72 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送POST请求，使用application/json
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response json(String url, JSON head, JSON body) {
+
+		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
+
+		String s = "application/json; charset=utf-8";
+		MediaType h = MediaType.parse(s);
+
+		String bodystring = X.EMPTY;
+		if (body != null && !body.isEmpty()) {
+			bodystring = body.toString();
+		}
+
+		request.addHeader("Content-Type", s);
+		boolean hasConnection = false;
+		boolean useragent = false;
+		if (head != null) {
+			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					useragent = true;
+				} else if (X.isSame(name, "connection")) {
+					hasConnection = true;
+				}
+				request.addHeader(name, head.getString(name));
+			}
+		}
+		if (!useragent) {
+			request.addHeader("User-Agent", _UA());
+		}
+		if (!hasConnection) {
+			request.addHeader("Connection", "close");
+		}
+
+		RequestBody bb = RequestBody.create(bodystring, h);
+		request.post(bb);
+
+		okhttp3.Response response = null;
+
+		try {
+			response = client.newCall(request.build()).execute();
+			return Response.create(this, response).url(url);
+		} catch (Exception e) {
+			log.error(url, e);
+			return Response.create(e);
+		} finally {
+			X.close(response);
+		}
+
+	}
+
+	/**
+	 * 发送POST， 以application/json
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @return Response对象
+	 */
+	public Response jsons(String url, JSON head, List<JSON> body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
@@ -430,12 +709,26 @@ public final class Http {
 			bodystring = body.toString();
 		}
 
-		request.addHeader("Connection", "close");
 		request.addHeader("Content-Type", s);
+//		boolean hasConnection = false;
+		boolean hasAgent = false;
 		if (head != null) {
 			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					hasAgent = true;
+//				} else if (X.isSame(name, "connection")) {
+//					hasConnection = true;
+				}
 				request.addHeader(name, head.getString(name));
 			}
+		}
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
+		if (!hasAgent) {
+			request.addHeader("User-Agent", _UA());
 		}
 
 		RequestBody bb = RequestBody.create(bodystring, h);
@@ -445,7 +738,7 @@ public final class Http {
 
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -455,25 +748,124 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送POST请求
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response post(String url, JSON head, JSON body) {
 		return post(url, head, body, null, null, null);
 	}
 
+	/**
+	 * 发送POST请求，并带附件
+	 * 
+	 * @param url      - 链接
+	 * @param head     - 头信息
+	 * @param body     - 参数
+	 * @param field    - 附件字段名
+	 * @param filename - 文件名
+	 * @param in       - 附件流
+	 * @return Response对象
+	 */
 	public Response post(String url, JSON head, JSON body, String field, String filename, InputStream in) {
 		return post(url, head, body, field, filename, in, false);
 	}
 
 	/**
-	 * post data, with resume upload binary
 	 * 
-	 * @param url      the server url
-	 * @param head     the head of post
-	 * @param body     the body parameter
-	 * @param field    the binary field
-	 * @param filename the binary filename
-	 * @param in       the binary
-	 * @param resume   true:resume
+	 * @param url
+	 * @param contentype
+	 * @param in         - 输入流
+	 * @param timeout    - 分钟
+	 * @param func       - 流式回调函数
 	 * @return
+	 */
+	public Response post(String url, String contentype, InputStream in, int timeout, Consumer<String> func) {
+
+		okhttp3.Response response = null;
+
+		try {
+
+			if (timeout > 60 * 24 * 7) {
+				log.warn("参数错误, timeout=" + timeout, new Exception("参数错误, 分钟timeout=" + timeout));
+				timeout /= X.AMINUTE;
+			}
+			if (timeout <= 0) {
+				// 1 minutes
+				timeout = 1;
+			}
+
+			OkHttpClient client = new OkHttpClient.Builder().connectTimeout(30, TimeUnit.SECONDS)
+					.writeTimeout(timeout, TimeUnit.MINUTES).readTimeout(timeout, TimeUnit.MINUTES)
+					.retryOnConnectionFailure(false).build();
+
+			RequestBody requestBody = new RequestBody() {
+				@Override
+				public MediaType contentType() {
+					return MediaType.get(contentype);
+				}
+
+				@Override
+				public void writeTo(BufferedSink sink) throws IOException {
+					try (Source source = Okio.source(in)) {
+						sink.writeAll(source); // 流式写入
+					}
+				}
+			};
+
+			Request.Builder request = new Request.Builder().url(url).post(requestBody);
+
+			if (keepalive) {
+				request.addHeader("Connection", "keep-alive");
+			} else {
+				request.addHeader("Connection", "close");
+			}
+
+			response = client.newCall(request.build()).execute();
+			Response r = Response.create(response.code(), response.headers(), response);
+
+			Reader r1 = response.body().charStream();
+
+			Task.schedule(t -> {
+				BufferedReader re = new BufferedReader(r1);
+				try {
+					String line = re.readLine();
+					while (line != null) {
+						func.accept(line);
+						line = re.readLine();
+					}
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				} finally {
+					X.close(re);
+				}
+			});
+			return r;
+		} catch (Exception e) {
+			log.error(url, e);
+			X.close(response);
+			return Response.create(e);
+		} finally {
+			X.close(in);
+		}
+
+	}
+
+	/**
+	 * 发送POST请求
+	 * 
+	 * @param url      - 链接
+	 * @param head     - 头信息
+	 * @param body     - 参数
+	 * @param field    - 附件文件字段名
+	 * @param filename - 文件名
+	 * @param in       - 输入流
+	 * @param resume   - True支持断点上传
+	 * @return Response对象
 	 */
 	public Response post(String url, JSON head, JSON body, String field, String filename, InputStream in,
 			boolean resume) {
@@ -521,17 +913,28 @@ public final class Http {
 
 			try {
 
-				Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent")
-						.addHeader("User-Agent", _UA());
+				Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
+
+				if (keepalive) {
+					request.addHeader("Connection", "keep-alive");
+				} else {
+					request.addHeader("Connection", "close");
+				}
 
 				String contentype = null;
+				boolean useragent = false;
 				if (head != null) {
 					for (String name : head.keySet()) {
 						if (X.isSame(name, "content-type")) {
 							contentype = head.getString(name);
+						} else if (X.isSame(name, "user-agent")) {
+							useragent = true;
 						}
 						request.addHeader(name, head.getString(name));
 					}
+				}
+				if (!useragent) {
+					request.addHeader("User-Agent", _UA());
 				}
 
 				if (contentype != null && contentype.toLowerCase().startsWith("application/json") && in == null) {
@@ -558,7 +961,7 @@ public final class Http {
 				}
 
 				response = client.newCall(request.build()).execute();
-				return Response.create(response).url(url);
+				return Response.create(this, response).url(url);
 			} catch (Exception e) {
 				log.error(url, e);
 				return Response.create(e);
@@ -575,15 +978,32 @@ public final class Http {
 
 		try {
 
-			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-					_UA());
-			request.addHeader("Connection", "close");
+			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
 
+			if (keepalive) {
+				request.addHeader("Connection", "keep-alive");
+			} else {
+				request.addHeader("Connection", "close");
+			}
+
+//			boolean hasConnection = false;
+			boolean useragent = false;
 			if (head != null) {
 				for (String name : head.keySet()) {
+					if (X.isSame(name, "user-agent")) {
+						useragent = true;
+//					} else if (X.isSame(name, "connection")) {
+//						hasConnection = true;
+					}
 					request.addHeader(name, head.getString(name));
 				}
 			}
+			if (!useragent) {
+				request.addHeader("User-Agent", _UA());
+			}
+//			if (!hasConnection) {
+//				request.addHeader("Connection", "close");
+//			}
 
 			MultipartBody.Builder bb = new MultipartBody.Builder();
 			bb.setType(MultipartBody.FORM);
@@ -606,7 +1026,7 @@ public final class Http {
 
 			response = client.newCall(request.build()).execute();
 
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			if (retries < 10) {
@@ -621,16 +1041,38 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送POST请求， 如果头信息不包含Content-Type，则以application/json方式
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response post(String url, JSON head, String body) {
 
-		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-				_UA());
+		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
+
+		boolean hasAgent = false;
+//		boolean hasConnection = false;
 		if (head != null) {
 			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					hasAgent = true;
+//				} else if (X.isSame(name, "connection")) {
+//					hasConnection = true;
+				}
 				request.addHeader(name, head.getString(name));
 			}
 		}
-		request.addHeader("Connection", "close");
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
+		if (!hasAgent) {
+			request.addHeader("User-Agent", _UA());
+		}
 
 		String contentype = "application/json";
 		if (head != null && head.containsKey("Content-Type")) {
@@ -646,7 +1088,7 @@ public final class Http {
 		okhttp3.Response response = null;
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -656,10 +1098,22 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送POST请求，以application/json方式
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response post(String url, String body) {
 		return post(url, "application/json", body);
 	}
 
+	/**
+	 * 清除所有临时Cookie
+	 * 
+	 * @return this
+	 */
 	public Http clear() {
 		if (cookies != null) {
 			cookies.clear();
@@ -667,12 +1121,24 @@ public final class Http {
 		return this;
 	}
 
+	/**
+	 * 发送POST请求
+	 * 
+	 * @param url        - 链接
+	 * @param contentype - Content-Type
+	 * @param body       - 参数
+	 * @return Response对象
+	 */
 	public Response post(String url, String contentype, String body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
 
-		request.addHeader("Connection", "close");
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
 
 		MediaType CC = MediaType.parse(contentype);
 
@@ -683,7 +1149,7 @@ public final class Http {
 		okhttp3.Response response = null;
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -693,24 +1159,38 @@ public final class Http {
 
 	}
 
+	/**
+	 * 发送PUT请求
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response put(String url, JSON body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
-		request.addHeader("Connection", "close");
+
+		String s = "application/json; charset=utf-8";
+		MediaType _JSON = MediaType.parse(s);
+
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
 
 		if (body != null && !body.isEmpty()) {
-			MultipartBody.Builder bb = new MultipartBody.Builder();
-			for (String key : body.keySet()) {
-				bb.addPart(Part.createFormData(key, body.getString(key)));
-			}
-			request.put(bb.build());
+			RequestBody bb = RequestBody.create(body.toString(), _JSON);
+			request.put(bb);
+		} else {
+			request.put(RequestBody.create(new byte[0]));
 		}
 
 		okhttp3.Response response = null;
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -719,11 +1199,22 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 发送PUT请求
+	 * 
+	 * @param url  - 链接
+	 * @param body - 参数
+	 * @return Response对象
+	 */
 	public Response put(String url, String body) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
-		request.addHeader("Connection", "close");
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
 
 		if (!X.isEmpty(body)) {
 			MediaType CC = MediaType.parse("application/json");
@@ -734,7 +1225,7 @@ public final class Http {
 		okhttp3.Response response = null;
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			log.error(url, e);
 			return Response.create(e);
@@ -743,17 +1234,27 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 发送HEAD请求
+	 * 
+	 * @param url - 链接
+	 * @return Response对象
+	 */
 	public Response head(String url) {
 
 		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 				_UA());
-		request.addHeader("Connection", "close");
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
 		request.head();
 
 		okhttp3.Response response = null;
 		try {
 			response = client.newCall(request.build()).execute();
-			return Response.create(response).url(url);
+			return Response.create(this, response).url(url);
 		} catch (Exception e) {
 			return Response.create(e);
 		} finally {
@@ -761,6 +1262,11 @@ public final class Http {
 		}
 	}
 
+	/**
+	 * 获取当前会话Cookie
+	 * 
+	 * @return 字符串，以“;”分隔
+	 */
 	@SuppressWarnings("unchecked")
 	public String cookie() {
 		if (cookies != null) {
@@ -786,20 +1292,37 @@ public final class Http {
 	}
 
 	/**
-	 * download the remote url to local file with the header.
+	 * 下载文件
 	 *
-	 * @param url       the remote resource url
-	 * @param localfile the localfile
-	 * @return the length of bytes
+	 * @param url - 链接
+	 * @param out - 输出流
+	 * @return 下载文件长度
 	 */
 	public long download(String url, OutputStream out) {
 		return download(url, null, null, out);
 	}
 
+	/**
+	 * 下载文件
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param out  - 输出流
+	 * @return 下载文件长度
+	 */
 	public long download(String url, JSON head, OutputStream out) {
 		return download(url, head, null, out);
 	}
 
+	/**
+	 * 下载文件
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @param out  - 输出流
+	 * @return 下载文件长度
+	 */
 	public long download(String url, JSON head, JSON body, OutputStream out) {
 
 //		try {
@@ -807,14 +1330,27 @@ public final class Http {
 			log.debug("url=\"" + url + "\"");
 		}
 
-		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-				_UA());
-		request.addHeader("Connection", "close");
+		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
 
+		boolean hasAgent = false;
+//		boolean hasConnection = false;
 		if (head != null && !head.isEmpty()) {
 			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					hasAgent = true;
+//				} else if (X.isSame(name, "connection")) {
+//					hasConnection = true;
+				}
 				request.addHeader(name, head.getString(name));
 			}
+		}
+		if (keepalive) {
+			request.addHeader("Connection", "keep-alive");
+		} else {
+			request.addHeader("Connection", "close");
+		}
+		if (!hasAgent) {
+			request.addHeader("User-Agent", _UA());
 		}
 
 		if (body != null && !body.isEmpty()) {
@@ -844,46 +1380,112 @@ public final class Http {
 		return 0;
 	}
 
-	public Temp download(String url, boolean resume) {
+	/**
+	 * 下载文件到临时文件中
+	 * 
+	 * @param url    - 链接
+	 * @param resume - True支持断点续传
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url, boolean resume) throws IOException {
 		return download(url, (JSON) null, (JSON) null, resume);
 	}
 
-	public Temp download(String url) {
+	/**
+	 * 下载文件
+	 * 
+	 * @param url - 链接
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url) throws IOException {
 		return download(url, (JSON) null, (JSON) null, false);
 	}
 
-	public Temp download(String url, JSON head, boolean resume) {
+	/**
+	 * 下载文件
+	 * 
+	 * @param url    - 链接
+	 * @param head   - 头信息
+	 * @param resume - True断点续传
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url, JSON head, boolean resume) throws IOException {
 		return download(url, head, (JSON) null, resume);
 	}
 
-	public Temp download(String url, JSON head) {
+	/**
+	 * 下载文件
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url, JSON head) throws IOException {
 		return download(url, head, (JSON) null, false);
 	}
 
-	public Temp download(String url, JSON head, JSON body) {
+	/**
+	 * 下载文件
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param body - 参数
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url, JSON head, JSON body) throws IOException {
 		return download(url, head, body, false);
 	}
 
-	public Temp download(String url, JSON head, JSON body, boolean resume) {
+	/**
+	 * 下载文件
+	 * 
+	 * @param url    - 链接
+	 * @param head   - 头信息
+	 * @param body   - 参数
+	 * @param resume - True支持断点续传
+	 * @return 临时文件对象
+	 * @throws IOException 
+	 */
+	public Temp download(String url, JSON head, JSON body, boolean resume) throws IOException {
 		return _download(url, head, body, resume, null);
 	}
 
-	private Temp _download(String url, JSON head, JSON body, boolean resume, Temp t) {
+	private Temp _download(String url, JSON head, JSON body, boolean resume, Temp t) throws IOException {
 
 		if (log.isDebugEnabled()) {
 			log.debug("url=\"" + url + "\"");
 		}
 
 		if (resume) {
+			// 断点续传
+			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
 
-			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-					_UA());
-			request.addHeader("Connection", "close");
+			boolean hasAgent = false;
+//			boolean hasConnection = false;
 
 			if (head != null && !head.isEmpty()) {
 				for (String name : head.keySet()) {
+					if (X.isSame(name, "user-agent")) {
+						hasAgent = true;
+//					} else if (X.isSame(name, "connection")) {
+//						hasConnection = true;
+					}
 					request.addHeader(name, head.getString(name));
 				}
+			}
+
+			if (!hasAgent) {
+				request.addHeader("User-Agent", _UA());
+			}
+			if (keepalive) {
+				request.addHeader("Connection", "keep-alive");
+			} else {
+				request.addHeader("Connection", "close");
 			}
 
 			// bytes=0-1
@@ -908,6 +1510,7 @@ public final class Http {
 				if (X.isEmpty(s)) {
 					s = url;
 
+					// 从链接中获取文件名
 					for (String s1 : new String[] { "?", "#" }) {
 						int i = s.indexOf(s1);
 						if (i > 0) {
@@ -922,6 +1525,7 @@ public final class Http {
 					filename = s;
 
 				} else {
+					// 从 content-disposition 中获取文件名
 					int i = s.indexOf("=");
 					if (i >= 0) {
 						// filename=....
@@ -931,6 +1535,7 @@ public final class Http {
 						filename = filename.substring(i + 1);
 					}
 				}
+				filename = filename.replaceAll("\"", X.EMPTY);
 
 				ResponseBody respbody = resp.body();
 				if (t == null) {
@@ -975,26 +1580,27 @@ public final class Http {
 				X.close(resp);
 			}
 		} else {
-			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-					_UA());
-
-			if (head != null && !head.isEmpty()) {
-				for (String name : head.keySet()) {
-					request.addHeader(name, head.getString(name));
-				}
-			}
-
-			if (body != null && !body.isEmpty()) {
-				MultipartBody.Builder bb = new MultipartBody.Builder();
-				for (String key : body.keySet()) {
-					bb.addPart(Part.createFormData(key, body.getString(key)));
-				}
-				request.setBody$okhttp(bb.build());
-			}
-
+			// 不支持断点续传
 			okhttp3.Response response = null;
 
 			try {
+				Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent")
+						.addHeader("User-Agent", _UA());
+
+				if (head != null && !head.isEmpty()) {
+					for (String name : head.keySet()) {
+						request.addHeader(name, head.getString(name));
+					}
+				}
+
+				if (body != null && !body.isEmpty()) {
+					MultipartBody.Builder bb = new MultipartBody.Builder();
+					for (String key : body.keySet()) {
+						bb.addPart(Part.createFormData(key, body.getString(key)));
+					}
+					request.setBody$okhttp(bb.build());
+				}
+
 				response = client.newCall(request.build()).execute();
 
 //			System.out.println(response.headers());
@@ -1003,6 +1609,7 @@ public final class Http {
 
 				String s = response.header("content-disposition");
 				if (X.isEmpty(s)) {
+					// 从链接中获取文件名
 					s = url;
 
 					for (String s1 : new String[] { "?", "#" }) {
@@ -1019,6 +1626,7 @@ public final class Http {
 					filename = s;
 
 				} else {
+					// 从 content-disposition 中获取文件名
 					int i = s.indexOf("=");
 					if (i >= 0) {
 						// filename=....
@@ -1027,6 +1635,14 @@ public final class Http {
 						i = filename.lastIndexOf("'");
 						filename = filename.substring(i + 1);
 					}
+				}
+				filename = filename.replaceAll("\"", X.EMPTY);
+
+				// 把特殊编码转成中文
+				int n = 0;
+				while (filename.startsWith("%") && n < 10) {
+					filename = Url.decode(filename);
+					n++;
 				}
 //			System.out.println(filename);
 
@@ -1042,8 +1658,9 @@ public final class Http {
 				});
 
 				return t;
-			} catch (Exception e) {
-				log.error(url, e);
+//			} catch (Exception e) {
+//				log.error(url, e);
+//				throw e;
 			} finally {
 				X.close(response);
 			}
@@ -1057,14 +1674,26 @@ public final class Http {
 
 //		System.out.println("downloading: " + t.length());
 
-		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
-				_UA());
-		request.addHeader("Connection", "close");
+		Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent");
+
+		boolean hasAgent = false;
+		boolean hasConnection = false;
 
 		if (head != null && !head.isEmpty()) {
 			for (String name : head.keySet()) {
+				if (X.isSame(name, "user-agent")) {
+					hasAgent = true;
+				} else if (X.isSame(name, "connection")) {
+					hasConnection = true;
+				}
 				request.addHeader(name, head.getString(name));
 			}
+		}
+		if (!hasAgent) {
+			request.addHeader("User-Agent", _UA());
+		}
+		if (!hasConnection) {
+			request.addHeader("Connection", "close");
 		}
 
 		File f = t.getFile();
@@ -1133,7 +1762,14 @@ public final class Http {
 
 	private Map<String, List<InetAddress>> dns = new HashMap<String, List<InetAddress>>();
 
-	public void dns(String host, String... ip) {
+	/**
+	 * 设置临时DNS
+	 * 
+	 * @param host - 域名
+	 * @param ip   - IP地址
+	 */
+	@Comment(text = "设置临时DNS", demo = "http.dns('www.giisoo.com', '192.168.0.1')")
+	public void dns(@Comment(text = "host") String host, @Comment(text = X.IP) String... ip) {
 		List<InetAddress> l1 = new ArrayList<InetAddress>();
 		for (String s : ip) {
 			try {
@@ -1144,6 +1780,13 @@ public final class Http {
 			}
 		}
 		dns.put(host, l1);
+	}
+
+	boolean keepalive = false;
+
+	public Http keepalive(boolean keepalive) {
+		this.keepalive = keepalive;
+		return this;
 	}
 
 	/**
@@ -1168,24 +1811,132 @@ public final class Http {
 		public String body;
 		public byte[] _body;
 
+		public Response charset(String charset) throws UnsupportedEncodingException {
+			if (_body != null) {
+				body = new String(_body, charset);
+			}
+			return this;
+		}
+
 		/**
 		 * 返回头部信息
 		 */
 		private Headers headers;
+		private okhttp3.Response response;
+		private Http http;
 
-		public static Response create(okhttp3.Response res) {
+		/**
+		 * 下载资源文件
+		 * 
+		 * @param select   - 节点选择, 比如: img
+		 * @param attrname - 节点属性名称, 比如: src
+		 * @return 下载好的临时文件列表
+		 * @throws IOException
+		 */
+		@SuppressWarnings("deprecation")
+		@Comment(text = "下载")
+		public List<Temp> download(String select, String attrname) throws IOException {
+			Html h1 = this.html();
+			List<Element> l1 = h1.find(select);
+			if (l1 != null && !l1.isEmpty()) {
+				List<Temp> l2 = new ArrayList<Temp>();
+				for (Element e : l1) {
+					String url = e.attr(attrname);
+					if (!X.isEmpty(url)) {
+						url = h1.format(url);
+						Temp t1 = http.download(url);
+						if (t1 != null && t1.length() > 0) {
+							l2.add(t1);
+						}
+					}
+				}
+				return l2;
+			}
+			return null;
+		}
+
+		public List<Element> find(String select) {
+			return find(select, null);
+		}
+
+		/**
+		 * 
+		 * @param select
+		 * @param regex  - href=.*\/wiki\/.*
+		 * @return
+		 */
+		@SuppressWarnings("deprecation")
+		public List<Element> find(String select, String regex) {
+			Html h1 = this.html();
+			List<Element> l1 = h1.find(select);
+			if (!X.isEmpty(regex)) {
+				int j = regex.indexOf("=");
+				if (j > 0) {
+					String name = regex.substring(0, j).trim();
+					String match = regex.substring(j + 1).trim();
+					for (int i = l1.size() - 1; i >= 0; i--) {
+						Element e = l1.get(i);
+						String att = e.attr(name);
+						if (att == null || !att.matches(match)) {
+							l1.remove(i);
+						}
+					}
+				}
+			}
+			return l1;
+		}
+
+		public List<JSON> a() throws Exception {
+			return a(null);
+		}
+
+		public List<JSON> a(String regex) throws Exception {
+			Html h1 = this.html();
+			return h1.a(regex);
+		}
+
+		public static Response create(Http h, okhttp3.Response res) {
 			Response e = new Response();
 
 			try {
+				e.http = h;
 				e.status = res.code();
-				e.body = res.body().string();
 				e.headers = res.headers();
+				e._body = res.body().bytes();
+				e.body = new String(e._body, e.charset());
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
 			}
 			return e;
 		}
 
+		private static Charset UTF_8 = Charset.forName(X.UTF8);
+
+		private Charset charset() {
+			MediaType s = contentType();
+			if (s == null) {
+				return UTF_8;
+			}
+			return s.charset(UTF_8);
+		}
+
+		private MediaType contentType() {
+			String s = headers.get("content-type");
+			if (s == null) {
+				return null;
+			}
+			return MediaType.parse(s);
+
+		}
+
+		/**
+		 * 创建 Http响应对象
+		 * 
+		 * @param status - 状态码
+		 * @param head   - 响应头
+		 * @param body   - 内容
+		 * @return
+		 */
 		public static Response create(int status, Map<String, String> head, String body) {
 			Response e = new Response();
 
@@ -1199,15 +1950,40 @@ public final class Http {
 			return e;
 		}
 
+		public static Response create(int status, Headers headers, okhttp3.Response r) {
+			Response e = new Response();
+
+			try {
+				e.status = status;
+				e.headers = headers;
+				e.response = r;
+			} catch (Exception e1) {
+				log.error(e1.getMessage(), e1);
+			}
+			return e;
+		}
+
+		/**
+		 * 创建Http响应对象
+		 * 
+		 * @param err - 错误栈
+		 * @return
+		 */
 		public static Response create(Exception err) {
 			Response e = new Response();
 
 			e.status = 500;
 			e.body = err.getMessage();
-			log.error(err.getMessage(), err);
+//			log.error(err.getMessage(), err);
 			return e;
 		}
 
+		/**
+		 * 设置 响应对象的 url
+		 * 
+		 * @param url - 原始请求链接
+		 * @return
+		 */
 		public Response url(String url) {
 			this.url = url;
 			return this;
@@ -1235,20 +2011,29 @@ public final class Http {
 		 */
 		@Comment(text = "HTML对象")
 		public Html html() {
-			Html m = Html.create(body);
-			m.url = url;
-			return m;
+			if (_html == null) {
+				_html = Html.create(body);
+				_html.url = url;
+			}
+			return _html;
 		}
+
+		Html _html;
 
 		@Comment(text = "纯文本")
 		public String text() {
-			Html m = Html.create(body);
+			Html m = html();
 			return m.text();
+		}
+
+		@Comment(text = "返回文本")
+		public String body() {
+			return body;
 		}
 
 		@Comment(text = "带基本样式纯文本")
 		public String text2() {
-			Html m = Html.create(body);
+			Html m = html();
 			return m.text2();
 		}
 
@@ -1271,7 +2056,12 @@ public final class Http {
 		 * @return JSON对象
 		 */
 		public JSON json() {
-			return JSON.fromObject(body);
+			try {
+				return JSON.fromObject(body);
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+			return null;
 		}
 
 		/**
@@ -1284,7 +2074,12 @@ public final class Http {
 		}
 
 		public List<JSON> jsons() {
-			return JSON.fromObjects(body);
+			try {
+				return JSON.fromObjects(body);
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+			return null;
 		}
 
 		/**
@@ -1387,10 +2182,30 @@ public final class Http {
 			return null;
 		}
 
+		public void close() {
+			if (response != null) {
+				X.close(response);
+			}
+			response = null;
+		}
+
+		@Comment(text = "获取扩展名")
+		public String ext(@Comment(text = "url") String url) {
+			int i = url.lastIndexOf("/");
+			if (i > -1) {
+				url = url.substring(i + 1);
+			}
+			i = url.lastIndexOf(".");
+			if (i > -1) {
+				return url.substring(i + 1).toLowerCase();
+			}
+			return null;
+		}
+
 	}
 
 	/**
-	 * add a cookie in Http. or replace the old one by (name, domain, path)
+	 * 设置临时Cookie
 	 *
 	 * @param name    the name
 	 * @param value   the value
@@ -1409,7 +2224,7 @@ public final class Http {
 	}
 
 	/**
-	 * batchCookies
+	 * 设置临时Cookie
 	 * 
 	 * @param cookiestring the cookie string, eg.:"a=b;c=a"
 	 * @param domain       the domain
@@ -1429,11 +2244,9 @@ public final class Http {
 	}
 
 	/**
-	 * Removes the cookie.
+	 * 删除临时Cookie.
 	 *
-	 * @param name   the name
-	 * @param domain the domain
-	 * @param path   the path
+	 * @param name - the name
 	 */
 	public void removeCookie(String name) {
 		if (cookies != null) {
@@ -1527,7 +2340,7 @@ public final class Http {
 		}
 	}
 
-	private static final String[] TOP = { "top", "cn", "com", "net", "love", "org", "biz", "info", "name", "tv", "me",
+	private static final String[] TOP = { "top", "cn", "com", "net", "love", "org", "biz", "info", X.NAME, "tv", "me",
 			"mobi", "asia", "eu", "in", "us", "cc", "com.cn", "net.cn", "org.cn", "gov.cn" };
 
 	private static String _top(String host) {
@@ -1592,6 +2405,11 @@ public final class Http {
 		return ss[0];
 	}
 
+	/**
+	 * 设置支持传发链接
+	 * 
+	 * @param b - True支持转发链接
+	 */
 	public void redirect(boolean b) {
 		builder.setFollowRedirects$okhttp(b);
 		builder.setFollowSslRedirects$okhttp(b);
@@ -1623,7 +2441,14 @@ public final class Http {
 
 	}
 
-	public void put(String url, JSON head, File file) {
+	/**
+	 * 发送PUT请求
+	 * 
+	 * @param url  - 链接
+	 * @param head - 头信息
+	 * @param file - 本地文件
+	 */
+	public Http.Response put(String url, JSON head, File file) {
 
 		okhttp3.Response response = null;
 
@@ -1631,6 +2456,12 @@ public final class Http {
 
 			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
 					_UA());
+
+			if (keepalive) {
+				request.addHeader("Connection", "keep-alive");
+			} else {
+				request.addHeader("Connection", "close");
+			}
 
 			if (head != null) {
 				for (String name : head.keySet()) {
@@ -1643,12 +2474,15 @@ public final class Http {
 
 			response = client.newCall(request.build()).execute();
 			log.info("put, url=" + url + ", head=" + head + ", response=" + response);
-			
+
+			return Response.create(this, response);
 		} catch (Exception e) {
 			log.error(url, e);
+			return Response.create(500, null, e.getMessage());
 		} finally {
 			X.close(response);
 		}
+
 	}
 
 }

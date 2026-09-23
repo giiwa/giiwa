@@ -14,10 +14,13 @@
 */
 package org.giiwa.dao;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -26,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -34,18 +38,25 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.BSONObject;
 import org.bson.Document;
+import org.giiwa.bean.Key;
+import org.giiwa.bean.Temp;
+import org.giiwa.crypto.MD5;
+import org.giiwa.crypto.SM4;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Digest;
+import org.giiwa.misc.Exporter;
+import org.giiwa.misc.StringFinder;
 import org.giiwa.web.Language;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -67,13 +78,19 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	private Object _id;
 
 	@Column(no = true)
-	private boolean _readonly = false;
+	private volatile boolean _readonly = false;
 
+	/**
+	 * 元数据
+	 */
 	@Column(no = true)
-	private Map<String, JSON> meta = null;
+	private Map<String, JSON> _meta = null;
 
+	/**
+	 * 选择列表
+	 */
 	@Column(no = true)
-	private String[] selected;
+	private String[] _selected;
 
 	public boolean isReadonly() {
 		return _readonly;
@@ -91,7 +108,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * 
 	 */
 	@Column(no = true)
-	public long _rowid;
+	private long _rowid;
 
 	@Column(memo = "更新时间")
 	private long updated;
@@ -174,6 +191,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
+	 * 修改data的值，需要加锁 <br>
 	 * set the value to extra data, or the field annotation by @Column.
 	 *
 	 * @param name  the name of the data or the column
@@ -195,86 +213,25 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		Object old = null;
 
 		// change all to lower case avoid some database auto change to upper case
-		name = name.toLowerCase();
+		String lowername = name.toLowerCase();
 //		log.warn("field=" + name + ", value=" + value.getClass());
 
-		if (value != null) {
-//			log.info("name=" + name + ", value=" + value + ", class=" + value.getClass());
+		value = _parse(value);
 
-			if (value instanceof java.sql.Clob) {
-				try {
-					Clob c = (Clob) value;
-					Reader re = c.getCharacterStream();
-					char[] cc = new char[(int) c.length()];
-					re.read(cc);
-					value = new String(cc);
-					c.free();
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			} else if (value instanceof java.sql.NClob) {
-				try {
-					NClob c = (NClob) value;
-					Reader re = c.getCharacterStream();
-					char[] cc = new char[(int) c.length()];
-					re.read(cc);
-					value = new String(cc);
-					c.free();
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			} else if (value instanceof java.sql.Blob) {
-				try {
-					Blob c = (Blob) value;
-					value = c.getBytes(0, (int) c.length());
-					c.free();
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			} else if (value instanceof Array) {
-				try {
-					java.sql.Array c = (Array) value;
-					value = X.asList(c.getArray(), s -> s);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			} else if (value instanceof ScriptObjectMirror) {
-				// TODO, data.a = []
-				// data.a.push 会报错
-//			ScriptObjectMirror m = (ScriptObjectMirror) value;
-//			if (m.isArray()) {
-//				value = X.asList(m, s -> s);
-//			} else {
-//				value = JSON.fromObject(value);
-//			}
-			} else if (value instanceof Map) {
-				value = JSON.fromObject(value);
-			} else if (value.getClass().getName().equals("org.postgresql.util.PGobject")) {
-				Object o = value;
-				try {
-					value = JSON.create().append(o.getClass().getMethod("getType").invoke(o).toString(),
-							o.getClass().getMethod("getValue").invoke(o));
-				} catch (Exception e) {
-					// ignore
-				}
-			} else if (value instanceof org.bson.BsonTimestamp) {
-				org.bson.BsonTimestamp b = (org.bson.BsonTimestamp) value;
-				value = b.asDateTime().getValue();
-			} else if (value instanceof Date) {
-				value = ((Date) value).getTime();
-//		} else {
-//			log.warn("field=" + name + ", value=" + value.getClass());
-			}
-		}
-
-//		log.info("name=" + name + ", value=" + value);
+//		log.info(X.NAME=" + name + ", value=" + value);
 
 		// looking for all the fields
-		_F f1 = _getField(name);
+		_F f1 = _getField(lowername);
 
 		if (f1 != null) {
 
 			try {
+				if (f1.password) {
+					value = _decode((String) value);
+				}
+//				if (X.isSame(name, "password")) {
+//					log.warn("password=" + f1.password + ", value=" + value + ", class=" + this.getClass());
+//				}
 
 //				f1.setAccessible(true);
 
@@ -283,7 +240,12 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 				Class<?> t1 = f1.getType();
 				// log.debug("t1=" + t1 + ", f1.name=" + f1.getName());
-				if (t1.equals(value.getClass())) {
+				if (value == null) {
+					if (!t1.isPrimitive()) {
+						// 不是基础类型
+						f1.set(this, null);
+					}
+				} else if (t1.equals(value.getClass())) {
 					f1.set(this, value);
 				} else if (t1 == long.class) {
 					f1.set(this, X.toLong(value));
@@ -294,9 +256,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				} else if (t1 == float.class) {
 					f1.set(this, X.toFloat(value, 0));
 				} else if (t1 == String.class) {
-//					if (value != null) {
-//						value = value.toString();
-//					}
+					if (value != null) {
+						value = value.toString();
+					}
 					// allow uuid
 //					if (List.class.isAssignableFrom(f1.getClass())) {
 //						f1.set(this, Arrays.asList(value));
@@ -310,7 +272,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 						if (value instanceof List) {
 							l1.addAll((List<Object>) value);
 						} else if (value.getClass().isArray()) {
-							l1.add(Arrays.asList(value));
+							l1.addAll(Arrays.asList(value));
 						} else if (value instanceof String) {
 							String s = (String) value;
 							l1.addAll(X.asList(X.split(s, "[\\[\\],]"), s1 -> s1));
@@ -344,32 +306,33 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				}
 			} catch (Exception e) {
 				// ignore
-//				log.error(name + "=" + value, e);
+				log.error(name + "=" + value, e);
 			}
 		} else {
 
-			if (data == null) {
-				data = new HashMap<String, Object>();
+			if (_data == null) {
+				_data = new HashMap<>();
 			}
 
-			old = data.get(name);
-
-			if (value instanceof Date) {
-				data.put(name, ((Date) value).getTime());
+			old = _data.get(lowername);
+			if (value == null) {
+				_data.remove(lowername);
+			} else if (value instanceof Date) {
+				_data.put(lowername, ((Date) value).getTime());
 			} else if (value instanceof Timestamp) {
-				data.put(name, ((Timestamp) value).getTime());
+				_data.put(lowername, ((Timestamp) value).getTime());
 			} else if (value instanceof LocalDateTime) {
 				java.util.Date d = Date.from(((LocalDateTime) value).atZone(ZoneOffset.ofHours(8)).toInstant());
-				data.put(name, d.getTime());
+				_data.put(lowername, d.getTime());
 			} else if (value instanceof Number) {
 				Number n = (Number) value;
 				if (n.toString().indexOf(".") > -1) {
-					data.put(name, n.doubleValue());
+					_data.put(lowername, n.doubleValue());
 				} else {
-					data.put(name, n.longValue());
+					_data.put(lowername, n.longValue());
 				}
 			} else {
-				data.put(name, value);
+				_data.put(lowername, value);
 			}
 		}
 
@@ -385,16 +348,112 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return old;
 	}
 
+	private Object _parse(Object value) {
+
+		if (value == null)
+			return null;
+
+		if (value instanceof java.sql.Clob) {
+			// TODO, 大字段怎么办？ ？GB
+			Clob c = (Clob) value;
+			Reader re = null;
+			try {
+				re = c.getCharacterStream();
+				char[] cc = new char[(int) c.length()];
+				re.read(cc);
+				value = new String(cc);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				X.close(re);
+				try {
+					c.free();
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				}
+			}
+		} else if (value instanceof java.sql.NClob) {
+			// TODO, 大字段怎么办？ GB
+			NClob c = (NClob) value;
+			Reader re = null;
+			try {
+				re = c.getCharacterStream();
+				char[] cc = new char[(int) c.length()];
+				re.read(cc);
+				value = new String(cc);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				X.close(re);
+				try {
+					c.free();
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				}
+			}
+		} else if (value instanceof java.sql.Blob) {
+			Blob c = (Blob) value;
+			try {
+				value = c.getBytes(0, (int) c.length());
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				try {
+					c.free();
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				}
+			}
+		} else if (value instanceof Array) {
+			try {
+				java.sql.Array c = (Array) value;
+				value = X.asList(c.getArray(), s -> _parse(s));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		} else if (value instanceof ScriptObjectMirror) {
+			// TODO, data.a = []
+			// data.a.push 会报错
+//		ScriptObjectMirror m = (ScriptObjectMirror) value;
+//		if (m.isArray()) {
+//			value = X.asList(m, s -> s);
+//		} else {
+//			value = JSON.fromObject(value);
+//		}
+		} else if (value instanceof Map) {
+			value = JSON.fromObject(value);
+		} else if (value.getClass().getName().equals("org.postgresql.util.PGobject")) {
+			Object o = value;
+			try {
+				value = JSON.create().append(o.getClass().getMethod("getType").invoke(o).toString(),
+						o.getClass().getMethod("getValue").invoke(o));
+			} catch (Exception e) {
+				// ignore
+			}
+		} else if (value instanceof org.bson.BsonTimestamp) {
+			org.bson.BsonTimestamp b = (org.bson.BsonTimestamp) value;
+			value = b.getValue();
+		} else if (value instanceof org.bson.types.Binary) {
+			org.bson.types.Binary b = (org.bson.types.Binary) value;
+			value = b.getData();
+		} else if (value instanceof Date) {
+			value = ((Date) value).getTime();
+		} else if (X.isArray(value)) {
+			value = X.asList(value, o -> _parse(o));
+		}
+		return value;
+	}
+
 	/**
 	 * get the Field by the colname
 	 * 
 	 * @param columnname the colname
 	 * @return the Field
 	 */
-	public Field getField(String columnname) {
-		_F f = _getField(columnname);
-		return f == null ? null : f.f;
-	}
+//	public Field getField(String columnname) {
+//		_F f = _getField(columnname);
+//		return f == null ? null : f.f;
+//	}
 
 	private _F _getField(String columnname) {
 
@@ -403,6 +462,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 	}
 
+	/**
+	 * 注意有权限， readonly后，通过这个还能修改数据
+	 * 
+	 * @return
+	 */
 	public Map<String, Field> getFields() {
 
 		Map<String, _F> m = _getFields();
@@ -416,85 +480,100 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return m1;
 	}
 
+	private volatile transient Map<String, _F> _ff;
+
 	private Map<String, _F> _getFields() {
 
-		Class<?> c1 = this.getClass();
-		Map<String, _F> m = _fields.get(c1);
-		if (m == null) {
-			m = new HashMap<String, _F>();
+		if (_ff == null) {
+			synchronized (this) {
+				if (_ff == null) {
+					Class<?> c1 = this.getClass();
+					_ff = _fields.get(c1);
+					if (_ff == null) {
+						_ff = new ConcurrentHashMap<String, _F>();
 
-			int i = 0;
-			for (; c1 != null;) {
-				i++;
-				if (log.isDebugEnabled()) {
-					log.debug("c1=" + c1);
-				}
+						int i = 0;
+						for (; c1 != null;) {
+							i++;
+							if (log.isDebugEnabled()) {
+								log.debug("c1=" + c1);
+							}
 
-				Field[] ff = c1.getDeclaredFields();
-				for (Field f : ff) {
+							Field[] ff = c1.getDeclaredFields();
+							for (Field f : ff) {
 
-					Column f1 = f.getAnnotation(Column.class);
-					if (f1 != null && f1.no()) {
-						continue;
-					}
+								Column f1 = f.getAnnotation(Column.class);
+								if (f1 != null && f1.no()) {
+									continue;
+								}
 
 //					if (log.isDebugEnabled())
 //						log.debug("f1=" + f1);
 
-					if (f1 != null && !X.isEmpty(f1.name())) {
-						f.setAccessible(true);
-						String name = f1.name().toLowerCase();
+								if (f1 != null && !X.isEmpty(f1.name())) {
+									f.setAccessible(true);
+									String name = f1.name().toLowerCase();
 
-						_F f2 = m.get(name);
-						if (f2 == null) {
-							f2 = _F.create(f);
-							m.put(name, f2);
-						} else {
-							f2.link(f);
-						}
+									_F f2 = _ff.get(name);
+									if (f2 == null) {
+										f2 = _F.create(f);
+										f2.password = f1.password();
+										_ff.put(name, f2);
+									} else {
+										f2.link(f);
+									}
 
-						String name1 = f.getName().toLowerCase();
-						if (!X.isSame(name, name1)) {
+									String name1 = f.getName().toLowerCase();
+									if (!X.isSame(name, name1)) {
 
-							f2 = m.get(name1);
-							if (f2 == null) {
-								f2 = _F.create(f);
-								m.put(name1, f2);
-							} else {
-								f2.link(f);
+										f2 = _ff.get(name1);
+										if (f2 == null) {
+											f2 = _F.create(f);
+											f2.password = f1.password();
+											_ff.put(name1, f2);
+										} else {
+											f2.link(f);
+										}
+									}
+								} else if ((f.getModifiers()
+										& (Modifier.FINAL | Modifier.STATIC | Modifier.TRANSIENT)) == 0) {
+									f.setAccessible(true);
+									String name = f.getName().toLowerCase();
+
+									_F f2 = _ff.get(name);
+									if (f2 == null) {
+										f2 = _F.create(f);
+										if (f1 != null) {
+											f2.password = f1.password();
+										}
+										_ff.put(name, f2);
+									} else {
+										f2.link(f);
+									}
+
+								}
 							}
-						}
-					} else if ((f.getModifiers() & (Modifier.FINAL | Modifier.STATIC | Modifier.TRANSIENT)) == 0) {
-						f.setAccessible(true);
-						String name = f.getName().toLowerCase();
-
-						_F f2 = m.get(name);
-						if (f2 == null) {
-							f2 = _F.create(f);
-							m.put(name, f2);
-						} else {
-							f2.link(f);
-						}
-
-					}
-				}
 //				if (log.isDebugEnabled())
 //					log.debug("c1=" + c1);
 
-				if (i > 5) {
-					log.error("c1=" + c1);
+							if (i > 5) {
+								log.error("c1=" + c1);
+							}
+
+							c1 = c1.getSuperclass();
+
+						}
+
+						_fields.put(this.getClass(), _ff);
+					}
 				}
-
-				c1 = c1.getSuperclass();
-
 			}
-
-			_fields.put(this.getClass(), m);
 		}
-		return m;
+
+		return _ff;
 	}
 
-	private final static Map<Class<? extends Bean>, Map<String, _F>> _fields = new HashMap<Class<? extends Bean>, Map<String, _F>>();
+	private final static Map<Class<? extends Bean>, Map<String, _F>> _fields = new ConcurrentHashMap<Class<? extends Bean>, Map<String, _F>>();
 
 	/**
 	 * get the value by name from bean <br>
@@ -510,8 +589,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 
 		// 大小写不敏感
-		String s = name.toString().toLowerCase();
-		_F f = _getField(s);
+		String lowername = name.toString().toLowerCase();
+		_F f = _getField(lowername);
 		if (f != null) {
 			try {
 				return f.get(this);
@@ -520,11 +599,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			}
 		}
 
-		if (data == null) {
+		if (_data == null) {
 			return null;
 		}
 
-		return data.get(s);
+		return _data.get(lowername);
 
 	}
 
@@ -558,17 +637,18 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	public final int size() {
 
-		int n = 0;
-		if (data != null) {
-			n += data.size();
+		Set<String> names = new HashSet<>();
+
+		if (_data != null) {
+			names.addAll(_data.keySet());
 		}
 
 		Map<String, _F> m2 = _getFields();
 		if (m2 != null) {
-			n += m2.size();
+			names.addAll(m2.keySet());
 		}
 
-		return n;
+		return names.size();
 	}
 
 	/**
@@ -577,7 +657,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return the boolean, true if empty
 	 */
 	public final boolean isEmpty() {
-		return false;
+		return this.size() == 0;
 	}
 
 	/*
@@ -586,16 +666,19 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @see java.util.Map.containsKey(java.lang.Object)
 	 */
 	public boolean containsKey(Object key) {
+		if (key == null)
+			return false;
+		String s = key.toString().toLowerCase();
 
-		if (data != null && data.size() > 0) {
-			if (data.containsKey(key)) {
+		if (_data != null && _data.size() > 0) {
+			if (_data.containsKey(s)) {
 				return true;
 			}
 		}
 
 		Map<String, _F> m2 = _getFields();
 		if (m2 != null) {
-			return m2.containsKey(key);
+			return m2.containsKey(s);
 		}
 
 		return false;
@@ -608,8 +691,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	public final boolean containsValue(Object value) {
 
-		if (data != null && data.size() > 0) {
-			if (data.containsValue(value)) {
+		if (_data != null && _data.size() > 0) {
+			if (_data.containsValue(value)) {
 				return true;
 			}
 		}
@@ -659,10 +742,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
+	 * 对data进行修改，需要加锁 <br>
 	 * remove all data from the bean, <br>
 	 * set the fields to null that annotation by @Column.
 	 */
-	public final void clear() {
+	public final synchronized void clear() {
 
 		if (_readonly)
 			return;
@@ -670,8 +754,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		/**
 		 * clear data in data
 		 */
-		if (data != null) {
-			data.clear();
+		if (_data != null) {
+			_data.clear();
 		}
 
 		/**
@@ -691,15 +775,16 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
+	 * 获取data的所有key，需要加锁<br>
 	 * get the names from the bean, <br>
 	 * the names in the "data" map, and the field annotation by @column.
 	 *
 	 * @return the sets of the names
 	 */
-	public final Set<String> keySet() {
+	public final synchronized Set<String> keySet() {
 		Set<String> l1 = new TreeSet<String>();
-		if (data != null && !data.isEmpty()) {
-			l1.addAll(data.keySet());
+		if (_data != null && !_data.isEmpty()) {
+			l1.addAll(_data.keySet());
 		}
 
 		Map<String, _F> m2 = _getFields();
@@ -776,15 +861,16 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
+	 * 获取所有data数据，需要加锁<br>
 	 * get all data, include the field annotation by @Column
 	 * 
 	 * @return Map of data
 	 */
-	public Map<String, Object> getAll() {
+	public synchronized Map<String, Object> getAll() {
 
 		Map<String, Object> map_obj = new HashMap<String, Object>();
-		if (data != null && data.size() > 0) {
-			map_obj.putAll(data);
+		if (_data != null && _data.size() > 0) {
+			map_obj.putAll(_data);
 		}
 
 		Map<String, _F> m2 = _getFields();
@@ -802,7 +888,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 
 		for (Object name : map_obj.keySet().toArray()) {
-			if (X.isIn(name, "created", "updated")) {
+			if (X.isIn(name, X.CREATED, "updated")) {
 				Object o = map_obj.get(name);
 				if (X.toLong(o) == 0) {
 					map_obj.remove(name);
@@ -824,21 +910,22 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
+	 * 修改data值，需要加锁 <br>
 	 * remove value by names.
 	 *
 	 * @param names the names
 	 */
-	public final void remove(String... names) {
+	public final synchronized void remove(String... names) {
 
 		if (_readonly)
 			return;
 
-		if (data != null && names != null) {
+		if (_data != null && names != null) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
 
-					if (data != null) {
-						String[] ss = data.keySet().toArray(new String[data.size()]);
+					if (_data != null) {
+						String[] ss = _data.keySet().toArray(new String[_data.size()]);
 						for (String k : ss) {
 							if (k.matches(name)) {
 								this._remove(k);
@@ -861,21 +948,27 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 	}
 
-	private void _remove(String name) {
+	/**
+	 * 对data进行修改，需要加锁
+	 * 
+	 * @param name
+	 */
+	private synchronized void _remove(String name) {
 		try {
 			_F f1 = _getField(name);
 			if (f1 != null) {
 				f1.set(this, null);
-			} else if (data != null) {
-				data.remove(name);
+			} else if (_data != null) {
+				_data.remove(name);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
+	// 按需生成扩展字段
 	@Column(no = true)
-	private Map<String, Object> data = null;
+	private Map<String, Object> _data = null;
 
 //	private transient JSON json_obj;
 
@@ -886,19 +979,57 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	@Comment(text = "转换为json")
 	public JSON json() {
+		return json(_selected);
+	}
 
-		JSON json_obj = null;
-		if (selected != null && selected.length > 0) {
-			json_obj = JSON.create();
-			for (String s : selected) {
-				Object o = this.get(s);
-				if (o instanceof Serializable) {
-					if (meta == null) {
-						json_obj.put(s, o);
+	@Comment(text = "转换为json")
+	public JSON json2() {
+
+		JSON json_obj = JSON.create();
+		if (_selected != null && _selected.length > 0) {
+			for (String s : _selected) {
+				// name:name1->%tY-%<tm-%<td %<tH:%<tM:%<tS //格式化为时间格式
+				// name:name1->.2 //保留2位小数点
+
+				String name = s, name1 = s, format = null;
+
+				StringFinder sf = StringFinder.create(s);
+				int i = sf.find(":", "->");
+				if (i > -1) {
+					name = s.substring(0, i).trim();
+					if (sf.charOf(0) == ':') {
+						name1 = s.substring(i + 1).trim();
 					} else {
-						JSON c = meta.get(s);
+						name1 = s;
+					}
+					i = name1.indexOf("->");
+					if (i > 0) {
+						format = name1.substring(i + 2).trim();
+						name1 = name1.substring(0, i).trim();
+					}
+				}
+
+				Object o = this.get(name);
+				if (o instanceof Serializable) {
+					if (format != null && format.length() > 0) {
+						char c1 = format.charAt(0);
+						if (c1 == '%') {
+							o = String.format(format, o);
+						} else if (c1 == '#') {
+							o = new DecimalFormat("#,##0").format(o);
+						} else if (c1 == '.') {
+							// .2
+							o = BigDecimal.valueOf(X.toDouble(o))
+									.setScale(X.toInt(format.substring(1)), RoundingMode.HALF_UP).doubleValue();
+						}
+					}
+
+					if (_meta == null) {
+						json_obj.put(name1, o);
+					} else {
+						JSON c = _meta.get(name);
 						if (c == null) {
-							json_obj.put(s, o);
+							json_obj.put(name1, o);
 						} else {
 							json_obj.put(c.getString("display"), o);
 						}
@@ -906,14 +1037,13 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				}
 			}
 		} else {
-			json_obj = JSON.create();
 			for (String s : this.keySet()) {
 				Object o = this.get(s);
 				if (o instanceof Serializable) {
-					if (meta == null) {
+					if (_meta == null) {
 						json_obj.put(s, o);
 					} else {
-						JSON c = meta.get(s);
+						JSON c = _meta.get(s);
 						if (c == null) {
 							json_obj.put(s, o);
 						} else {
@@ -927,15 +1057,63 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return json_obj;
 	}
 
-	@Comment(text = "转换为json", demo = ".json('a', 'b', 'c')")
+	@Comment(text = "转换为json", demo = ".json('a', 'b', 'c', 'd->.1f')")
 	public JSON json(String... names) {
 
+		JSON json_obj = JSON.create();
 		if (X.isEmpty(names)) {
-			return json();
+			for (String s : this.keySet()) {
+				Object o = this.get(s);
+				if (o instanceof Serializable) {
+					json_obj.put(s, o);
+				}
+			}
+			return json_obj;
 		}
 
-		selected = names;
-		return json();
+		for (String s : names) {
+			// name:name1->%tY-%<tm-%<td %<tH:%<tM:%<tS //格式化为时间格式
+			// name:name1->.2 //保留2位小数点
+
+			String name = s, name1 = s, format = null;
+
+			StringFinder sf = StringFinder.create(s);
+			int i = sf.find(":", "->");
+			if (i > -1) {
+				name = s.substring(0, i).trim();
+				if (sf.charOf(0) == ':') {
+					name1 = s.substring(i + 1).trim();
+				} else {
+					name1 = s;
+				}
+				i = name1.indexOf("->");
+				if (i > 0) {
+					format = name1.substring(i + 2).trim();
+					name1 = name1.substring(0, i).trim();
+				}
+			}
+
+			Object o = this.get(name);
+			if (o instanceof Serializable) {
+				if (format != null && format.length() > 0) {
+					char c1 = format.charAt(0);
+					if (c1 == '%') {
+						o = String.format(format, o);
+					} else if (c1 == '#') {
+						o = new DecimalFormat("#,##0").format(o);
+					} else if (c1 == '.') {
+						// .2
+						o = BigDecimal.valueOf(X.toDouble(o))
+								.setScale(X.toInt(format.substring(1)), RoundingMode.HALF_UP).doubleValue();
+					}
+				}
+
+				json_obj.put(name1, o);
+			}
+		}
+
+		return json_obj;
+
 	}
 
 	/**
@@ -969,6 +1147,13 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			this.set(name, o);
 		}
 	}
+
+//	public void load(org.sbson.BSONObject d) {
+//		for (String name : d.keySet()) {
+//			Object o = d.get(name);
+//			this.set(name, o);
+//		}
+//	}
 
 	public void load(Document d, String[] ss) {
 		if (ss == null || ss.length == 0 || X.isIn("*", ss)) {
@@ -1097,7 +1282,14 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@Override
 	public Object clone() {
 		try {
-			return super.clone();
+			Bean b = (Bean) super.clone();
+			if (_data != null)
+				b._data = new HashMap<>(_data);
+			if (_meta != null)
+				b._meta = new HashMap<>(_meta);
+			if (_selected != null)
+				b._selected = _selected.clone();
+			return b;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -1137,18 +1329,19 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	public String md5() {
 		JSON j1 = this.json().copy();
-		j1.remove("_.*", "created", "updated");
+		j1.remove("_.*", X.CREATED, "updated");
 		String s1 = j1.toString();
 
 		if (log.isDebugEnabled())
 			log.debug("s1=" + s1);
 
-		return Digest.md5(s1);
+		return MD5.md5(s1);
 	}
 
 	private static class _F {
 
 		Field f;
+		boolean password;
 		_F link;
 
 		void link(Field f) {
@@ -1212,10 +1405,105 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return;
 		}
 
-		this.meta = new HashMap<String, JSON>();
+		this._meta = new HashMap<String, JSON>();
 		for (JSON e : meta) {
-			this.meta.put(e.getString("name"), e);
+			this._meta.put(e.getString(X.NAME), e);
 		}
 	}
+
+	@Comment(text = "选择列", demo = ".select('a','b')")
+	public Bean select(String... names) {
+		_selected = names;
+		return this;
+	}
+
+	@Comment(text = "输出为CSV文件", demo = ".csv('a','b')")
+	public String csv(String... names) throws IOException {
+		_selected = names;
+		return csv();
+	}
+
+	@Comment(text = "输出为CSV文件", demo = ".csv()")
+	public String csv() throws IOException {
+
+		Temp t = Temp.create("a.csv");
+		Exporter<Bean> ex = Exporter.create(t.getFile(), Exporter.FORMAT.csv);
+
+		// print head
+		String[] cc = null;
+		if (_selected != null && _selected.length != 0) {
+			cc = _selected;
+		} else {
+			if (!this.isEmpty()) {
+				Set<String> names = this.keySet();
+				cc = names.toArray(new String[names.size()]);
+			}
+		}
+		if (cc != null) {
+			if (_meta != null) {
+				String[] ss = new String[cc.length];
+				for (int i = 0; i < cc.length; i++) {
+					String s = cc[i];
+					JSON c = _meta.get(s);
+					if (c == null) {
+						ss[i] = s;
+					} else {
+						ss[i] = c.getString("display");
+					}
+				}
+				ex.print(ss);
+			} else {
+				ex.print(cc);
+			}
+
+			String[] cc1 = cc;
+			ex.createSheet(e -> {
+				Object[] v = new Object[cc1.length];
+				for (int i = 0; i < cc1.length; i++) {
+					v[i] = e.get(cc1[i]);
+				}
+				return v;
+			});
+
+			ex.print(this);
+		}
+
+		ex.close();
+		return X.IO.read(t.getFile(), X.UTF8);
+	}
+
+	private String _decode(String password) {
+		if (X.isEmpty(password)) {
+			return password;
+		}
+		if (password.startsWith("$$") && password.length() > 3) {
+			char v = password.charAt(2);
+			if (v == '3') {
+				try {
+					return SM4.decode(password.substring(3), Key.get("password", 20));
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				}
+			}
+		}
+		return password;
+	}
+
+//	@SuppressWarnings({ "rawtypes", "deprecation" })
+//	public static void main(String[] args) {
+//
+//		Config.init(new File("/Users/joe/d/giiwa/conf/giiwa.properties"));
+//		Helper.init2(Config.getConf());
+//
+//		String s = "aaaaa";
+//		BeanDAO a = User.dao;
+//
+//		s = a.encode(s).toString();
+//		System.out.println("encode=" + s);
+//
+//		Bean b = new Bean();
+//		System.out.println("decode=" + b._decode(s));
+//
+//	}
 
 }

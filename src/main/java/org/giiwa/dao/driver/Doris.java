@@ -6,6 +6,7 @@ public class Doris extends MySQL {
 
 	@Override
 	public boolean check(String driverinfo) {
+		// 专用DorisHelper
 		return false;
 	}
 

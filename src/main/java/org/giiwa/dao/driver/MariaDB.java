@@ -105,7 +105,7 @@ public class MariaDB extends RDSHelper._AbstractDriver {
 //				String name = r.getString("table_name");
 //				name = name.toLowerCase();
 //				if (X.isEmpty(tablename) || name.matches(tablename)) {
-//					l1.add(JSON.create().append("name", name).append("type", r.getString("table_type"))
+//					l1.add(JSON.create().append(X.NAME, name).append("type", r.getString("table_type"))
 //							.append("display", r.getString("TABLE_COMMENT"))
 //							.append("memo", r.getString("TABLE_COMMENT")));
 //				}
@@ -165,7 +165,7 @@ public class MariaDB extends RDSHelper._AbstractDriver {
 			stat = c.createStatement();
 			stat.execute("alter table " + tablename + " comment '" + memo + "'");
 //			for (JSON j1 : cols) {
-//				String name = j1.getString("name");
+//				String name = j1.getString(X.NAME);
 //				String display = j1.getString("display");
 //
 //				try {

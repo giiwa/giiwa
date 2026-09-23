@@ -18,10 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.Base32;
+import org.giiwa.crypto.RSA;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
-import org.giiwa.misc.Base32;
-import org.giiwa.misc.RSA;
 import org.giiwa.web.Module;
 
 public class Key {

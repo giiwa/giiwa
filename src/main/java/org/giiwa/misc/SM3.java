@@ -14,9 +14,13 @@
 */
 package org.giiwa.misc;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.bouncycastle.crypto.digests.SM3Digest;
 import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.giiwa.dao.X;
 
 /**
  * SM3 => MD5
@@ -24,6 +28,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
  * @author joe
  *
  */
+@Deprecated
 public class SM3 {
 
 	/**
@@ -52,6 +57,38 @@ public class SM3 {
 		return org.bouncycastle.util.encoders.Hex.toHexString(encrypt);
 	}
 
+	public static String hash(String code, InputStream... ins) throws IOException {
+		try {
+
+			KeyParameter keyParameter = new KeyParameter(code.getBytes());
+			SM3Digest digest = new SM3Digest();
+			HMac hmac = new HMac(digest);
+			hmac.init(keyParameter);
+
+			byte[] buffer = new byte[1024 * 32];
+			int bytesRead;
+
+			// 2. 流式读取并更新摘要
+			// update 方法可以多次调用，模拟数据流不断写入
+			for (InputStream in : ins) {
+				while ((bytesRead = in.read(buffer)) != -1) {
+					hmac.update(buffer, 0, bytesRead);
+				}
+			}
+
+			// 3. 完成计算并获取结果
+			byte[] result = new byte[hmac.getMacSize()]; // SM3 固定为 32 字节
+			hmac.doFinal(result, 0);
+
+			// 4. 转换为 16 进制字符串返回
+			return org.bouncycastle.util.encoders.Hex.toHexString(result);
+		} finally {
+			for (InputStream in : ins) {
+				X.close(in);
+			}
+		}
+	}
+
 	/**
 	 * hash the src
 	 * 
@@ -64,6 +101,34 @@ public class SM3 {
 		byte[] encrypt = new byte[sm3Digest.getDigestSize()];
 		sm3Digest.doFinal(encrypt, 0);
 		return encrypt;
+	}
+
+	public static String hash(InputStream... ins) throws IOException {
+		try {
+			SM3Digest sm3Digest = new SM3Digest();
+
+			byte[] buffer = new byte[1024 * 32];
+			int bytesRead;
+
+			// 2. 流式读取并更新摘要
+			// update 方法可以多次调用，模拟数据流不断写入
+			for (InputStream in : ins) {
+				while ((bytesRead = in.read(buffer)) != -1) {
+					sm3Digest.update(buffer, 0, bytesRead);
+				}
+			}
+
+			// 3. 完成计算并获取结果
+			byte[] result = new byte[sm3Digest.getDigestSize()]; // SM3 固定为 32 字节
+			sm3Digest.doFinal(result, 0);
+
+			// 4. 转换为 16 进制字符串返回
+			return org.bouncycastle.util.encoders.Hex.toHexString(result);
+		} finally {
+			for (InputStream in : ins) {
+				X.close(in);
+			}
+		}
 	}
 
 	/**

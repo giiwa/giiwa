@@ -106,7 +106,7 @@ public final class Menu extends Bean {
 			 * test and create from the "root"
 			 */
 
-			jo.put("tag", mo.getName());
+			jo.put(X.TAG, mo.getName());
 			insertOrUpdate(jo, 0, mo);
 		}
 	}
@@ -116,7 +116,7 @@ public final class Menu extends Bean {
 	}
 
 	public String getName() {
-		return this.getString("name");
+		return this.getString(X.NAME);
 	}
 
 	public String getLoad1() {
@@ -132,7 +132,7 @@ public final class Menu extends Bean {
 	}
 
 	public String getTag() {
-		return this.getString("tag");
+		return this.getString(X.TAG);
 	}
 
 	public String getClasses() {
@@ -169,12 +169,12 @@ public final class Menu extends Bean {
 		try {
 			// log.info(jo);
 
-			String name = jo.has("name") ? jo.getString("name") : null;
+			String name = jo.has(X.NAME) ? jo.getString(X.NAME) : null;
 			if (!X.isEmpty(name)) {
 				/**
 				 * create menu if not exists
 				 */
-				V v = V.create().copy(jo, X.URL, "click", "classes", "content", "tag", "access", "seq", "tip", "style",
+				V v = V.create().copy(jo, X.URL, "click", "classes", "content", X.TAG, "access", "seq", "tip", "style",
 						"load", "show");
 
 				if (!X.isEmpty(v.value("load"))) {
@@ -223,8 +223,8 @@ public final class Menu extends Bean {
 						for (JSON j : arr) {
 							if (j != null) {
 
-								if (jo.containsKey("tag")) {
-									j.put("tag", jo.get("tag"));
+								if (jo.containsKey(X.TAG)) {
+									j.put(X.TAG, jo.get(X.TAG));
 								}
 								insertOrUpdate(j, m.getId(), mo);
 							}
@@ -298,7 +298,7 @@ public final class Menu extends Bean {
 	private static Menu insertOrUpdate(long parent, String name, V v) {
 		String node = Local.id();
 
-		W q = W.create().and("parent", parent).and("name", name).and("node", node);
+		W q = W.create().and("parent", parent).and(X.NAME, name).and(X.NODE, node);
 
 		try {
 			if (dao.exists(q)) {
@@ -308,15 +308,15 @@ public final class Menu extends Bean {
 				dao.update(q, v);
 
 			} else {
-				long id = UID.next("menu.id");
+				long id = dao.next();
 				while (dao.exists(id)) {
-					id = UID.next("menu.id");
+					id = dao.next();
 
 					if (log.isDebugEnabled())
 						log.debug("id=" + id);
 				}
 
-				dao.insert(v.set(X.ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node));
+				dao.insert(v.set(X.ID, id).set(X.ID, id).set("parent", parent).set(X.NAME, name).set(X.NODE, node));
 
 			}
 		} catch (Exception e1) {
@@ -354,7 +354,7 @@ public final class Menu extends Bean {
 	 */
 	public static Menu load(long parent, String name) {
 		String node = Local.id();
-		Menu m = dao.load(W.create().and("parent", parent).and("name", name).and("node", node));
+		Menu m = dao.load(W.create().and("parent", parent).and(X.NAME, name).and(X.NODE, node));
 		return m;
 	}
 
@@ -462,7 +462,7 @@ public final class Menu extends Bean {
 	 */
 	public static void remove(String tag) {
 		String node = Local.id();
-		dao.delete(W.create().and("tag", tag).and("node", node));
+		dao.delete(W.create().and(X.TAG, tag).and(X.NODE, node));
 	}
 
 	/**
@@ -471,7 +471,7 @@ public final class Menu extends Bean {
 	public static void reset() {
 		String node = Local.id();
 		// log.debug("node=" + node);
-		dao.update(W.create().and("node", node), V.create("seq", -1));
+		dao.update(W.create().and(X.NODE, node), V.create("seq", -1));
 	}
 
 	/**
@@ -479,7 +479,7 @@ public final class Menu extends Bean {
 	 */
 	public static void deleteall() {
 		String node = Local.id();
-		dao.delete(W.create().and("node", node).and("seq", 0, W.OP.lt));
+		dao.delete(W.create().and(X.NODE, node).and("seq", 0, W.OP.lt));
 	}
 
 	public String getStyle() {

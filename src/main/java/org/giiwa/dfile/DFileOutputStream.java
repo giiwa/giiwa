@@ -19,6 +19,8 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
 import org.giiwa.bean.Disk;
+import org.giiwa.dao.TimeStamp;
+import org.giiwa.dfile.ObsDFile.ObsMultipartOutputStream;
 
 public class DFileOutputStream extends OutputStream {
 
@@ -27,8 +29,9 @@ public class DFileOutputStream extends OutputStream {
 	String filename;
 	Disk disk;
 	FlushFunc flush;
+	Disk.Counter writer;
 
-	byte[] bb = new byte[1024 * 1024 * 4];
+	byte[] bb = new byte[1024 * 1024 * 5];
 	int pos = 0;
 	long offset = 0;
 
@@ -40,6 +43,7 @@ public class DFileOutputStream extends OutputStream {
 		d.offset = offset;
 		d.raf = raf;
 		d.flush = flush;
+		d.writer = Disk.Counter.write(disk);
 
 		return d;
 	}
@@ -51,16 +55,14 @@ public class DFileOutputStream extends OutputStream {
 		d.offset = offset;
 		d.out = out;
 		d.flush = flush;
+		d.writer = Disk.Counter.write(disk);
 
 		return d;
 	}
 
 	@Override
 	public void write(int b) throws IOException {
-		if (pos >= bb.length) {
-			flush();
-		}
-		bb[pos++] = (byte) b;
+		write(new byte[] { (byte) b }, 0, 1);
 	}
 
 	@Override
@@ -74,6 +76,8 @@ public class DFileOutputStream extends OutputStream {
 			return;
 		}
 
+		TimeStamp t = TimeStamp.create();
+
 		int n = 0;
 		while (n < len) {
 			int n1 = Math.min(len - n, bb.length - pos);
@@ -82,12 +86,16 @@ public class DFileOutputStream extends OutputStream {
 			pos += n1;
 			flush();
 		}
+
+		if (out == null || !(out instanceof ObsMultipartOutputStream)) {
+			// Obs自己记录性能
+			writer.add(len, t.pastms());
+		}
+
 	}
 
 	@Override
 	public void flush() throws IOException {
-
-//		log.warn("flush, pos=" + pos + ", filename=" + filename);
 
 		if (pos > 0) {
 			offset = flush.accept(offset, bb, pos);

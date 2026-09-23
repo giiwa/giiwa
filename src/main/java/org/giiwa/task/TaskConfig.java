@@ -17,6 +17,7 @@ package org.giiwa.task;
 import java.io.Serializable;
 
 import org.giiwa.bean.Node;
+import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 
 public class TaskConfig implements Serializable {
@@ -63,10 +64,10 @@ public class TaskConfig implements Serializable {
 
 		JSON j1 = JSON.create();
 
-		j1.put("name", name);
+		j1.put(X.NAME, name);
 		j1.put("clazzname", clazzname);
-		j1.put("node", node);
-		j1.put("state", state);
+		j1.put(X.NODE, node);
+		j1.put(X.STATE, state);
 		j1.put("remain", remain);
 		j1.put("delay", delay);
 		j1.put("runtime", runtime);

@@ -26,7 +26,10 @@ import org.giiwa.conf.Global;
 /**
  * The Class Digest.
  */
+@Deprecated
 public class AES {
+
+//	private static Log log = LogFactory.getLog(AES.class);
 
 	/**
 	 * AES decode
@@ -39,6 +42,7 @@ public class AES {
 	public synchronized static byte[] decode(byte[] content, byte[] code) throws Exception {
 
 		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 		IvParameterSpec ivspec = new IvParameterSpec(iv);
 
 		SecretKeySpec key = new SecretKeySpec(code, "AES");
@@ -70,6 +74,7 @@ public class AES {
 		}
 
 		byte[] iv = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 		IvParameterSpec ivspec = new IvParameterSpec(iv);
 
 		SecretKeySpec key = new SecretKeySpec(code, "AES");

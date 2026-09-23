@@ -25,6 +25,7 @@ import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.giiwa.dao.TimeStamp;
+import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
 
@@ -101,7 +102,7 @@ public class VelocityView extends View {
 			 * get the template from the top
 			 */
 
-			Template t1 = Velocity.getTemplate(viewname, "UTF-8");
+			Template t1 = Velocity.getTemplate(viewname, X.UTF8);
 			t = T.create(t1, View.lastModified(file));
 
 //			if (Local.getInt("web.debug", 0) == 0) {

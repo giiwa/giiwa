@@ -22,7 +22,7 @@ import org.giiwa.misc.Url;
 import org.giiwa.web.Controller;
 
 /**
- * web api： /temp <br>
+ * 临时文件接口 <br>
  * used to access temporary file which created by Temp
  * 
  * @Deprecated

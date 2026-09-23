@@ -41,7 +41,7 @@ public class _DiskIO extends Bean {
 
 	public static BeanDAO<String, _DiskIO> dao = BeanDAO.create(_DiskIO.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "节点", size = 50)
@@ -83,7 +83,7 @@ public class _DiskIO extends Bean {
 				break;
 			}
 
-			_Disk d1 = _Disk.dao.load(W.create().and("node", node).and("path", path));
+			_Disk d1 = _Disk.dao.load(W.create().and(X.NODE, node).and("path", path));
 			if (d1 == null)
 				continue;
 
@@ -93,9 +93,9 @@ public class _DiskIO extends Bean {
 //				name = name.replace("[\\\\]", "/");
 				V v = V.create();
 
-				v.append("node", node).force("name", name).remove("_id", X.ID);
+				v.append(X.NODE, node).force(X.NAME, name).remove("_id", X.ID);
 
-				Record r1 = Record.dao.load(W.create().and("node", node).and("path", path).sort("created", -1));
+				Record r1 = Record.dao.load(W.create().and(X.NODE, node).and("path", path).sort(X.CREATED, -1));
 				if (r1 != null && jo.readbytes > r1.readbytes) {
 					long time = (Global.now() - r1.getCreated()) / 1000;
 					v.force("_reads", (jo.readbytes - r1.readbytes) / time);
@@ -112,11 +112,11 @@ public class _DiskIO extends Bean {
 					dao.insert(v.copy().force(X.ID, id));
 				}
 
-				if (!Record.dao.exists2(W.create().and("node", node).and("path", path).and("created",
+				if (!Record.dao.exists2(W.create().and(X.NODE, node).and("path", path).and(X.CREATED,
 						Global.now() - X.AMINUTE, W.OP.gt))) {
 					// save to record per hour
 					Record.dao
-							.insert(v.copy().force(X.ID, UID.id(id, Global.now())).append("node", node));
+							.insert(v.copy().force(X.ID, UID.id(id, Global.now())).append(X.NODE, node));
 				}
 			} catch (Exception e) {
 				log.error(jo, e);
@@ -135,7 +135,7 @@ public class _DiskIO extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AMONTH, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AMONTH, W.OP.lt));
 		}
 
 	}

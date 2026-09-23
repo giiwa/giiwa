@@ -188,9 +188,9 @@ public final class Policy extends Bean {
 					Integer delay = X.toInt(min_delay + Math.random() * (max_delay - min_delay));
 					GLog.securitylog.warn(Policy.class, "delay",
 							"delay=" + delay + ", client=" + client + ", url=" + url, null, ip);
-					log.warn("blocked, delay output=" + delay + "s");
-					synchronized (delay) {
-						delay.wait(delay * 1000);
+					log.warn("blocked, delay output=" + delay + X.S);
+					synchronized (this) {
+						this.wait(delay * 1000);
 					}
 				} catch (Exception err) {
 					log.error(err.getMessage(), err);

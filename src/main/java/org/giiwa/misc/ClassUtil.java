@@ -68,7 +68,7 @@ public class ClassUtil {
 					if (X.isSame("jar", u.getProtocol())) {
 
 						String jarPath = u.getPath().substring(5, u.getPath().indexOf("!"));
-						JarFile jar = new JarFile(URLDecoder.decode(jarPath, "UTF-8"));
+						JarFile jar = new JarFile(URLDecoder.decode(jarPath, X.UTF8));
 						Enumeration<JarEntry> entries = jar.entries();
 
 						while (entries.hasMoreElements()) {

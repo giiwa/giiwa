@@ -15,6 +15,7 @@
 package org.giiwa.dao;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -26,6 +27,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,7 @@ import org.bson.types.ObjectId;
 import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.Helper.Stream;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.sql.SQL;
@@ -60,7 +63,6 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoWriteException;
-import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListCollectionsIterable;
@@ -70,9 +72,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.DeleteManyModel;
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -134,20 +134,16 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		TimeStamp t = TimeStamp.create();
 
-		int n = -1;
+		Bson filter = q.query();
+
+		int n = 0;
 		try {
 			MongoCollection<Document> db1 = getCollection(collection);
 
-			DeleteManyModel<Document> dmm = new DeleteManyModel<Document>(q.query());
-			List<WriteModel<Document>> req = new ArrayList<WriteModel<Document>>();
-			req.add(dmm);
-			BulkWriteResult r = db1.bulkWrite(req);
-			n = r.getDeletedCount();
-
-//			DeleteOption opt = StandardDeleteOption.OVERRIDE_READ_ONLY;
-//			DeleteResult r = db1.deleteMany(q.query(), null);
-//			n = X.toInt(r.getDeletedCount());
-
+			if (db1 != null) {
+				DeleteResult r = db1.deleteMany(filter);
+				n = (int) r.getDeletedCount();
+			}
 			if (log.isDebugEnabled()) {
 				log.debug("delete, collection=" + collection + ", q=" + q + ", deleted=" + n);
 			}
@@ -157,7 +153,7 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("delete, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
-				GLog.applog.warn("sys", "db",
+				GLog.applog.warn("db", "delete",
 						"count, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
 			} else if (log.isDebugEnabled()) {
 				log.debug("delete, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
@@ -188,7 +184,8 @@ public final class MongoHelper implements Helper.DBHelper {
 	 * @param database the name of database, if "" or null, then "default"
 	 * @return DB
 	 */
-	public MongoDatabase getDB() {
+	public synchronized MongoDatabase getDB() {
+
 		if (gdb != null)
 			return gdb;
 
@@ -210,9 +207,10 @@ public final class MongoHelper implements Helper.DBHelper {
 		}
 
 		return gdb;
+
 	}
 
-	private MongoDatabase getAdmin() {
+	private MongoDatabase _admin() {
 
 		if (admin != null)
 			return admin;
@@ -238,40 +236,54 @@ public final class MongoHelper implements Helper.DBHelper {
 
 	private MongoDatabase getDB(String url, String db, String user, String passwd, int conns, int timeout) {
 
-		url = url.trim();
-		db = db.trim();
+		if (client == null) {
+			url = url.trim();
+			db = db.trim();
 
-		if (X.isEmpty(user)) {
-			Url u = Url.create(url);
-			user = u.get("username");
-			passwd = u.get("passwd");
-		}
-		int i = url.indexOf("?");
-		if (i > 0) {
-			url = url.substring(0, i);
-		}
-		log.warn("url=" + url + ", db=" + db + ", user=" + user + ", passwd=" + passwd);
-		if (url.startsWith("jmdb://") || url.startsWith("mysql://")) {
-			i = url.indexOf("://");
-			url = "mongodb" + url.substring(i);
+			if (X.isEmpty(user)) {
+				Url u = Url.create(url);
+				user = u.get("username");
+				passwd = u.get("passwd");
+			}
+			int i = url.indexOf("?");
+//		if (i > 0) {
+//			url = url.substring(0, i);
+//		}
+			log.warn("url=" + url + ", db=" + db + ", user=" + user + ", timeout=" + timeout + ", conns=" + conns);
+			if (url.startsWith("sdb://") || url.startsWith("jmdb://") || url.startsWith("mysql://")) {
+				i = url.indexOf("://");
+				url = "mongodb" + url.substring(i);
+			}
+
+			MongoClientSettings.Builder setting = MongoClientSettings.builder();
+			setting.applyConnectionString(new ConnectionString(url));
+			setting.applyToSocketSettings(b -> {
+				b.connectTimeout(timeout, TimeUnit.MILLISECONDS);
+				b.readTimeout(timeout, TimeUnit.MILLISECONDS);
+			});
+			setting.applyToConnectionPoolSettings(b -> {
+				b.maxConnecting(5); // 并发创建链接最大数
+				b.minSize(Math.min(5, conns)); // 最小链接数量
+				b.maxSize(conns);
+				b.maxConnectionIdleTime(60, TimeUnit.SECONDS);
+				b.maxConnectionLifeTime(10, TimeUnit.MINUTES);
+				b.maxWaitTime(30, TimeUnit.SECONDS);
+			}).retryWrites(true);
+//		setting.applyToClusterSettings(builder -> builder.serverSelectionTimeout(1, TimeUnit.SECONDS));
+//		setting.applyToServerSettings(builder -> builder.heartbeatFrequency(20, TimeUnit.SECONDS));
+
+			if (!X.isEmpty(user)) {
+				setting.credential(MongoCredential.createCredential(user, db, passwd.toCharArray()));
+			}
+
+			client = MongoClients.create(setting.build());
 		}
 
-		MongoClientSettings.Builder setting = MongoClientSettings.builder();
-		setting.applyConnectionString(new ConnectionString(url));
-		setting.applyToSocketSettings(b -> {
-			b.connectTimeout(timeout, TimeUnit.SECONDS);
-			b.readTimeout(timeout, TimeUnit.SECONDS);
-		});
-		setting.applyToConnectionPoolSettings(b -> {
-			b.maxConnecting(conns);
-		}).retryWrites(true);
+		MongoDatabase d1 = client.getDatabase(db);
 
-		if (!X.isEmpty(user)) {
-			setting.credential(MongoCredential.createCredential(user, db, passwd.toCharArray()));
-		}
+		log.warn("url=" + url + ", db=" + d1 + ", user=" + user);
 
-		client = MongoClients.create(setting.build());
-		return client.getDatabase(db);
+		return d1;
 
 	}
 
@@ -284,11 +296,13 @@ public final class MongoHelper implements Helper.DBHelper {
 	 * @param database   the database
 	 * @param collection the collection
 	 * @return DBCollection
+	 * @throws
 	 */
 	public MongoCollection<Document> getCollection(String collection) {
 
 		MongoDatabase g = getDB();
 
+//		try {
 		MongoCollection<Document> d = null;
 
 		if (g != null) {
@@ -301,6 +315,10 @@ public final class MongoHelper implements Helper.DBHelper {
 		}
 
 		return d;
+//		} catch (Throwable err) {
+//			log.error(err.getMessage(), err);
+//			throw new RuntimeException(client);
+//		}
 	}
 
 	/**
@@ -339,22 +357,24 @@ public final class MongoHelper implements Helper.DBHelper {
 		try {
 			MongoCollection<Document> db = getCollection(collection);
 			if (db != null) {
-				FindIterable<Document> d = db.find(query);
-				if (d != null) {
-					Document d1 = d.first();
-					if (d1 != null) {
-						b.load(d1);
-						return b;
+				FindIterable<Document> d = db.find(query).limit(1);
+				try (MongoCursor<Document> cursor = d.limit(1).iterator()) {
+					if (cursor.hasNext()) {
+						Document d1 = cursor.next();
+						if (d1 != null) {
+							b.load(d1);
+							return b;
+						}
 					}
 				}
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("load查询异常 collection=" + collection + ", query=" + query.toBsonDocument(), e);
 
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
-				GLog.applog.warn("sys", "db",
+				GLog.applog.warn("db", "load",
 						"load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
 			} else if (log.isDebugEnabled()) {
 				log.debug("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
@@ -389,34 +409,30 @@ public final class MongoHelper implements Helper.DBHelper {
 			MongoCollection<Document> db1 = getCollection(collection);
 			if (db1 != null) {
 
-				FindIterable<Document> d = db1.find(query);
+				FindIterable<Document> d = db1.find(query).limit(1);
 				if (order != null) {
 					d.sort(order);
 				}
 
 				if (d != null) {
 
-					Document d1 = d.first();
+					try (MongoCursor<Document> it = d.iterator()) {
+						Document d1 = it.hasNext() ? it.next() : null;
+						if (trace) {
+							log.warn("trace, load - cost=" + t.past() + ", collection=" + collection + ", query="
+									+ query + ", order=" + order + ", d=" + (d1 != null ? 1 : 0));
+						} else if (log.isDebugEnabled()) {
+							log.debug("load - cost=" + t.past() + ", collection=" + collection + ", query=" + query
+									+ ", order=" + order + ", d=" + (d1 != null ? 1 : 0));
+						}
 
-					if (trace) {
-						log.warn("trace, load - cost=" + t.past() + ", collection=" + collection + ", query=" + query
-								+ ", order=" + order + ", d=" + (d1 != null ? 1 : 0));
-					} else if (log.isDebugEnabled()) {
-						log.debug("load - cost=" + t.past() + ", collection=" + collection + ", query=" + query
-								+ ", order=" + order + ", d=" + (d1 != null ? 1 : 0));
+						String[] ss = X.split(fields, "[, ]");
+						if (d1 != null) {
+							b.load(d1, ss);
+							return b;
+						}
 					}
 
-					String[] ss = X.split(fields, ",");
-					if (d1 != null) {
-						b.load(d1, ss);
-						return b;
-					}
-
-					// MongoCursor<Document> it = d.iterator();
-					// if (it.hasNext()) {
-					// b.load(it.next());
-					// return b;
-					// }
 				} else {
 					if (trace) {
 						log.warn("trace, load - cost=" + t.past() + ", collection=" + collection + ", query=" + query
@@ -435,8 +451,14 @@ public final class MongoHelper implements Helper.DBHelper {
 			if (t.pastms() > 1000) {
 				log.warn("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query + ", order="
 						+ order);
-				GLog.applog.warn(MongoHelper.class, "db", "load, cost=" + t.past() + ",  collection=" + collection
-						+ ", query=" + query + ", order=" + order);
+
+				if (t.pastms() < 3000) {
+					/**
+					 * 防止数据库错误，导致死循环了
+					 */
+					GLog.applog.warn("db", "load", "cost=" + t.past() + ",  collection=" + collection + ", query="
+							+ query + ", order=" + order);
+				}
 			} else if (log.isDebugEnabled()) {
 				log.debug("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query + ", order="
 						+ order);
@@ -484,56 +506,49 @@ public final class MongoHelper implements Helper.DBHelper {
 			throws SQLException {
 
 		TimeStamp t = TimeStamp.create();
-		MongoCollection<Document> db1 = null;
-		FindIterable<Document> cur = null;
 		Bson query = q.query();
 		Bson orderBy = q.order();
 
+		final Beans<T> bs = new Beans<>();
+
 		try {
 
-			db1 = getCollection(collection);
+			MongoCollection<Document> db1 = getCollection(collection);
 			if (db1 != null) {
-				cur = db1.find(query);
 
-				if (orderBy != null) {
-					cur.sort(orderBy);
-				}
-
-				final Beans<T> bs = new Beans<T>();
 				bs.q = q;
 				bs.table = collection;
 
-				// ignore this as big performance
-				// bs.total = (int) db.count(query);
-				// log.debug("cost=" + t.past() + "ms, count=" + bs.total);
-
+				FindIterable<Document> cur = db1.find(query).allowDiskUse(true); // 关键参数;
+				if (orderBy != null) {
+					cur.sort(orderBy);
+				}
 				cur = cur.skip(offset);
-				// log.debug("skip=" + t.past() +"ms, count=" + bs.total);
 
 				if (limit < 0) {
 					limit = 1000;
 				}
 				cur = cur.limit(limit);
 
-				long rowid = offset;
-				MongoCursor<Document> it = cur.iterator();
+//				long rowid = offset;
+				String[] ss = X.split(q.fields(), "[, ]");
 
-				String[] ss = X.split(q.fields(), ",");
-
-				while (it.hasNext() && limit > 0) {
-					// log.debug("hasnext=" + t.past() + "ms, count=" + bs.total);
-					Document d = it.next();
-					// log.debug("next=" + t.past() +"ms, count=" + bs.total);
-					if (d != null) {
-						T b = clazz.getDeclaredConstructor().newInstance();
-						if (ss == null || ss.length == 0) {
-							b.load(d);
-							b._rowid = rowid++;
-						} else {
-							b.load(d, ss);
+				try (MongoCursor<Document> it = cur.iterator()) {
+					while (it.hasNext() && limit > 0) {
+						// log.debug("hasnext=" + t.past() + "ms, count=" + bs.total);
+						Document d = it.next();
+						// log.debug("next=" + t.past() +"ms, count=" + bs.total);
+						if (d != null) {
+							T b = clazz.getDeclaredConstructor().newInstance();
+							if (ss == null || ss.length == 0) {
+								b.load(d);
+//								b._rowid = rowid++;
+							} else {
+								b.load(d, ss);
+							}
+							bs.add(b);
+							limit--;
 						}
-						bs.add(b);
-						limit--;
 					}
 				}
 
@@ -550,24 +565,20 @@ public final class MongoHelper implements Helper.DBHelper {
 			}
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + orderBy, e);
-			throw new SQLException(e.getMessage() + ", sql=" + q, e);
+			throw new SQLException(e.getMessage() + ", table=" + collection + ", sql=" + q.toSQL(), e);
 		} finally {
-
 			if (t.pastms() > 1000) {
-				log.warn("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query + ", order="
-						+ orderBy);
-				GLog.applog.warn("sys", "db", "load, cost=" + t.past() + ",  collection=" + collection + ", query="
-						+ query + ", order=" + orderBy);
+				log.warn("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + q.toSQL());
+				GLog.applog.warn("db", "load",
+						"cost=" + t.past() + ",  collection=" + collection + ", query=" + q.toSQL());
 			} else if (log.isDebugEnabled()) {
-				log.debug("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + query + ", order="
-						+ orderBy);
+				log.debug("load, cost=" + t.past() + ",  collection=" + collection + ", query=" + q.toSQL());
 			}
-
 			Helper.Stat.read(collection, t.pastms());
 
 		}
 
-		return null;
+		return bs;
 	}
 
 	/**
@@ -679,7 +690,12 @@ public final class MongoHelper implements Helper.DBHelper {
 		try {
 			MongoCollection<Document> c = getCollection(collection);
 			if (c != null) {
-				return c.find(query).first();
+				try (MongoCursor<Document> cursor = c.find(query).limit(1).iterator()) {
+					if (cursor.hasNext()) {
+						return cursor.next();
+					}
+					return null;
+				}
 			}
 		} catch (Exception e) {
 			log.error(query, e);
@@ -724,9 +740,6 @@ public final class MongoHelper implements Helper.DBHelper {
 		v.force(X.CREATED, t1).force(X.UPDATED, t1);
 		v.append("_node", Global.id());
 
-		// TODO
-//		v.append("_node1", Local.label());
-//
 		TimeStamp t = TimeStamp.create();
 
 		try {
@@ -736,7 +749,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 				Object id = v.value(X.ID);
 				if (!X.isEmpty(id)) {
-					v.append("_id", v.value(X.ID));
+					v.append("_id", id);
 				} else {
 					v.append("_id", UUID.randomUUID().toString());
 				}
@@ -753,7 +766,8 @@ public final class MongoHelper implements Helper.DBHelper {
 						} else if (v1 instanceof Date) {
 							v1 = ((Date) v1).getTime();
 						}
-						d.append(name, v1);
+//						d.append(name, v1);
+						d.append(name.toLowerCase(), v1);
 					}
 				}
 
@@ -807,7 +821,7 @@ public final class MongoHelper implements Helper.DBHelper {
 			log.debug("updated=" + o + ", ==ignore");
 		}
 
-		// TODO, not allow change the created
+		// not allow change the created
 		o = v.value(X.CREATED);
 		if (o != V.ignore) {
 			if (X.toLong(o) == 0) {
@@ -819,6 +833,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		TimeStamp t = TimeStamp.create();
 		Document set = new Document();
+		Document unset = new Document();
 
 		// int len = v.size();
 		for (String name : v.names()) {
@@ -832,7 +847,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			} else if (v1 instanceof Date) {
 				v1 = ((Date) v1).getTime();
 			}
-			set.append(name, v1);
+//			set.append(name, v1);
+			set.append(name.toLowerCase(), v1);
 		}
 
 		try {
@@ -841,6 +857,9 @@ public final class MongoHelper implements Helper.DBHelper {
 			Document d = new Document();
 			if (!set.isEmpty()) {
 				d.append("$set", set);
+			}
+			if (!unset.isEmpty()) {
+				d.append("$unset", unset);
 			}
 			UpdateResult r = null;
 //			if (v.value("_id") != null) {
@@ -889,7 +908,9 @@ public final class MongoHelper implements Helper.DBHelper {
 		try {
 			MongoCollection<Document> c = getCollection(collection);
 			if (c != null) {
-				b = c.find(q.query()).first() != null;
+				try (MongoCursor<Document> cursor = c.find(q.query()).limit(1).iterator()) {
+					b = cursor.hasNext();
+				}
 			}
 		} catch (Exception e) {
 			throw e;
@@ -942,19 +963,17 @@ public final class MongoHelper implements Helper.DBHelper {
 	 *
 	 * @param collection the collection
 	 */
-	@SuppressWarnings("unused")
 	public void clear(String collection) {
 		try {
 			MongoCollection<Document> c = getCollection(collection);
 			if (c != null) {
-				TimeStamp t = TimeStamp.create();
-				DeleteResult d = c.deleteMany(new BasicDBObject());
+				c.drop();
+
+				this.getOptimizer().drop(collection);
 
 			}
-
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-
 		}
 	}
 
@@ -981,8 +1000,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			if (t.pastms() > 1000) {
 				log.warn("distinct, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n="
 						+ (l1 == null ? "null" : l1.size()));
-				GLog.applog.warn("sys", "db", "distinct, cost=" + t.past() + ",  collection=" + collection + ", query="
-						+ q + ", n=" + (l1 == null ? "null" : l1.size()));
+				GLog.applog.warn("db", "distinct", "cost=" + t.past() + ",  collection=" + collection + ", query=" + q
+						+ ", n=" + (l1 == null ? "null" : l1.size()));
 			} else if (log.isDebugEnabled()) {
 				log.debug("distinct, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n="
 						+ (l1 == null ? "null" : l1.size()));
@@ -1037,23 +1056,24 @@ public final class MongoHelper implements Helper.DBHelper {
 			log.debug("backuping " + tablename);
 
 		MongoCollection<Document> d1 = getCollection(tablename);
-		MongoCursor<Document> c1 = d1.find().iterator();
-		int rows = 0;
-		while (c1.hasNext()) {
-			rows++;
+		try (MongoCursor<Document> c1 = d1.find().iterator()) {
+			int rows = 0;
+			while (c1.hasNext()) {
+				rows++;
 
-			Document d2 = c1.next();
-			JSON jo = new JSON();
-			jo.put("_table", tablename);
-			for (String name : d2.keySet()) {
-				jo.put(name, d2.get(name));
-			}
+				Document d2 = c1.next();
+				JSON jo = new JSON();
+				jo.put("_table", tablename);
+				for (String name : d2.keySet()) {
+					jo.put(name, d2.get(name));
+				}
 //			out.println(jo.toString());
-			out.println(Base64.getEncoder().encodeToString(jo.toString().getBytes()));
+				out.println(Base64.getEncoder().encodeToString(jo.toString().getBytes()));
 
-			if (rows % 1000 == 0) {
-				if (log.isDebugEnabled())
-					log.debug("backup " + tablename + ", rows=" + rows);
+				if (rows % 1000 == 0) {
+					if (log.isDebugEnabled())
+						log.debug("backup " + tablename + ", rows=" + rows);
+				}
 			}
 		}
 	}
@@ -1125,7 +1145,8 @@ public final class MongoHelper implements Helper.DBHelper {
 				d1 = new Document();
 				for (String s : v.names()) {
 					Object v1 = v.value(s);
-					d1.append(s, v1);
+//					d1.append(s, v1);
+					d1.append(s.toLowerCase(), v1);
 				}
 				if (!d1.isEmpty()) {
 					d2.append("$set", d1);
@@ -1143,10 +1164,12 @@ public final class MongoHelper implements Helper.DBHelper {
 				if (v != null && !v.isEmpty()) {
 					for (String s : v.names()) {
 						Object v1 = v.value(s);
-						d1.append(s, v1);
+//						d1.append(s, v1);
+						d1.append(s.toLowerCase(), v1);
 					}
 				}
-				d1.append(name, n);
+//				d1.append(name, n);
+				d1.append(name.toLowerCase(), n);
 				d2.append("$set", d1);
 				r = c.updateMany(q.query(), d2);
 
@@ -1167,7 +1190,8 @@ public final class MongoHelper implements Helper.DBHelper {
 				return -1;
 			}
 
-			v1.append(name, n);
+//			v1.append(name, n);
+			v1.append(name.toLowerCase(), n);
 			v1.copy(v);
 
 			return insertTable(table, v1);
@@ -1178,7 +1202,7 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
-				GLog.applog.warn("sys", "db", "inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "inc", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			} else if (log.isDebugEnabled()) {
 				log.debug("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			}
@@ -1208,7 +1232,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			Document d1 = new Document();
 			for (String s : v.names()) {
 				Object v1 = v.value(s);
-				d1.append(s, v1);
+//				d1.append(s, v1);
+				d1.append(s.toLowerCase(), v1);
 			}
 			if (!d1.isEmpty()) {
 				d2.append("$set", d1);
@@ -1225,7 +1250,8 @@ public final class MongoHelper implements Helper.DBHelper {
 				if (v != null && !v.isEmpty()) {
 					for (String s : v.names()) {
 						Object v1 = v.value(s);
-						d1.append(s, v1);
+//						d1.append(s, v1);
+						d1.append(s.toLowerCase(), v1);
 					}
 				}
 				d1.append(name, n);
@@ -1249,9 +1275,10 @@ public final class MongoHelper implements Helper.DBHelper {
 				return -1;
 			}
 
-			v1.append(name, n);
+//			v1.append(name, n);
+			v1.append(name.toLowerCase(), n);
 			v1.copy(v);
-			v1.append("created", Global.now());
+			v1.append(X.CREATED, Global.now());
 
 			return insertTable(table, v1);
 
@@ -1261,7 +1288,7 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
-				GLog.applog.warn("sys", "db", "inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "inc", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			} else if (log.isDebugEnabled()) {
 				log.debug("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			}
@@ -1317,17 +1344,18 @@ public final class MongoHelper implements Helper.DBHelper {
 		List<Map<String, Object>> l1 = new ArrayList<Map<String, Object>>();
 
 		MongoCollection<Document> c = getCollection(table);
-		MongoCursor<Document> i1 = c.listIndexes().iterator();
-		while (i1.hasNext()) {
-			Document d1 = i1.next();
-			l1.add(d1);
+		try (MongoCursor<Document> i1 = c.listIndexes().iterator()) {
+			while (i1.hasNext()) {
+				l1.add(new HashMap<>(i1.next()));
+			}
 		}
 
 		return l1;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public int insertTable(String collection, List<V> values) {
+	public int insertTable(String collection, List values) {
 
 		if (X.isEmpty(values))
 			return 0;
@@ -1340,47 +1368,94 @@ public final class MongoHelper implements Helper.DBHelper {
 
 				List<Document> l1 = new ArrayList<Document>();
 
-				for (V v : values) {
+				int n = 0;
 
-					if (v == null || v.isEmpty())
+				for (Object o : values) {
+
+					if (o == null)
 						continue;
 
 					long t1 = Global.now();
-					v.force(X.CREATED, t1).force(X.UPDATED, t1);
-					v.force("_node", Global.id());
-
 					Document d = new Document();
 
-					Object id = v.value(X.ID);
-					if (!X.isEmpty(id)) {
-						v.append("_id", v.value(X.ID));
-					} else {
-						v.append("_id", UUID.randomUUID().toString());
-					}
+					if (o instanceof V) {
+						V v = (V) o;
+						v.force(X.CREATED, t1).force(X.UPDATED, t1);
+						v.force("_node", Global.id());
 
-					for (String name : v.names()) {
-						Object v1 = v.value(name);
-						if (v1 != null) {
-							if (v1 instanceof UUID) {
-								v1 = v1.toString();
-							} else if (v1 instanceof Date) {
-								v1 = ((Date) v1).getTime();
-							}
-							d.append(name, v1);
+						Object id = v.value(X.ID);
+						if (!X.isEmpty(id)) {
+							v.append("_id", id);
+						} else {
+							id = UID.id(v.toString());
+							v.append("_id", id);
+							v.append(X.ID, id);
 						}
+
+						for (String name : v.names()) {
+							Object v1 = v.value(name);
+							if (v1 != null) {
+								if (v1 instanceof UUID) {
+									v1 = v1.toString();
+								} else if (v1 instanceof Date) {
+									v1 = ((Date) v1).getTime();
+								}
+//								d.append(name, v1);
+								d.append(name.toLowerCase(), v1);
+							}
+						}
+					} else if (o instanceof Map) {
+						Map v = (Map) o;
+						v.put(X.CREATED, t1);
+						v.put(X.UPDATED, t1);
+						v.put("_node", Global.id());
+
+						Object id = v.get(X.ID);
+						if (!X.isEmpty(id)) {
+							v.put("_id", id);
+						} else {
+							id = UID.id(v.toString());
+							v.put("_id", id);
+							v.put(X.ID, id);
+						}
+
+						for (Object name : v.keySet()) {
+							Object v1 = v.get(name);
+							if (v1 != null) {
+								if (v1 instanceof UUID) {
+									v1 = v1.toString();
+								} else if (v1 instanceof Date) {
+									v1 = ((Date) v1).getTime();
+								}
+//								d.append(name.toString(), v1);
+								d.append(name.toString().toLowerCase(), v1);
+							}
+						}
+					} else {
+						throw new RuntimeException("not support type: " + o.getClass());
 					}
 
 					l1.add(d);
+
+					if (l1.size() > 1000) {
+						c.insertMany(l1);
+						n += l1.size();
+						l1 = new ArrayList<Document>();
+					}
 				}
 
 				try {
 
-					c.insertMany(l1);
+					if (!l1.isEmpty()) {
+						c.insertMany(l1);
 
-					if (log.isDebugEnabled())
-						log.debug("inserted collection=" + collection + ", cost=" + t.past() + ", size=" + l1.size());
+						if (log.isDebugEnabled())
+							log.debug(
+									"inserted collection=" + collection + ", cost=" + t.past() + ", size=" + l1.size());
 
-					return l1.size();
+						n += l1.size();
+					}
+					return n;
 				} catch (Exception e) {
 					log.error("cost=" + t.past(), e);
 
@@ -1412,9 +1487,9 @@ public final class MongoHelper implements Helper.DBHelper {
 			ListCollectionsIterable<Document> it = g.listCollections();
 			for (Document d : it) {
 				JSON j = JSON.create();
-				String name = d.getString("name");
+				String name = d.getString(X.NAME);
 				if (X.isEmpty(tablename) || name.matches(tablename)) {
-					j.put("name", name);
+					j.put(X.NAME, name);
 					j.putAll(d);
 					list.add(j);
 					if (n > 0 && list.size() > n) {
@@ -1428,7 +1503,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 			@Override
 			public int compare(JSON o1, JSON o2) {
-				return o1.getString("name").compareToIgnoreCase(o2.getString("name"));
+				return o1.getString(X.NAME).compareToIgnoreCase(o2.getString(X.NAME));
 			}
 
 		});
@@ -1444,6 +1519,63 @@ public final class MongoHelper implements Helper.DBHelper {
 			client.close();
 			client = null;
 		}
+
+	}
+
+	@Override
+	public <T extends Bean> Stream<T> stream(String table, W q, long offset, Class<T> t1) throws SQLException {
+
+		FindIterable<Document> cur = null;
+		Bson query = q.query();
+		Bson orderBy = q.order();
+
+		MongoCollection<Document> db1 = getCollection(table);
+		if (db1 != null) {
+			cur = db1.find(query);
+			cur.noCursorTimeout(true);
+
+			if (orderBy != null) {
+				cur.sort(orderBy);
+			}
+			if (offset > 0) {
+				cur.skip((int) offset);
+			}
+
+			MongoCursor<Document> it = cur.iterator();
+
+			return new Stream<T>() {
+
+				@Override
+				public boolean hasNext() {
+					return it.hasNext();
+				}
+
+				@Override
+				public T next() {
+					try {
+						T d = t1.getDeclaredConstructor().newInstance();
+						d.load(it.next());
+						return d;
+					} catch (Exception err) {
+						log.error(err.getMessage(), err);
+					}
+					return null;
+				}
+
+				@Override
+				public void close() throws IOException {
+					it.close();
+				}
+
+				@Override
+				public long size() {
+					return db1.countDocuments(query);
+				}
+
+			};
+		}
+
+		throw new SQLException("connection error for get table!");
 
 	}
 
@@ -1510,7 +1642,7 @@ public final class MongoHelper implements Helper.DBHelper {
 		//
 		int i = url.lastIndexOf("/");
 		if (i < 0) {
-			throw new SQLException("dbname missed, mongdb://[ip]:[port],[ip2]:[port]/dbname");
+			throw new SQLException("dbname missed, mongodb://[ip]:[port],[ip2]:[port]/dbname");
 		}
 		String dbname = url.substring(i + 1);
 		i = dbname.indexOf("?");
@@ -1527,7 +1659,7 @@ public final class MongoHelper implements Helper.DBHelper {
 	public List<JSON> getMetaData(String tablename) {
 		MongoCollection<Document> c = getCollection(tablename);
 		List<JSON> list = new ArrayList<JSON>();
-		list.add(JSON.create().append("name", tablename).append("size", c.estimatedDocumentCount()));
+		list.add(JSON.create().append(X.NAME, tablename).append("size", c.estimatedDocumentCount()));
 		return list;
 	}
 
@@ -1551,11 +1683,12 @@ public final class MongoHelper implements Helper.DBHelper {
 				if (log.isDebugEnabled())
 					log.debug("l1=" + l1);
 
-				MongoCursor<Document> it = c.aggregate(l1).iterator();
-				if (it != null && it.hasNext()) {
-					Document d = it.next();
-					if (d != null) {
-						n = d.get(name);
+				try (MongoCursor<Document> it = c.aggregate(l1).iterator()) {
+					if (it.hasNext()) {
+						Document d = it.next();
+						if (d != null) {
+							n = d.get(name);
+						}
 					}
 				}
 			}
@@ -1564,8 +1697,8 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("sum, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
-				GLog.applog.warn("sys", "db",
-						"sum, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
+				GLog.applog.warn("db", "sum",
+						"cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
 			} else if (log.isDebugEnabled()) {
 				log.debug("sum, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
 			}
@@ -1590,13 +1723,16 @@ public final class MongoHelper implements Helper.DBHelper {
 				group.append("$group", new BasicDBObject().append("_id", name).append(name,
 						new BasicDBObject().append("$avg", "$" + name)));
 
-				List<BasicDBObject> l1 = Arrays.asList(match, group);
+				List<BasicDBObject> pipeline = Arrays.asList(match, group);
 
-				MongoCursor<Document> it = c.aggregate(l1).iterator();
-				if (it != null && it.hasNext()) {
-					Document d = it.next();
-					if (d != null) {
-						n = d.get(name);
+				AggregateIterable<Document> aggregate = c.aggregate(pipeline).allowDiskUse(true).batchSize(100);
+
+				try (MongoCursor<Document> it = aggregate.iterator()) {
+					if (it.hasNext()) {
+						Document d = it.next();
+						if (d != null) {
+							n = d.get(name);
+						}
 					}
 				}
 			}
@@ -1606,8 +1742,8 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("avg, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
-				GLog.applog.warn("sys", "db",
-						"avg, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
+				GLog.applog.warn("db", "avg",
+						"cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
 			} else if (log.isDebugEnabled()) {
 				log.debug("avg, cost=" + t.past() + ",  collection=" + collection + ", query=" + q + ", n=" + n);
 			}
@@ -1630,6 +1766,8 @@ public final class MongoHelper implements Helper.DBHelper {
 	public void drop(String table) {
 		MongoCollection<Document> c = getCollection(table);
 		c.drop();
+
+		this.getOptimizer().drop(table);
 	}
 
 	/**
@@ -1710,15 +1848,18 @@ public final class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", order));
 				}
 
-				AggregateIterable<Document> a1 = db1.aggregate(l1);
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
 
 				List<JSON> l2 = JSON.createList();
-				for (Document d : a1) {
-					JSON j1 = JSON.fromObject(d);
-					Object o = j1.remove("_id");
-					if (o instanceof Map) {
-						j1.putAll((Map) o);
-						l2.add(j1);
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext()) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
 					}
 				}
 
@@ -1778,15 +1919,18 @@ public final class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", order));
 				}
 
-				AggregateIterable<Document> a1 = db1.aggregate(l1);
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
 
 				List<JSON> l2 = JSON.createList();
-				for (Document d : a1) {
-					JSON j1 = JSON.fromObject(d);
-					Object o = j1.remove("_id");
-					if (o instanceof Map) {
-						j1.putAll((Map) o);
-						l2.add(j1);
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext()) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
 					}
 				}
 
@@ -1802,9 +1946,168 @@ public final class MongoHelper implements Helper.DBHelper {
 
 			if (t.pastms() > 1000) {
 				log.warn("sum, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
-				GLog.applog.warn("sys", "db", "sum, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "sum", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			} else if (log.isDebugEnabled()) {
 				log.debug("sum, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			}
+
+			Helper.Stat.read(table, t.pastms());
+
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<JSON> max(String table, W q, String name, String[] group) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group", new Exception("bad group"));
+				return null;
+			}
+
+			db1 = getCollection(table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("max",
+						new BasicDBObject().append("$max", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
+
+				List<JSON> l2 = JSON.createList();
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext()) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
+					}
+				}
+
+				if (log.isDebugEnabled())
+					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+		} finally {
+
+			if (t.pastms() > 1000) {
+				log.warn("sum, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "max", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			} else if (log.isDebugEnabled()) {
+				log.debug("cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			}
+
+			Helper.Stat.read(table, t.pastms());
+
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<JSON> min(String table, W q, String name, String[] group) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group", new Exception("bad group"));
+				return null;
+			}
+
+			db1 = getCollection(table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("min",
+						new BasicDBObject().append("$min", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
+
+				List<JSON> l2 = JSON.createList();
+
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext()) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
+					}
+				}
+
+				if (log.isDebugEnabled())
+					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+		} finally {
+
+			if (t.pastms() > 1000) {
+				log.warn("min, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "min", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			} else if (log.isDebugEnabled()) {
+				log.debug("min, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			}
 
 			Helper.Stat.read(table, t.pastms());
@@ -1857,14 +2160,17 @@ public final class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", order));
 				}
 
-				AggregateIterable<Document> a1 = db1.aggregate(l1);
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
 
-				for (Document d : a1) {
-					JSON j1 = JSON.fromObject(d);
-					Object o = j1.remove("_id");
-					if (o instanceof Map) {
-						j1.putAll((Map) o);
-						l2.add(j1);
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext()) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
 					}
 				}
 
@@ -1879,8 +2185,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			if (t.pastms() > 1000) {
 				log.warn("avg, cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n="
 						+ (l2 == null ? "null" : l2.size()));
-				GLog.applog.warn("sys", "db", "avg, cost=" + t.past() + ",  collection=" + table + ", query=" + q
-						+ ", n=" + (l2 == null ? "null" : l2.size()));
+				GLog.applog.warn("db", "avg", "cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n="
+						+ (l2 == null ? "null" : l2.size()));
 			} else if (log.isDebugEnabled()) {
 				log.debug("avg, cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n="
 						+ (l2 == null ? "null" : l2.size()));
@@ -1927,8 +2233,8 @@ public final class MongoHelper implements Helper.DBHelper {
 				if (log.isDebugEnabled())
 					log.debug("std_deviation, cost=" + t.past() + ", query=" + l1 + ", result=" + a1);
 
-				if (a1 != null) {
-					Document doc = a1.first();
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					Document doc = cursor.hasNext() ? cursor.next() : null;
 					if (doc != null) {
 						return (T) doc.get("e");
 					}
@@ -1942,8 +2248,8 @@ public final class MongoHelper implements Helper.DBHelper {
 
 			if (t.pastms() > 1000) {
 				log.warn("std_deviation, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
-				GLog.applog.warn("sys", "db",
-						"std_deviation, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
+				GLog.applog.warn("db", "std_deviation",
+						"cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
 			} else if (log.isDebugEnabled()) {
 				log.debug("std_deviation, cost=" + t.past() + ",  collection=" + collection + ", query=" + query);
 			}
@@ -1998,7 +2304,7 @@ public final class MongoHelper implements Helper.DBHelper {
 	public List<JSON> listOp() {
 
 		try {
-			MongoDatabase g = getAdmin();
+			MongoDatabase g = _admin();
 			if (g != null) {
 				Document d1 = g.runCommand(new BasicDBObject("currentOp", true).append("$all", true));
 
@@ -2009,7 +2315,8 @@ public final class MongoHelper implements Helper.DBHelper {
 					JSON e = (JSON) e1;
 					JSON d = JSON.create();
 
-					if (e.containsKey("command") && !X.isIn(e.get("op"), "none")) {
+					if (e.containsKey("command") && !X.isIn(e.get("op"), "none")
+							&& !X.isSame(e.get("ns"), "admin.$cmd")) {
 						d.put("client", e.get("client"));
 						d.put("opid", e.get("opid"));
 						d.put("cost", e.get("secs_running"));
@@ -2053,7 +2360,7 @@ public final class MongoHelper implements Helper.DBHelper {
 	public void killOp(Object id) {
 
 		try {
-			MongoDatabase g = getAdmin();
+			MongoDatabase g = _admin();
 			if (g != null) {
 				g.runCommand(new BasicDBObject("killOp", 1).append("op", X.toLong(id)));
 			}
@@ -2121,8 +2428,8 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t1.pastms() > 1000) {
 				log.warn("count, cost=" + t1.past() + ",  collection=" + table + ", query=" + q1 + ", n=" + n);
-				GLog.applog.warn("sys", "db",
-						"count, cost=" + t1.past() + ",  collection=" + table + ", query=" + q1 + ", n=" + n);
+				GLog.applog.warn("db", "count",
+						"cost=" + t1.past() + ",  collection=" + table + ", query=" + q1 + ", n=" + n);
 			} else if (log.isDebugEnabled()) {
 				log.debug("count, cost=" + t1.past() + ",  collection=" + table + ", query=" + q1 + ", n=" + n);
 			}
@@ -2182,18 +2489,19 @@ public final class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", ord));
 				}
 
-				AggregateIterable<Document> a1 = db1.aggregate(l1);
+				AggregateIterable<Document> a1 = db1.aggregate(l1).allowDiskUse(true).batchSize(1000);
 
 				List<JSON> l2 = JSON.createList();
-				for (Document d : a1) {
-					JSON j1 = JSON.fromObject(d);
-					Object o = j1.remove("_id");
-					if (o instanceof Map) {
-						j1.putAll((Map) o);
-						l2.add(j1);
+				try (MongoCursor<Document> cursor = a1.iterator()) {
+					while (cursor.hasNext() && l2.size() < n) {
+						Document d = cursor.next();
+						JSON j1 = JSON.fromObject(d);
+						Object o = j1.remove("_id");
+						if (o instanceof Map) {
+							j1.putAll((Map) o);
+							l2.add(j1);
+						}
 					}
-					if (l2.size() >= n)
-						break;
 				}
 
 				if (log.isDebugEnabled())
@@ -2207,8 +2515,8 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("count, cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n=" + n);
-				GLog.applog.warn("sys", "db",
-						"count, cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n=" + n);
+				GLog.applog.warn("db", "count",
+						"cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n=" + n);
 			} else if (log.isDebugEnabled()) {
 				log.debug("count, cost=" + t.past() + ",  collection=" + table + ", query=" + q + ", n=" + n);
 			}
@@ -2325,15 +2633,21 @@ public final class MongoHelper implements Helper.DBHelper {
 	@Override
 	public boolean distributed(String tablename, String key) {
 
-		BasicDBObject cmd = new BasicDBObject();
-		MongoDatabase db = getDB();
-		cmd.append("shardCollection", db.getName() + "." + tablename);
-		cmd.append("key", new BasicDBObject().append(key, "hashed"));
-		Document d = admin.runCommand(cmd);
+		MongoDatabase g = _admin();
 
-		log.warn("setting distributed for [" + tablename + "] on key[" + key + "], result=" + d);
+		if (g != null) {
+			BasicDBObject cmd = new BasicDBObject();
+			MongoDatabase db = getDB();
+			cmd.append("shardCollection", db.getName() + "." + tablename);
+			cmd.append("key", new BasicDBObject().append(key, "hashed"));
+			Document d = g.runCommand(cmd);
 
-		return true;
+			log.warn("setting distributed for [" + tablename + "] on key[" + key + "], result=" + d);
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -2361,7 +2675,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			for (String name : incvalue.keySet()) {
 				Object v1 = incvalue.get(name);
 				if (!X.isIn(v1, null, 0, 0.0f, 0.0d)) {
-					d.put(name, v1);
+//					d.put(name, v1);
+					d.put(name.toLowerCase(), v1);
 				}
 			}
 			MongoCollection<Document> c = getCollection(table);
@@ -2373,7 +2688,8 @@ public final class MongoHelper implements Helper.DBHelper {
 			Document d1 = new Document();
 			for (String s : v.names()) {
 				Object v1 = v.value(s);
-				d1.append(s, v1);
+//				d1.append(s, v1);
+				d1.append(s.toLowerCase(), v1);
 			}
 			if (!d1.isEmpty()) {
 				d2.append("$set", d1);
@@ -2401,10 +2717,11 @@ public final class MongoHelper implements Helper.DBHelper {
 			}
 
 			for (String name : incvalue.keySet()) {
-				v1.append(name, incvalue.get(name));
+//				v1.append(name, incvalue.get(name));
+				v1.append(name.toLowerCase(), incvalue.get(name));
 			}
 			v1.copy(v);
-			v1.append("created", Global.now());
+			v1.append(X.CREATED, Global.now());
 
 			return insertTable(table, v1);
 
@@ -2414,7 +2731,7 @@ public final class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (t.pastms() > 1000) {
 				log.warn("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
-				GLog.applog.warn("sys", "db", "inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("db", "inc", "cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			} else if (log.isDebugEnabled()) {
 				log.debug("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
 			}
@@ -2429,21 +2746,43 @@ public final class MongoHelper implements Helper.DBHelper {
 	@Override
 	public void copy(String src, String dest, W filter) throws SQLException {
 
-		Task.schedule(t -> {
-			try {
+		MongoCollection<Document> s = getCollection(src);
+		MongoCollection<Document> d = getCollection(dest);
+		if (s == null || d == null) {
+			throw new SQLException("源/目标集合不存在, src=" + src + ", dest=" + dest);
+		}
 
-				Bson query = filter == null ? null : filter.query();
-				MongoCollection<Document> s = getCollection(src);
-				MongoCollection<Document> d = getCollection(dest);
-				FindIterable<Document> findIterable = query == null ? s.find() : s.find(query);
-				MongoCursor<Document> mongoCursor = findIterable.iterator();
+		Bson query = (filter == null) ? null : filter.query();
+
+		FindIterable<Document> findIterable = (query == null) ? s.find().batchSize(1000)
+				: s.find(query).batchSize(1000);
+
+		Task.schedule(t -> {
+			long total = 0;
+			List<Document> batchCache = new ArrayList<>(1000);
+			final int batchSize = 1000;
+			try (MongoCursor<Document> mongoCursor = findIterable.iterator()) {
 				while (mongoCursor.hasNext()) {
 					Document doc = mongoCursor.next();
-					d.insertOne(doc);
+					batchCache.add(doc);
+					total++;
+					// 批量写入
+					if (batchCache.size() >= batchSize) {
+						d.insertMany(batchCache);
+						batchCache.clear();
+						// 简单限流，避免压库
+						Thread.sleep(10);
+					}
 				}
+				// 写入剩余数据
+				if (!batchCache.isEmpty()) {
+					d.insertMany(batchCache);
+				}
+				log.info("集合复制完成 src=" + src + ", dest=" + dest + ", 共复制" + total + "条");
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-				GLog.applog.error("db", "copy", e.getMessage(), e);
+				String errMsg = "集合复制失败 src=" + src + ", dest=" + dest + ", totalCopy=" + total;
+				log.error(errMsg, e);
+				GLog.applog.error("db", "copy", errMsg, e);
 			}
 		});
 
@@ -2451,7 +2790,6 @@ public final class MongoHelper implements Helper.DBHelper {
 
 	@Override
 	public void delColumn(String tablename, String colname) throws SQLException {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -2465,7 +2803,7 @@ public final class MongoHelper implements Helper.DBHelper {
 			Set<String> key = d.keySet();
 			for (String name : key) {
 				JSON j1 = JSON.create();
-				j1.append("name", name.toLowerCase());
+				j1.append(X.NAME, name.toLowerCase());
 				j1.append("display", name);
 				Object o = d.get(name);
 				if (o != null) {
@@ -2512,20 +2850,18 @@ public final class MongoHelper implements Helper.DBHelper {
 	public void createTable(String tablename, String memo, List<JSON> cols, JSON prop) throws SQLException {
 
 		if (prop != null && prop.getInt("distributed") == 1) {
-			distributed(tablename, "id");
+			distributed(tablename, X.ID);
 		}
 
 	}
 
 	@Override
 	public void addColumn(String tablename, JSON col) throws SQLException {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void alterColumn(String tablename, JSON col) throws SQLException {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -2574,7 +2910,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 				Object id = v.get(X.ID);
 				if (!X.isEmpty(id)) {
-					v.append("_id", v.get(X.ID));
+					v.append("_id", id);
 				} else {
 					v.append("_id", UUID.randomUUID().toString());
 				}
@@ -2591,7 +2927,8 @@ public final class MongoHelper implements Helper.DBHelper {
 						} else if (v1 instanceof Date) {
 							v1 = ((Date) v1).getTime();
 						}
-						d.append(e.getKey(), v1);
+//						d.append(e.getKey(), v1);
+						d.append(e.getKey().toLowerCase(), v1);
 					}
 				}
 
@@ -2636,7 +2973,7 @@ public final class MongoHelper implements Helper.DBHelper {
 			log.debug("updated=" + o + ", ==ignore");
 		}
 
-		// TODO, not allow change the created
+		// not allow change the created
 		o = v.get(X.CREATED);
 		if (o != V.ignore) {
 			if (X.toLong(o) == 0) {
@@ -2661,7 +2998,9 @@ public final class MongoHelper implements Helper.DBHelper {
 			} else if (v1 instanceof Date) {
 				v1 = ((Date) v1).getTime();
 			}
-			set.append(e.getKey(), v1);
+//			set.append(e.getKey(), v1);
+			String key = e.getKey();
+			set.append(key.toLowerCase(), v1);
 		}
 
 		try {
@@ -2702,6 +3041,16 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		}
 		return 0;
+	}
+
+	@Override
+	public boolean exists(String tablename) {
+		return true;
+	}
+
+	@Override
+	public <T extends Bean> Beans<T> query(String sql, Class<T> t) throws SQLException {
+		throw new SQLException("不支持");
 	}
 
 }

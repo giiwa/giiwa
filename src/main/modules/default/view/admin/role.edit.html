@@ -26,10 +26,10 @@
             <tbody>
                 #foreach($a in $accesses.keySet())
                 <tr>
-                    <td>$lang.get("group.$a")</td>
+                    <td><p class="hint hint--right" data-hint='$!lang.get("group.${a}.hint", "")'>$lang.get("group.$a")</p></td>
                     <td>
                         #foreach($p in $accesses.get($a))
-                        <label style="width: initial;"><input type="checkbox" name="access1" onchange="change()" value="$p.name" #if($r.has($p.name)) checked="checked" #end/>$lang.get($p.name)</label> #end
+                        <label style="width: initial;" class="hint hint--bottom" data-hint='$!lang.get("${p.name}.hint", "")'><input type="checkbox" name="access1" onchange="change()" value="$p.name" #if($r.has($p.name)) checked="checked" #end/>$lang.get($p.name)</label> #end
                     </td>
                 </tr>
                 #end

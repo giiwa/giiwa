@@ -19,6 +19,7 @@ package org.giiwa.misc;
  *
  * @author jjiang
  */
+@Deprecated
 public class Hex {
 
     /**

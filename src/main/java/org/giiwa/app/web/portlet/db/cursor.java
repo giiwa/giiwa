@@ -33,14 +33,14 @@ public class cursor extends portlet {
 	@Override
 	public void get() {
 
-		W q = W.create().and("node", Global.id()).and("name", "status")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, Global.id()).and(X.NAME, "status")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1);
 		_DB.Record.dao.optimize(q);
 		
 		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 
 		this.show("/portlet/db/cursor.html");
@@ -52,11 +52,11 @@ public class cursor extends portlet {
 		long time = Global.now() - X.ADAY * 2;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
-				W.create().and("node", Global.id()).and("name", "status").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, Global.id()).and(X.NAME, "status").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 
 		this.show("/portlet/db/cursor.more.html");

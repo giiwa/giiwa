@@ -18,6 +18,7 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -31,8 +32,10 @@ import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.giiwa.app.task.MonitorTask;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.bean.Access;
+import org.giiwa.bean.Api;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.License;
@@ -41,14 +44,16 @@ import org.giiwa.bean.User;
 import org.giiwa.bean.License.LICENSE;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.MD5;
+import org.giiwa.crypto.RSA;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.FileVersion;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.MD5;
-import org.giiwa.misc.RSA;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller.PathMapping;
 
@@ -337,7 +342,7 @@ public class Module implements Serializable {
 				JarEntry e = l1.nextElement();
 				String name = e.getName();
 				if (name.endsWith(".class")) {
-//				log.warn("name=" + name + ", jar=" + f.getName());
+//				log.warn(X.NAME=" + name + ", jar=" + f.getName());
 
 					if (_classes.containsKey(name) && !X.isSame(f1.getName(), _classes.get(name))
 							&& !name.endsWith("module-info.class")) {
@@ -385,15 +390,17 @@ public class Module implements Serializable {
 			IOUtil.delete(f0);
 		}
 
+		TimeStamp ts = TimeStamp.create();
+		
 		/**
 		 * unzip the module.zip
 		 */
 		ZipEntry z = in.getNextEntry();
-		byte[] bb = new byte[4 * 1024];
+		byte[] bb = new byte[5 * 1024 * 1024];
 		while (z != null) {
 			File f = new File(root + z.getName());
 
-			// log.info("name:" + z.getName() + ", " +
+			// log.info(X.NAME:" + z.getName() + ", " +
 			// f.getAbsolutePath());
 			if (z.isDirectory()) {
 				X.IO.mkdirs(f);
@@ -415,6 +422,9 @@ public class Module implements Serializable {
 			z = in.getNextEntry();
 		}
 
+		log.info("download: " + e.getName() + ", cost=" + ts.past());
+		ts.reset();
+		
 		/**
 		 * prepare the module
 		 */
@@ -569,14 +579,6 @@ public class Module implements Serializable {
 	private static TreeMap<Integer, Module> modules = new TreeMap<Integer, Module>();
 
 	/**
-	 * cache the model in the module, the modelMap structure: {"method|uri",
-	 * "class"}
-	 */
-	private static Map<String, CachedModel> _modelcache = new HashMap<String, CachedModel>();
-
-	private static int MAX_CACHE_SIZE = 2000;
-
-	/**
 	 * configuration
 	 */
 	public static Configuration _conf;
@@ -585,9 +587,7 @@ public class Module implements Serializable {
 	 * Reset.
 	 */
 	public static void reset() {
-		synchronized (_modelcache) {
-			_modelcache.clear();
-		}
+		CachedModel.reset();
 	}
 
 	/**
@@ -622,10 +622,10 @@ public class Module implements Serializable {
 
 			Document doc = DocumentHelper.createDocument();
 			Element root = doc.addElement("module");
-			Element e = root.addElement("id");
+			Element e = root.addElement(X.ID);
 			e.setText(Integer.toString(this.id));
 
-			e = root.addElement("name");
+			e = root.addElement(X.NAME);
 			e.setText(this.name);
 
 			if (!X.isEmpty(this.pack)) {
@@ -682,14 +682,14 @@ public class Module implements Serializable {
 				e = root.addElement("required");
 				for (Required m : required) {
 					Element e1 = e.addElement("module");
-					e1.addAttribute("name", m.module);
+					e1.addAttribute(X.NAME, m.module);
 					e1.addAttribute("minversion", m.minversion);
 					e1.addAttribute("maxversion", m.maxversion);
 				}
 			}
 
 			OutputFormat format = OutputFormat.createPrettyPrint();
-			format.setEncoding("UTF-8");
+			format.setEncoding(X.UTF8);
 			XMLWriter writer = new XMLWriter(new FileOutputStream(f), format);
 			writer.write(doc);
 			writer.close();
@@ -735,6 +735,10 @@ public class Module implements Serializable {
 		// possible license issue
 		// this.setLicense(License.LICENSE.issue, null);
 		return defaultValue;
+	}
+
+	public JSON license() {
+		return License.get(this.name).remove("company", "type", "code");
 	}
 
 	public Set<String> listJars() {
@@ -997,6 +1001,9 @@ public class Module implements Serializable {
 	}
 
 	public License.LICENSE getLicense() {
+		if (license == null) {
+			return License.LICENSE.free;
+		}
 		return license;
 	}
 
@@ -1222,6 +1229,8 @@ public class Module implements Serializable {
 				log.debug("menu inited. checking unused jar ... changed=" + changed);
 			}
 
+			MonitorTask.add(cleanup);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 
@@ -1312,9 +1321,9 @@ public class Module implements Serializable {
 			List<Element> list = root.elements();
 			for (Element e1 : list) {
 				String tag = e1.getName();
-				if (X.isSame(tag, "id")) {
+				if (X.isSame(tag, X.ID)) {
 					id = X.toInt(e1.getText(), Integer.MAX_VALUE);
-				} else if (X.isSame(tag, "name")) {
+				} else if (X.isSame(tag, X.NAME)) {
 					name = e1.getText().trim();
 				} else if (X.isSame(tag, "package")) {
 					pack = e1.getText().trim();
@@ -1365,7 +1374,7 @@ public class Module implements Serializable {
 					for (Element e2 : l2) {
 						if (X.isSame(e2.getName(), "module")) {
 							Required m = new Required();
-							m.module = e2.attributeValue("name");
+							m.module = e2.attributeValue(X.NAME);
 							m.minversion = e2.attributeValue("minversion");
 							m.maxversion = e2.attributeValue("maxversion");
 							required.add(m);
@@ -1437,9 +1446,12 @@ public class Module implements Serializable {
 					}
 				}
 			}
+		} catch (NoClassDefFoundError e) {
+			log.error("exit now!", e);
+			GLog.applog.error(this.name, "init", "module [" + name + "] init failed", e, null, null);
+			System.exit(0);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-
 			GLog.applog.error(this.name, "init", "module [" + name + "] init failed", e, null, null);
 
 			return false;
@@ -1524,26 +1536,23 @@ public class Module implements Serializable {
 	 * @param uri    the uri
 	 * @return Model
 	 */
-	public Controller loadModelFromCache(String method, String uri) {
+	public static Controller loadModelFromCache(String method, String uri) {
 		try {
 			// log.debug("looking for model for <" + method + "|" + uri + ">,
 			// mapping=" + modelMap);
 
-			CachedModel c = _modelcache.get(method + "|" + uri);
+			CachedModel c = CachedModel.get(method + "|" + uri);
 
 			if (c != null) {
 				Controller m = c.create(uri);
-
 				return m;
 			}
 
-			c = _modelcache.get("*|" + uri);
-			if (c != null) {
-				Controller m = c.create(uri);
-
-				return m;
-			}
-
+//			c = CachedModel.get("*|" + uri);
+//			if (c != null) {
+//				Controller m = c.create(uri);
+//				return m;
+//			}
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
@@ -1565,70 +1574,43 @@ public class Module implements Serializable {
 	 * @return the model
 	 */
 	@SuppressWarnings("unchecked")
-	public Controller getModel(String method, String uri, String original) {
+	public Controller getModel(String method, final String uri, final String original) {
 
 		try {
 
-//			method = method.toUpperCase();
-
-			// log.debug("looking for model for <" + method + "|" + uri + ">");
-
-			CachedModel c = null;
-
-//			synchronized (_modelcache) {
-//			c = X.isEmpty(original) ? null : _modelcache.get(method + "|" + original);
-//			// log.debug("uri=" + (method + "|" + uri));
-//			if (c == null) {
-			/**
-			 * looking for the model class
-			 */
-			String name = (pack + uri).replace("/", ".").replace("..", ".");
-
-			Class<Controller> c1 = null;
-			synchronized (Class.class) {
-				c1 = (Class<Controller>) Class.forName(name);
+			if (log.isDebugEnabled()) {
+				log.debug("model cached, uri=" + uri + ", original=" + original);
 			}
 
-			/**
-			 * cache it and cache all the path
-			 */
-			Map<String, Map<String, Controller.PathMapping>> path = _loadPath(c1);
-//					if (path != null && path.size() > 0) {
-//						
-//						String u = uri;
-//						// if (!u.endsWith("/")) {
-//						// u += "/";
-//						// }
-//						for (String m1 : path.keySet()) {
-//							Map<String, Controller.PathMapping> p = path.get(m1);
-//							for (String s : p.keySet()) {
-//								c = CachedModel.create(c1, path, this);
-//								_cache(m1 + "|" + u + "/" + s, c);
-//								// log.debug("uri=" + (m1 + "|" + u + "/" + s));
-//							}
-//							// c = CachedModel.create(c1, path, this);
-//							// _cache(m1 + "|" + u, c);
-//							// log.debug("uri=" + (m1 + "|" + u));
-//
-//						}
-//					} else {
-			c = CachedModel.create(c1, path, this);
-			if (original != null)
-				_cache(method + "|" + original, c);
+			CachedModel c = CachedModel.get(method + "|" + original);
+			if (c == null) {
 
-			Controller m = c.create(uri);
+				String name = (pack + uri).replace("/", ".").replace("..", ".");
+				c = CachedModel.classmapping.get(name);
 
+				if (c == null) {
+					Class<Controller> c1 = (Class<Controller>) Class.forName(name);
+
+					Map<String, Map<String, Controller.PathMapping>> pathmapping = _loadPath(c1);
+
+					if (log.isDebugEnabled()) {
+						log.debug("getModel, " + c1 + "=" + pathmapping);
+					}
+
+					c = CachedModel.create(c1, pathmapping, this);
+					CachedModel.classmapping.put(name, c);
+				}
+
+				CachedModel.set(method + "|" + uri, method + "|" + original, c);
+
+			}
+
+			Controller m = c.create(original);
 			return m;
 
-		} catch (Throwable e) {
-			/**
-			 * not found, or is not a model, ignore the exception
-			 */
-
+		} catch (Throwable err) {
+			// not found, or is not a model, ignore the exception
 		}
-
-//		if (log.isDebugEnabled())
-//			log.debug("load model from floor");
 
 		Module e = floor();
 		if (e != null && e.getId() != this.id) {
@@ -1646,6 +1628,11 @@ public class Module implements Serializable {
 			 * cache it and cache all the path
 			 */
 			Map<String, Map<String, Controller.PathMapping>> path = _loadPath(clazz);
+
+			if (log.isDebugEnabled()) {
+				log.info("getModel, " + clazz + "=" + path);
+			}
+
 			CachedModel c = CachedModel.create(clazz, path, this);
 
 			return c.create(null);
@@ -1660,75 +1647,12 @@ public class Module implements Serializable {
 		return null;
 	}
 
-	private void _cache(String uri, CachedModel c) {
-
-		CachedModel c1 = _modelcache.get(uri);
-		if (c1 != null) {
-			if (c1.module.getId() > c.module.getId()) {
-				// the cached uri is bigger module's, forget current
-				return;
-			}
-		}
-
-		c.uri = uri;
-		synchronized (_modelcache) {
-			_modelcache.put(uri, c);
-		}
-
-		if (_modelcache.size() > MAX_CACHE_SIZE) {
-			Task t = new Task() {
-
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public String getName() {
-					return "model.cleanup";
-				}
-
-				@Override
-				public void onExecute() {
-
-					String[] ss = null;
-					synchronized (_modelcache) {
-						ss = _modelcache.keySet().toArray(new String[_modelcache.size()]);
-					}
-
-					TreeMap<Long, CachedModel> s1 = new TreeMap<Long, CachedModel>();
-					for (String s : ss) {
-						CachedModel c1 = _modelcache.get(s);
-						s1.put(c1.age, c1);
-					}
-					int d = s1.size() / 5;
-					while (d > 0 && !s1.isEmpty()) {
-
-						long age = s1.firstKey();
-						CachedModel c1 = s1.remove(age);
-						synchronized (_modelcache) {
-							_modelcache.remove(c1.uri);
-						}
-						d--;
-
-					}
-
-				}
-
-			};
-			if (!t.isScheduled()) {
-				t.schedule(0);
-			}
-		}
-
-	}
-
 	private Map<String, Map<String, Controller.PathMapping>> _loadPath(Class<? extends Controller> c) {
 
 		Method[] list = c.getMethods();
 		if (list != null && list.length > 0) {
 
-			Map<String, Map<String, Controller.PathMapping>> map = new HashMap<String, Map<String, Controller.PathMapping>>();
+			var map = new HashMap<String, Map<String, Controller.PathMapping>>();
 			for (Method m : list) {
 				Path p = m.getAnnotation(Path.class);
 				if (p != null) {
@@ -1810,7 +1734,7 @@ public class Module implements Serializable {
 				/**
 				 * read the language file using utf-8 encoding?
 				 */
-				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), X.UTF8));
 				try {
 					String line = reader.readLine();
 					while (line != null) {
@@ -1871,7 +1795,7 @@ public class Module implements Serializable {
 		if (f.exists()) {
 			BufferedReader reader = null;
 			try {
-				reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+				reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), X.UTF8));
 				String line = reader.readLine();
 				while (line != null) {
 					line = line.trim();
@@ -1904,7 +1828,7 @@ public class Module implements Serializable {
 
 		PrintStream out = null;
 		try {
-			out = new PrintStream(f, "UTF-8");
+			out = new PrintStream(f, X.UTF8);
 
 			for (String key : tmp.keySet()) {
 				out.println(key + "=" + tmp.get(key));
@@ -2326,13 +2250,31 @@ public class Module implements Serializable {
 		return list;
 	}
 
+	static class TimingCachedModel {
+		CachedModel model;
+		long age = Global.now();
+
+		public TimingCachedModel(CachedModel model) {
+			this.model = model;
+		}
+
+	}
+
 	static class CachedModel {
+
+		private static int MAX_CACHE_SIZE = 2000;
+
+		/**
+		 * cache the model in the module, the modelMap structure: {"method|uri",
+		 * "class"}
+		 */
+		private static Map<String, TimingCachedModel> urlmapping = new HashMap<>(MAX_CACHE_SIZE);
+
+		private static Map<String, CachedModel> classmapping = new HashMap<String, CachedModel>();
 
 		Class<? extends Controller> model;
 		Map<String, Map<String, Controller.PathMapping>> pathmapping;
 		Module module;
-		String uri;
-		long age = Global.now();
 
 		/*
 		 * (non-Javadoc)
@@ -2341,6 +2283,108 @@ public class Module implements Serializable {
 		 */
 		public String toString() {
 			return "{" + module.name + "//" + model.getName() + "}";
+		}
+
+		public static void set(String original, CachedModel c) {
+			synchronized (urlmapping) {
+				urlmapping.put(original, new TimingCachedModel(c));
+			}
+		}
+
+		public static void set(String uri, final String original, CachedModel c) {
+
+//			log.info("model cached uri=" + uri + ", original=" + original);
+
+			var c1 = urlmapping.get(original);
+			if (c1 != null) {
+				if (c1.model.module.getId() >= c.module.getId()) {
+					// the cached uri is bigger module's, forget current
+					return;
+				}
+			}
+
+			c.store(uri);
+
+			synchronized (urlmapping) {
+				urlmapping.put(original, new TimingCachedModel(c));
+			}
+
+		}
+
+		private static AtomicLong ok = new AtomicLong(0);
+
+		public static CachedModel get(String uri) {
+			var m = urlmapping.get(uri);
+			if (m != null) {
+				m.age = Global.now();
+				log.info("model cached ok: " + ok.incrementAndGet() + ", uri=" + uri + ", size=" + urlmapping.size());
+			}
+			return m == null ? null : m.model;
+		}
+
+		public static void reset() {
+			synchronized (urlmapping) {
+				urlmapping.clear();
+			}
+		}
+
+		public void store(String uri) {
+
+//			Comment c1 = model.getAnnotation(Comment.class);
+//			if (c1 == null || c1.hide() == true) {
+//				return;
+//			}
+//
+//			String parent = null;
+//			{
+//				V v = V.create();
+//				v.append("module", module.name);
+//				v.append("memo", c1.text());
+//				v.append("parent", X.EMPTY);
+//				String s1 = uri;
+//				int i = s1.indexOf("/" + model.getSimpleName() + "/");
+//				if (i >= 0) {
+//					s1 = s1.substring(0, i) + "/" + model.getSimpleName() + "/";
+//				}
+//				i = s1.indexOf("|");
+//				if (i > 0) {
+//					s1 = s1.substring(i + 1);
+//				}
+//				parent = Api.update(s1, v);
+//			}
+//			if (parent == null) {
+//				return;
+//			}
+
+			String u = uri;
+			int i = uri.indexOf("|");
+			if (i > 0) {
+				u = uri.substring(i + 1);
+			}
+
+			for (String s1 : pathmapping.keySet()) {
+				var m = pathmapping.get(s1);
+				for (var s2 : m.keySet()) {
+					var p = m.get(s2);
+					V v = V.create();
+					v.append("module", module.name);
+					v.append("method", p.path.method());
+					v.append("login", p.path.login() ? 1 : 0);
+					v.append("loglevel", p.path.loglevel());
+					v.append("access", p.path.access());
+					v.append("in", p.path.in());
+					v.append("out", p.path.out());
+					v.append("permission", p.path.permission());
+					v.append("memo", p.path.memo());
+//					v.append("parent", parent);
+
+					if (!X.isSame(s2, "none")) {
+						Api.update(u + "/" + s2, v);
+					} else {
+						Api.update(u, v);
+					}
+				}
+			}
 		}
 
 		/**
@@ -2368,14 +2412,13 @@ public class Module implements Serializable {
 		 * @throws Exception the exception
 		 */
 		public Controller create(String uri) throws Exception {
+
 			Controller m = model.getDeclaredConstructor().newInstance();
 			m.module = module;
 			m.pathmapping = pathmapping;
 			if (!X.isEmpty(uri)) {
 				m.path = getPath(uri);
 			}
-			age = Global.now();
-
 			return m;
 		}
 
@@ -2388,6 +2431,58 @@ public class Module implements Serializable {
 			return path;
 		}
 
+		// 清除过期， 过期时间1小时，没有访问
+		public static void cleanup() {
+			String[] ss = null;
+			synchronized (urlmapping) {
+				ss = urlmapping.keySet().toArray(new String[urlmapping.size()]);
+			}
+
+			var l1 = new ArrayList<String>();
+			for (var s : ss) {
+				var c = urlmapping.get(s);
+				if (Global.now() - c.age > X.AHOUR) {
+					l1.add(s);
+				}
+			}
+
+			if (urlmapping.size() > MAX_CACHE_SIZE) {
+				// 清除“很久”没用的
+				long min = Long.MAX_VALUE;
+				long max = Long.MIN_VALUE;
+				synchronized (urlmapping) {
+					for (var e : urlmapping.values()) {
+						if (e.age < min) {
+							min = e.age;
+						}
+						if (e.age > max) {
+							max = e.age;
+						}
+					}
+				}
+
+				long out = min + (max - min) / 5;
+				synchronized (urlmapping) {
+					ss = urlmapping.keySet().toArray(new String[urlmapping.size()]);
+				}
+
+				for (var s : ss) {
+					var e = urlmapping.get(s);
+					if (e.age <= out) {
+						l1.add(s);
+					}
+				}
+			}
+
+			if (!l1.isEmpty()) {
+				synchronized (urlmapping) {
+					for (var s : l1) {
+						urlmapping.remove(s);
+					}
+				}
+			}
+
+		}
 	}
 
 	public void setError(String error) {
@@ -2515,10 +2610,31 @@ public class Module implements Serializable {
 		return false;
 	}
 
+	/**
+	 * RSA 加密
+	 * 
+	 * @param passwd
+	 * @return
+	 */
 	public static String encode(String passwd) {
 		return Base64.getEncoder().encodeToString(RSA.encode(passwd.getBytes(), pubkey));
 	}
 
+	/**
+	 * RSA pubkey
+	 * 
+	 * @return
+	 */
+	public static String pubkey() {
+		return pubkey;
+	}
+
+	/**
+	 * RSA 解密
+	 * 
+	 * @param code
+	 * @return
+	 */
 	public static String decode(String code) {
 		return new String(RSA.decode(Base64.getDecoder().decode(code), prikey));
 	}
@@ -2566,5 +2682,24 @@ public class Module implements Serializable {
 		}
 		return r;
 	}
+
+	static Task cleanup = new Task() {
+
+		@Override
+		public String getName() {
+			return "gi.model.cached.cleanup";
+		}
+
+		@Override
+		public void onFinish() {
+			this.schedule(X.AMINUTE);
+		}
+
+		@Override
+		public void onExecute() {
+			CachedModel.cleanup();
+		}
+
+	};
 
 }

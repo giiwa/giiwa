@@ -25,19 +25,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.task.MonitorTask;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.TimingCache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Shell;
-import org.giiwa.net.mq.IStub;
-import org.giiwa.net.mq.MQ;
-import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;
 
 /**
+ * 节点配置管理API
+ * 
  * The Class Global is extended of Config, it can be "overrided" by module or
  * configured, it stored in database
  * 
@@ -53,7 +52,7 @@ public final class Local extends Bean {
 
 	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 
-	@Column(memo = "主键", size = 100)
+	@Column(memo = "主键", size = 128, unique = true)
 	String id;
 
 	@Column(memo = "字符串值", size = 1000)
@@ -96,9 +95,7 @@ public final class Local extends Bean {
 					TimingCache.set(Local.class, name, c);
 					return X.toInt(c.i, defaultValue);
 				} else {
-					c = new Local();
-					c.i = Config.getConf().getInt(name, defaultValue);
-					TimingCache.set(Local.class, name, c);
+					return Global.getInt(name, defaultValue);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -117,7 +114,7 @@ public final class Local extends Bean {
 			if (c != null) {
 				return X.toInt(c.i, defaultValue);
 			} else {
-				return Config.getConf().getInt(name, defaultValue);
+				return Global.getInt(name, defaultValue);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -135,7 +132,7 @@ public final class Local extends Bean {
 			if (c != null) {
 				return X.toInt(c.i, defaultValue);
 			} else {
-				return Config.getConf().getInt(name, defaultValue);
+				return Global.getInt(name, defaultValue);
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -152,7 +149,7 @@ public final class Local extends Bean {
 			if (c != null) {
 				return X.toLong(c.l, defaultValue);
 			} else {
-				return Config.getConf().getLong(name, defaultValue);
+				return Global.getLong(name, defaultValue);
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -197,9 +194,7 @@ public final class Local extends Bean {
 					TimingCache.set(Local.class, name, c);
 					return c.s != null ? c.s : defaultValue;
 				} else {
-					c = new Local();
-					c.s = Config.getConf().getString(name, defaultValue);
-					TimingCache.set(Local.class, name, c);
+					return Global.getString(name, defaultValue);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -252,9 +247,7 @@ public final class Local extends Bean {
 
 					return X.toLong(c.l, defaultValue);
 				} else {
-					c = new Local();
-					c.l = Config.getConf().getInt(name, (int) defaultValue);
-					TimingCache.set(Local.class, name, c);
+					return Global.getLong(name, defaultValue);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -320,7 +313,7 @@ public final class Local extends Bean {
 				v.append("l", e.l);
 			} else {
 				e.s = o.toString();
-				v.append("s", e.s);
+				v.append(X.S, e.s);
 			}
 
 			if (Helper.isConfigured()) {
@@ -350,7 +343,7 @@ public final class Local extends Bean {
 	public static String _id;
 
 	/**
-	 * get the unique id of this node in the cluster
+	 * 获取本地节点ID
 	 * 
 	 * @return
 	 */
@@ -360,99 +353,74 @@ public final class Local extends Bean {
 			_id = (conf != null ? conf.getString("node.id", null) : UID.uuid());
 			if (X.isEmpty(_id)) {
 				// create id
-				log.warn("restarting as node.id=null");
-
+				_id = UID.uuid();
+//				log.warn("restarting as node.id=null");
+				// 不需要重启
 				Config.save2();
-				Task.schedule(t -> {
-					System.exit(0);
-				}, 1000);
+//				Task.schedule(t -> {
+//					System.exit(0);
+//				}, 1000);
 			}
 		}
 		return _id;
 	}
 
+	/**
+	 * 初始化
+	 */
 	public static void init() {
-		// start listen
-		try {
-			new IStub("giiwa.state") {
+		// start heartbeat
+		check();
+	}
+
+	private static void check() {
+		if (_hb == null) {
+			_hb = new SysTask() {
+
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				private long _forcetime = 0;
 
 				@Override
-				public void onRequest(long seq, Request req) {
-
-					try {
-						JSON j = req.get();
-
-						if (log.isDebugEnabled())
-							log.debug("got message, j=" + j + ", local=" + Local.id());
-
-						if (j != null && X.isSame(Local.id(), j.getString("node"))) {
-							int power = j.getInt("power");
-							synchronized (Task.class) {
-								if (power == 1) {
-									// restart service
-									log.warn("restart by admin [" + req.from + "]");
-									Task.schedule(t -> {
-										System.exit(0);
-									}, 1000);
-								} else if (power == 2) {
-									// restart
-									log.warn("poweroff by admin [" + req.from + "]");
-									Task.schedule(t -> {
-										try {
-											Shell.run("halt", X.AMINUTE);
-										} catch (Exception e) {
-											log.error(e.getMessage(), e);
-										}
-									}, 1000);
-								}
-							}
-						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
+				public void onExecute() {
+					// checking node load
+					if ((Global.now() - _forcetime) > X.AMINUTE) {
+						Node.touch(true);
+						_forcetime = Global.now();
+					} else {
+						Node.touch(false);
 					}
 
 				}
 
-			}.bindAs(MQ.Mode.TOPIC);
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-		// start heartbeat
-		new SysTask() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-			long t = 0;
-
-			@Override
-			public void onExecute() {
-				// checking node load
-				if ((Global.now() - t) > 10 * X.AMINUTE) {
-					Node.touch(true);
-					t = Global.now();
-				} else {
-					Node.touch(false);
+				@Override
+				public String getName() {
+					return "gi.node.hb";
 				}
 
-			}
+				@Override
+				public void onFinish() {
+					this.schedule(1000 * 6);
+				}
 
-			@Override
-			public String getName() {
-				return "gi.node.hb";
+			};
+			if (!_hb.isScheduled()) {
+				_hb.schedule(0);
 			}
-
-			@Override
-			public void onFinish() {
-				this.schedule(1000 * 6);
-			}
-
-		}.schedule(6000);
+			MonitorTask.add(_hb);
+		}
 	}
 
+	private static Task _hb = null;
+
+	/**
+	 * 获取本地节点标签名称
+	 * 
+	 * @return
+	 */
 	public static String label() {
 		Node e = Node.dao.load(Local.id());
 		if (e != null && !X.isEmpty(e.label)) {
@@ -461,6 +429,11 @@ public final class Local extends Bean {
 		return Local.id();
 	}
 
+	/**
+	 * 获取本地节点
+	 * 
+	 * @return
+	 */
 	public static Node node() {
 		return Node.dao.load(Local.id());
 	}
@@ -528,7 +501,7 @@ public final class Local extends Bean {
 					} else {
 						j1.append("label", e.label);
 					}
-					j1.append("id", e.id);
+					j1.append(X.ID, e.id);
 					l1.add(j1);
 				}
 			}

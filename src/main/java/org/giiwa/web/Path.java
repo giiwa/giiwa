@@ -57,31 +57,66 @@ public @interface Path {
 	String method() default "GET,POST";
 
 	/**
-	 * login required, default is "false".
+	 * 需要登录, default is "false".
 	 *
 	 * @return boolean
 	 */
 	boolean login() default false;
 
 	/**
-	 * the access key that required, default is "none".
+	 * 特殊权限令牌，the access key that required, default is "none".
 	 *
 	 * @return String
 	 */
 	String access() default X.NONE;
 
 	/**
-	 * demo account
+	 * 演示账号
 	 * 
 	 * @return
 	 */
 	String demo() default X.EMPTY;
 
 	/**
-	 * auto record oplog
+	 * 自动记录日志
 	 * 
 	 * @return
 	 */
 	boolean oplog() default false;
+
+	/**
+	 * 日记级别 when oplog=true
+	 * 
+	 * @return
+	 */
+	String loglevel() default "info";
+
+	/**
+	 * 接口说明
+	 * 
+	 * @return
+	 */
+	String memo() default X.EMPTY;
+
+	/**
+	 * 参数说明
+	 * 
+	 * @return
+	 */
+	String in() default X.EMPTY;
+
+	/**
+	 * 输出说明
+	 * 
+	 * @return
+	 */
+	String out() default X.EMPTY;
+
+	/**
+	 * 权限说明
+	 * 
+	 * @return
+	 */
+	String permission() default X.EMPTY;
 
 }

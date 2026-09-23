@@ -21,6 +21,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.Digest;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -29,7 +30,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.Digest;
 import org.giiwa.web.Controller;
 
 /**
@@ -86,6 +86,9 @@ public final class App extends Bean {
 	@Column(memo = "过期时间")
 	private long expired;
 
+	@Column(memo = "角色id, 一个应用只能一个")
+	public long rid;
+
 	@Column(memo = "权限")
 	public List<String> access;
 
@@ -93,8 +96,7 @@ public final class App extends Bean {
 	public long accessed;
 
 	public void touch(String ip) {
-		dao.inc(W.create().and(X.ID, id), "accessed", 1,
-				V.create("lastime", Global.now()).append("ip", ip));
+		dao.inc(W.create().and(X.ID, id), X.ACCESSED, 1, V.create("lastime", Global.now()).append(X.IP, ip));
 	}
 
 	/**

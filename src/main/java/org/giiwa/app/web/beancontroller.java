@@ -34,6 +34,7 @@ import org.giiwa.web.Path;
  * @author joe
  *
  */
+@Deprecated
 public class beancontroller extends Controller {
 
 	/**
@@ -41,18 +42,18 @@ public class beancontroller extends Controller {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Path(path = "list", login = true)
+	@Path(path = X.LIST, login = true)
 	public void list() {
 
-		if (!_method("list")) {
+		if (!_method(X.LIST)) {
 			this.notfound();
 			return;
 		}
 
 		W q = W.create();
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
 		_query(q);
 
@@ -61,9 +62,9 @@ public class beancontroller extends Controller {
 			bs.count();
 		}
 
-		this.set("list", bs.asList(e -> {
+		this.set(X.LIST, bs.asList(e -> {
 			return _refine(e);
-		})).set("total", bs.getTotal()).set("s", s).set("n", n).set("pages", bs.getTotal() / n).send(200);
+		})).set("total", bs.getTotal()).set(X.S, s).set(X.N, n).set("pages", bs.getTotal() / n).send(200);
 
 	}
 
@@ -124,7 +125,7 @@ public class beancontroller extends Controller {
 		Object id = v.value(X.ID);
 		_done("create", id);
 
-		this.set("id", v.value(X.ID)).set(X.MESSAGE, lang.get("save.success")).send(200);
+		this.set(X.ID, v.value(X.ID)).set(X.MESSAGE, lang.get("save.success")).send(200);
 	}
 
 	@Path(path = "detail", login = true)
@@ -135,8 +136,8 @@ public class beancontroller extends Controller {
 			return;
 		}
 
-		Object id = _id(this.get("id"));
-		Data d = Data.load(_table(), W.create().and("id", id));
+		Object id = _id(this.get(X.ID));
+		Data d = Data.load(_table(), W.create().and(X.ID, id));
 		if (d == null) {
 			this.set(X.ERROR, "参数错误, [id]").send(201);
 		} else {
@@ -153,7 +154,7 @@ public class beancontroller extends Controller {
 			return;
 		}
 
-		Object id = _id(this.get("id"));
+		Object id = _id(this.get(X.ID));
 
 		V v = V.create().ignore(X.ID);
 
@@ -164,7 +165,7 @@ public class beancontroller extends Controller {
 		}
 
 		try {
-			Helper.primary.updateTable(_table(), W.create().and("id", id), v);
+			Helper.primary.updateTable(_table(), W.create().and(X.ID, id), v);
 		} catch (SQLException err) {
 			log.error(err.getMessage(), err);
 		}
@@ -200,7 +201,7 @@ public class beancontroller extends Controller {
 			return;
 		}
 
-		Object id = _id(this.get("id"));
+		Object id = _id(this.get(X.ID));
 
 		Helper.primary.delete(_table(), W.create().and(X.ID, id));
 

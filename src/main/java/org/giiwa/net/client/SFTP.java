@@ -38,6 +38,7 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.ProxyHTTP;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.UIKeyboardInteractive;
@@ -50,6 +51,7 @@ public class SFTP implements Closeable {
 
 	private Session session = null;
 	private ChannelSftp sftp = null;
+	private String proxy = null;
 
 	/**
 	 * 关闭链接
@@ -139,6 +141,10 @@ public class SFTP implements Closeable {
 		try {
 			session = getSession(url, url.get("username"), url.get("passwd"));
 			timeout(300 * 1000);
+			if (!X.isEmpty(proxy)) {
+				String[] ss = X.split(proxy, "[:： ]");
+				session.setProxy(new ProxyHTTP(ss[0], X.toInt(ss[1])));
+			}
 
 			sftp = (ChannelSftp) session.openChannel("sftp");
 			sftp.connect();
@@ -362,7 +368,6 @@ public class SFTP implements Closeable {
 	 * @return 文件数组
 	 * @throws IOException
 	 */
-	@SuppressWarnings("unchecked")
 	@Comment(text = "列表目录")
 	public File[] list(@Comment(text = "src") String src) throws IOException {
 
@@ -493,6 +498,12 @@ public class SFTP implements Closeable {
 		}
 	}
 
+	@Comment(text = "设置代理", demo = ".proxy('g04:3128')")
+	public SFTP proxy(String proxy) {
+		this.proxy = proxy;
+		return this;
+	}
+
 	private static Session getSession(Url url, String username, String passwd) throws IOException {
 
 		JSch jsch = new JSch();
@@ -539,6 +550,10 @@ public class SFTP implements Closeable {
 			session.setUserInfo(ui);
 			// session.connect();
 			session.connect(30 * 1000);
+//			Properties config = new Properties();
+//			config.put("StrictHostKeyChecking", "no");
+//			config.put("PreferredAuthentications", "password,publickey");
+//			session.setConfig(config);
 
 			if (session.isConnected()) {
 				return session;

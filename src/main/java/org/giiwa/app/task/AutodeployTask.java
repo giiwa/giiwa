@@ -23,15 +23,21 @@ import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.crypto.MD5;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.MD5;
 import org.giiwa.net.client.Http;
 import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 import org.giiwa.web.Module;
 
+/**
+ * 自动模块升级任务
+ * 
+ * @author joe
+ *
+ */
 public class AutodeployTask extends Task {
 
 	/**
@@ -51,6 +57,14 @@ public class AutodeployTask extends Task {
 
 	private AutodeployTask() {
 
+	}
+
+	@Override
+	public boolean isEnabled() {
+		if (Local.getInt("autodeploy.enabled", 0) == 0) {
+			return Boolean.FALSE;
+		}
+		return Boolean.TRUE;
 	}
 
 	@Override
@@ -87,15 +101,15 @@ public class AutodeployTask extends Task {
 			boolean restart = false;
 
 			JSON jo = JSON.create();
-			jo.put("name", modules);
+			jo.put(X.NAME, modules);
 
 			Http.Response r = h.post(url, jo);
 			log.info("remote module=" + modules + ", resp=" + r.body);
 
 			JSON j1 = JSON.fromObject(r.body);
 			if (j1 != null && j1.getInt(X.STATE) == 200) {
-				if (j1.has("list")) {
-					List<JSON> list = j1.getList("list");
+				if (j1.has(X.LIST)) {
+					List<JSON> list = j1.getList(X.LIST);
 					for (JSON j2 : list) {
 						if (_upgrade(url, j2)) {
 							restart = true;
@@ -124,7 +138,7 @@ public class AutodeployTask extends Task {
 	}
 
 	private boolean _upgrade(String url, JSON j1) {
-		String name = j1.getString("name");
+		String name = j1.getString(X.NAME);
 		Module m = Module.load(name);
 		if (m == null || !X.isSame(m.getVersion(), j1.getString("version"))
 				|| !X.isSame(m.getBuild(), j1.getString("build"))) {
@@ -133,7 +147,7 @@ public class AutodeployTask extends Task {
 			int i = url.indexOf("/", 10);
 			url = url.substring(0, i) + uri;
 
-			File f = _download(url, j1.getString("md5"));
+			File f = _download(url, j1.getString(X.MD5));
 			if (f != null) {
 
 				GLog.applog.info(autodeploy.class, "download", f.getName(), null, upgradeurl);
@@ -155,8 +169,7 @@ public class AutodeployTask extends Task {
 	private boolean _upgrade(String name, File f) {
 		try {
 			Language lang = Language.getLanguage();
-			DFile f1 = Disk.seek(
-					"/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/ss") + "/" + f.getName());
+			DFile f1 = Disk.seek("/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/ss") + "/" + f.getName());
 			f1.upload(f);
 			boolean restart = Module.prepare(f1);
 			GLog.applog.info(autodeploy.class, "upgrade", "success, name=" + name, null, null);
@@ -201,6 +214,9 @@ public class AutodeployTask extends Task {
 
 	@Override
 	public void onFinish() {
+		/**
+		 * 监测是否开启
+		 */
 		if (Local.getInt("autodeploy.enabled", 0) == 0) {
 			log.info("autodeply.enabled=0, disabled!");
 			return;

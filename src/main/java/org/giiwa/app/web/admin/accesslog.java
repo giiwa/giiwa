@@ -58,7 +58,7 @@ public class accesslog extends Controller {
 	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
 		String url = this.getString("url");
-		String ip = this.getString("ip");
+		String ip = this.getString(X.IP);
 //		String sortby = this.getString("sortby");
 //		int sortby_type = this.getInt("sortby_type", -1);
 
@@ -68,13 +68,13 @@ public class accesslog extends Controller {
 			this.set("url", url);
 		}
 		if (!X.isEmpty(ip)) {
-			q.and("ip", ip);
-			this.set("ip", ip);
+			q.and(X.IP, ip);
+			this.set(X.IP, ip);
 		}
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
-		q.sort("created", -1);
+		q.sort(X.CREATED, -1);
 		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 		if (bs != null) {
 			bs.count();

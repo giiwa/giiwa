@@ -21,13 +21,14 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
+import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 
 /**
- * The Class RecycleTask.
+ * 自动重启任务
  */
-public class RecycleTask extends Task {
+public class RecycleTask extends SysTask {
 
 	/**
 	 * The Constant serialVersionUID.
@@ -42,12 +43,7 @@ public class RecycleTask extends Task {
 	/**
 	 * The owner.
 	 */
-	public static RecycleTask owner = new RecycleTask();
-
-	@Override
-	protected boolean isSys() {
-		return true;
-	}
+	public static RecycleTask inst = new RecycleTask();
 
 	@Override
 	public String getName() {
@@ -103,7 +99,7 @@ public class RecycleTask extends Task {
 
 			@Override
 			public void onExecute() {
-				
+
 				log.warn("recycle ...");
 				Task.schedule(t -> {
 					System.exit(0);
@@ -121,6 +117,15 @@ public class RecycleTask extends Task {
 	@Override
 	public void onFinish() {
 		this.schedule(X.AHOUR);
+	}
+
+	@Override
+	public boolean isEnabled() {
+		String s = Local.getString("recycle.task", "-1");
+		if ((!X.isSame(s, "-1"))) {
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
 	}
 
 }

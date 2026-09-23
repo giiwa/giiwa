@@ -20,12 +20,12 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.crypto.AES;
+import org.giiwa.crypto.RSA;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Digest;
-import org.giiwa.misc.RSA;
 import org.giiwa.task.Task;
 import org.giiwa.web.Module;
 
@@ -52,7 +52,7 @@ public final class License extends Bean {
 		free, trial, limited, licensed, issue, personal, professional, enterprise, unlimited, inactive
 	};
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size = 64)
 	private String id; // name
 
 	@Column(memo = "CODE")
@@ -76,7 +76,7 @@ public final class License extends Bean {
 			@Override
 			public void onExecute() {
 				int s = 0;
-				W q = W.create().sort("created", 1);
+				W q = W.create().sort(X.CREATED, 1);
 				Beans<License> bs = dao.load(q, s, 10);
 				while (bs != null && !bs.isEmpty()) {
 					for (License e : bs) {
@@ -88,10 +88,10 @@ public final class License extends Bean {
 				}
 			}
 
-			@Override
-			public void onFinish() {
-				this.schedule(X.AMINUTE);
-			}
+//			@Override
+//			public void onFinish() {
+//				this.schedule(X.AMINUTE);
+//			}
 
 		}.schedule(0);
 	}
@@ -104,7 +104,7 @@ public final class License extends Bean {
 				String code = new String(RSA.decode(Base64.getDecoder().decode(this.code), key));
 
 				if (!X.isEmpty(code)) {
-					JSON jo = JSON.fromObject(Digest.decode(Base64.getDecoder().decode(this.content), code));
+					JSON jo = JSON.fromObject(AES.decode(Base64.getDecoder().decode(this.content), code.getBytes()));
 					if (jo != null) {
 						keys.put(id, jo);
 						m.setLicense(LICENSE.valueOf(jo.getString("type")), jo.getString("code"));
@@ -113,7 +113,7 @@ public final class License extends Bean {
 				}
 
 			} catch (Exception e) {
-				// log.error(e.getMessage(), e);
+				log.error(e.getMessage(), e);
 				// GLog.applog.error("license", "decode", id, e, null, null);
 			}
 		}
@@ -134,7 +134,7 @@ public final class License extends Bean {
 
 	public static JSON get(String name) {
 		if (keys.containsKey(name)) {
-			return keys.get(name).copy().remove("company", "type", "code");
+			return keys.get(name).copy();
 		} else {
 			return JSON.create();
 		}

@@ -22,10 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.giiwa.auth.ICaptcha;
 import org.giiwa.bean.App;
 import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.Role;
 import org.giiwa.bean.Roles;
 import org.giiwa.bean.Session;
@@ -34,17 +36,19 @@ import org.giiwa.bean.User;
 import org.giiwa.bean.UserConfig;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.crypto.Base32;
+import org.giiwa.crypto.RSA;
 import org.giiwa.dao.Beans;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Base32;
 import org.giiwa.misc.Captcha;
 import org.giiwa.misc.Url;
-import org.giiwa.misc.noti.Email;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 import org.giiwa.web.view.View;
@@ -52,12 +56,13 @@ import org.giiwa.web.view.View;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * web api： /user <br>
+ * 用户鉴权接口 <br>
  * used to login or logout, etc.
  * 
  * @author joe
  * 
  */
+@Comment(text="用户工具 - 用户账号 Web 控制器，提供登录、注册、登出、SSO、用户信息与权限查询、密码管理接口")
 public class user extends Controller {
 
 	/**
@@ -101,7 +106,7 @@ public class user extends Controller {
 		JSON jo = JSON.fromObject(App.decode(data, a.getSecret()));
 		if (jo != null) {
 			long time = jo.getLong("time");
-			String name = jo.getString("name");
+			String name = jo.getString(X.NAME);
 			if (Global.now() - time < X.AMINUTE) {
 				User u = User.load(name);
 				if (u != null) {
@@ -156,10 +161,10 @@ public class user extends Controller {
 				this.set(X.MESSAGE, lang.get("captcha.bad"));
 			} else {
 
-				String name = this.getString("name").trim().toLowerCase();
+				String name = this.getString(X.NAME).trim().toLowerCase();
 
 				try {
-					V v = V.create("name", name).copy(this, "nickname", "email", "phone");
+					V v = V.create(X.NAME, name).copy(this, "nickname", "email", "phone");
 
 					String pwd = this.get("password");
 					if (X.isEmpty(pwd)) {
@@ -175,7 +180,7 @@ public class user extends Controller {
 
 					String role = Global.getString("user.role", "N/A");
 					Role r = Role.loadByName(role);
-					User u = User.dao.load(id);
+					User u = User.load(id);
 					if (r != null) {
 						u.setRole(r.getId());
 					}
@@ -184,7 +189,7 @@ public class user extends Controller {
 							login, this.ip());
 
 					if (this.isAjax()) {
-						this.send(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
+						this.send(JSON.create().append(X.STATE, 200).append(X.ID, u.getId()).append(X.MESSAGE,
 								lang.get("create.success")));
 						return;
 					} else {
@@ -253,7 +258,16 @@ public class user extends Controller {
 
 	}
 
-	@Path(login = true, path = "set")
+	@Path(login = true, path = "set", memo = """
+			保存用户自定义键值缓存数据，跨浏览器同步用户习惯配置，实现多端访问时个人设置保持一致；接口需要登录后调用。
+			""", in = """
+			前端自定义name和value， 比如：
+			name：value
+			""", out = """
+			json数据：
+			state：200，成功，否则错误；
+			error：错误信息。
+			""")
 	public void set() {
 
 		try {
@@ -285,7 +299,7 @@ public class user extends Controller {
 	@Path(path = "info")
 	public void info() {
 		if (this.user() != null) {
-			User u = User.dao.load(login.getId());
+			User u = User.load(login.getId());
 			if (u != null) {
 				this.send(JSON.create().append(X.STATE, 200).append("data", u.json()));
 				return;
@@ -318,7 +332,7 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "sso")
+	@Path(path = "sso", oplog = true, loglevel = "warn")
 	public void sso() {
 
 //		Global.setConfig("user.login.sso", X.isSame("on", this.getString("user.login.sso")) ? 1 : 0);
@@ -401,18 +415,14 @@ public class user extends Controller {
 			long time = j1.getLong("time");
 			long expired = Global.getLong("user.login.sso.expired", 60);
 			if (Global.now() - time > expired * 60 * X.AMINUTE) {
-
 				GLog.securitylog.warn("user", "sso", "failed as exired", null, this.ip());
-
 				this.print("expired");
 				return;
 			}
 
-			String name = j1.getString("name");
+			String name = j1.getString(X.NAME);
 			if (X.isEmpty(name)) {
-
 				GLog.securitylog.warn("user", "sso", "failed as name missed in token", null, this.ip());
-
 				this.print("[name] missed in token");
 				return;
 			}
@@ -425,9 +435,7 @@ public class user extends Controller {
 				this.user(u);
 
 				if (!X.isEmpty(url)) {
-
 					GLog.securitylog.warn("user", "sso", "redirect [" + url + "], url0=" + url0, u, this.ip());
-
 					this.redirect(url);
 					return;
 				}
@@ -444,15 +452,13 @@ public class user extends Controller {
 						}
 					}
 				}
-
 				GLog.securitylog.warn("user", "sso", "redirect [/]", u, this.ip());
-
 				this.redirect("/");
 				return;
 			}
 
 			V v = V.create();
-			v.append("name", name);
+			v.append(X.NAME, name);
 			v.append("nickname", j1.getString("nickname", name));
 			v.append("createdua", "sso");
 			v.append("password", UID.random(12));
@@ -462,7 +468,7 @@ public class user extends Controller {
 
 				GLog.securitylog.warn("sso", "createuser", "name=" + name, null, this.ip());
 
-				u = User.dao.load(id);
+				u = User.load(id);
 				this.user(u);
 
 				String role = Global.getString("user.login.sso.role", X.EMPTY);
@@ -472,17 +478,13 @@ public class user extends Controller {
 						u.setRole(r1.id);
 
 						if (!X.isEmpty(url)) {
-
 							GLog.securitylog.warn("user", "sso", "redirect [" + url + "]", u, this.ip());
-
 							this.redirect(url);
 							return;
 						}
 
 						if (!X.isEmpty(r1.url)) {
-
 							GLog.securitylog.warn("user", "sso", "redirect [" + r1.url + "]", u, this.ip());
-
 							this.redirect(r1.url);
 							return;
 						}
@@ -490,9 +492,7 @@ public class user extends Controller {
 				}
 
 				if (!X.isEmpty(url)) {
-
 					GLog.securitylog.warn("user", "sso", "redirect [" + url + "]", u, this.ip());
-
 					this.redirect(url);
 					return;
 				}
@@ -517,9 +517,7 @@ public class user extends Controller {
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-
 				GLog.securitylog.error("user", "sso", e.getMessage(), e, u, this.ip());
-
 				this.print(X.toString(e));
 			}
 
@@ -534,12 +532,24 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "ssolink")
+	@Path(path = "ssolink", oplog = true, loglevel = "warn", memo = """
+			生成免登录SSO访问链接，实现一键免登跳转目标页面；需要传入应用appid、应用密钥、登录用户名以及待跳转原始链接。
+			""", in = """
+			appid：必须，应用名appid；
+			secret：必须，应用密钥；
+			name：必须，生成链接的登录用户名；
+			url：必须，原始链接；
+			""", out = """
+			json数据：
+			state：200， 成功，否则错误；
+			error：错误信息；
+			url：加密后的访问链接。
+			""")
 	public void ssolink() {
 
 		String appid = this.get("appid");
 		String secret = this.get("secret");
-		String name = this.get("name");
+		String name = this.get(X.NAME);
 
 		if (X.isEmpty(appid)) {
 			this.set(X.ERROR, "[appid] missed").send(201);
@@ -552,6 +562,13 @@ public class user extends Controller {
 			this.set(X.ERROR, "bad appid [" + appid + "]").send(201);
 			GLog.securitylog.warn("user", "ssolink", "bad appid [" + appid + "]", null, this.ip());
 			return;
+		}
+
+		if (X.isEmpty(a.allowip) || !a.isAllow(this)) {
+			// 没有白名单，或不在白名单内，禁止
+			this.set(X.ERROR, "白名单禁止!").send(201);
+			GLog.securitylog.warn("user", "ssolink", "白名单禁止! [" + this.ip() + "], allow=[" + a.allowip + "]", null,
+					this.ip());
 		}
 
 		if (!X.isSame(secret, a.secret)) {
@@ -567,7 +584,7 @@ public class user extends Controller {
 		}
 
 		JSON j1 = JSON.create();
-		j1.append("name", name);
+		j1.append(X.NAME, name);
 		j1.append("time", Global.now());
 
 		String url = this.getHtml("url");
@@ -586,10 +603,28 @@ public class user extends Controller {
 
 	}
 
+	@Path(path = "code")
+	public void code() {
+
+		String name = this.get(X.NAME);
+		User user = User.load(name);
+		if (user != null) {
+			// send code
+
+		}
+
+	}
+
 	/**
 	 * Login.
 	 */
-	@Path(path = "login")
+	@Path(path = "login", in = """
+			auth：必须，登录令牌，采用RSA对“name$$passwd$$timestamp”加密；其中$$为分隔符，name为用户名，passwd为用户密码，timestamp为当前时间戳；timestamp和publickey可以通过“/f/pubkey”接口获取，算法为：auth=base64(rsa("name$$passwd$$timestamp",public_key))。
+			""", out = """
+			json数据：
+			state：200，成功，否则错误；
+			error：错误信息。
+			""")
 	public void login() {
 
 		if (!Helper.isConfigured()) {
@@ -628,7 +663,7 @@ public class user extends Controller {
 			}
 
 			if (a != null) {
-
+				// 用token登录
 				// ok, logined
 				jo.put(X.STATE, 200);
 				jo.put(X.MESSAGE, "ok");
@@ -638,18 +673,17 @@ public class user extends Controller {
 				this.user(u, LoginType.ajax);
 
 				if (u.expired()) {
-					this.set(X.MESSAGE, lang.get("passwd.expired"));
-					log.info("redirect to passwd as expired!");
+					this.set(X.MESSAGE, lang.get("passwd.expired")).send(201);
+					log.warn("redirect to [/user/passwd] as expired!");
 					this.redirect("/user/passwd");
 					GLog.securitylog.info("user", "login", "success, " + lang.get("passwd.expired"), u, this.ip());
-
 					return;
 				}
 
 				if (!X.isEmpty(callback) && !callback.startsWith("/user/")) {
 					// 重定向， 禁止重定向到 /user/...
 					// SSO
-					log.info("redirect to callback=" + callback);
+					log.warn("redirect to callback=" + callback);
 					this.redirect(callback);
 					GLog.securitylog.info("user", "login", "success, redirect: " + callback, u, this.ip());
 					return;
@@ -658,7 +692,89 @@ public class user extends Controller {
 			} else {
 
 				try {
-					String name = this.getString("name");
+					// 用加密key登录
+					String auth = this.getString("auth");
+					if (!X.isEmpty(auth)) {
+						// 登录令牌， 采用RSA加密
+						org.giiwa.web.Module m = org.giiwa.web.Module.load("default");
+						String prikey = m.getKey();
+
+						byte[] data = Base64.getDecoder().decode(auth);
+						String s = new String(RSA.decode(data, prikey));
+
+						// name$$passwd$$timestamp
+						String[] ss = X.split(s, "\\$\\$");
+						if (ss.length == 3) {
+							String name = ss[0].trim().toLowerCase();
+							String pwd = ss[1].trim();
+							long time = X.toLong(ss[2]);
+							if (Global.now() - time < X.AMINUTE * 10) {
+								// 10分钟之内
+								User me = User.load(name, pwd, this.ip());
+								if (me == null) {
+									// 用户名/密码错误
+									this.set(X.ERROR, "用户信息错误!").send(201);
+									return;
+								} else {
+									GLog.securitylog.info("user", "login", me.name + " login success", me, this.ip());
+									this.user(me, LoginType.ajax);
+									me.logined(sid(true), this.ip(), V.create("ajaxlogined", Global.now()));
+
+									jo.put("sid", sid(true));
+									jo.put("uid", me.getId());
+
+									jo.append("access", me.getAccesses());
+
+									/**
+									 * test the configuration is enabled user token and this request is ajax
+									 */
+									if (Global.getInt("user.token", 0) == 1) {
+										AuthToken t = AuthToken.create(me.getId(), this.ip());
+										if (t != null) {
+											jo.put("token", t.getToken());
+											jo.put("expired", t.getExpired());
+											jo.put(X.STATE, HttpServletResponse.SC_OK);
+										} else {
+											jo.put(X.MESSAGE, "create authtoken error");
+											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+										}
+									} else {
+										jo.put(X.STATE, HttpServletResponse.SC_OK);
+									}
+									if (me.expired()) {
+										jo.append(X.MESSAGE, "密码已经过期!");
+										jo.append("uri", "/user/passwd");
+									} else if (!X.isEmpty(callback)) {
+										jo.append("uri", callback);
+									} else {
+										Roles rs = me.getRole();
+										if (rs != null && rs.getList() != null) {
+											for (Role r1 : rs.getList()) {
+												if (!X.isEmpty(r1.url)) {
+													log.info("redirect to role home=" + r1.url);
+													jo.append("uri", r1.url);
+													GLog.securitylog.info("user", "login", "success, home=" + r1.url,
+															me, this.ip());
+													break;
+												}
+											}
+										}
+									}
+									this.send(jo);
+									return;
+								}
+							} else {
+								this.set(X.ERROR, "客户端时钟错误, 当前时间：" + lang.format(Global.now(), "yyyy-MM-dd HH:mm:ss"))
+										.set("yours", lang.format(time, "yyyy-MM-dd HH:mm:ss")).send(201);
+								return;
+							}
+						} else {
+							this.set(X.ERROR, "加密信息拼接错误!").send(201);
+							return;
+						}
+					}
+
+					String name = this.getString(X.NAME);
 					if (name != null) {
 						name = name.toLowerCase().replaceAll("'", X.EMPTY).replaceAll("\"", X.EMPTY);
 					}
@@ -678,19 +794,34 @@ public class user extends Controller {
 					Captcha.Result r = Captcha.Result.ok;
 
 					if (Global.getInt("user.captcha", 0) == 1) {
+
 						String code = this.getString("code");
 						if (code != null) {
 							code = code.toLowerCase();
 						}
-						r = Captcha.verify(this.sid(true), code);
-						Captcha.remove(this.sid(true));
 
+						log.warn("captcha code=" + code);
+
+						String option = Global.getString("user.captcha.option", "");
+						if (X.isSame(option, "image")) {
+							r = Captcha.verify(this.sid(true), code);
+							Captcha.remove(this.sid(true));
+						} else {
+							ICaptcha c = ICaptcha.get(option);
+							if (c.verify(u, code)) {
+								r = Captcha.Result.ok;
+							} else {
+								r = Captcha.Result.badcode;
+							}
+						}
 					}
 
 					if (Captcha.Result.badcode == r) {
 
 						jo.put(X.MESSAGE, lang.get("captcha.bad"));
 						jo.put(X.STATE, 202);
+
+						log.warn("captcha is bad!");
 
 						GLog.securitylog.error("user", "login", lang.get("captcha.bad"), u, this.ip());
 
@@ -705,7 +836,7 @@ public class user extends Controller {
 
 						User me = User.load(name, pwd, this.ip());
 
-						log.info("login: name=" + name + ", sid=" + sid(true) + ", me=" + me);
+						log.info("login: name=" + name + ", sid=" + sid(true) + ", pwd=" + pwd + ", me=" + me);
 
 						if (me != null) {
 
@@ -717,12 +848,16 @@ public class user extends Controller {
 								jo.put(X.MESSAGE, lang.get("account.locked.error"));
 
 								jo.put(X.STATE, 204);
-								jo.put("name", name);
+								jo.put(X.NAME, name);
 								jo.put("pwd", pwd);
+
+								log.warn("user was locked!");
 
 								GLog.securitylog.error("user", "login", lang.get("account.locked.error"), u, this.ip());
 
 							} else {
+
+								log.warn("user login success!");
 
 								GLog.securitylog.info("user", "login", me.name + " login success", u, this.ip());
 
@@ -734,15 +869,14 @@ public class user extends Controller {
 										log.debug("isAjax login");
 									}
 
-									me.logined(sid(true), this.ip(),
-											V.create("ajaxlogined", Global.now()));
+									me.logined(sid(true), this.ip(), V.create("ajaxlogined", Global.now()));
 
 									if (me.expired()) {
 										this.set(X.MESSAGE, lang.get("passwd.expired"));
 
-										log.info("redirect to passwd as expired");
+//										log.warn("redirect to passwd as expired");
 
-										// this.redirect("/user/passwd");
+//										 this.redirect("/user/passwd");
 
 										GLog.securitylog.info("user", "login", "success, " + lang.get("passwd.expired"),
 												u, this.ip());
@@ -762,6 +896,10 @@ public class user extends Controller {
 
 									jo.put("sid", sid(true));
 									jo.put("uid", me.getId());
+
+									if (me != null) {
+										jo.append("access", me.getAccesses());
+									}
 
 									/**
 									 * test the configuration is enabled user token and this request is ajax
@@ -787,8 +925,7 @@ public class user extends Controller {
 									/**
 									 * logined, to update the stat data
 									 */
-									me.logined(sid(true), this.ip(),
-											V.create("weblogined", Global.now()));
+									me.logined(sid(true), this.ip(), V.create("weblogined", Global.now()));
 
 									if (me.expired()) {
 										this.set(X.MESSAGE, lang.get("passwd.expired"));
@@ -850,9 +987,13 @@ public class user extends Controller {
 								jo.put("message", lang.get("login.name_password.error"));
 								jo.put(X.STATE, 201);
 
+								log.warn("bad username!");
+
 								GLog.securitylog.error("user", "login",
 										lang.get("login.name_password.error") + ":" + name, u, this.ip());
 							} else {
+
+								log.warn("bad password!");
 
 								u.failed(this.ip(), sid(true), this.browser());
 
@@ -877,7 +1018,7 @@ public class user extends Controller {
 								}
 							}
 
-							jo.put("name", name);
+							jo.put(X.NAME, name);
 							jo.put("pwd", pwd);
 						}
 					}
@@ -886,6 +1027,10 @@ public class user extends Controller {
 					jo.put(X.MESSAGE, e.getMessage());
 					jo.put(X.STATE, 201);
 				}
+			}
+
+			if (login != null) {
+				jo.append("access", login.getAccesses());
 			}
 
 			if (X.isSame("json", this.getString("type")) || this.isAjax()) {
@@ -930,7 +1075,7 @@ public class user extends Controller {
 		String refer = this.getString("refer");
 		if (!X.isEmpty(refer) && !isAjax()) {
 			try {
-				this.session(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
+				this.session(true).set("uri", URLDecoder.decode(refer, X.UTF8)).store();
 			} catch (Exception e) {
 				log.error(refer, e);
 				GLog.securitylog.error("user", "login", e.getMessage(), e, login, this.ip());
@@ -1011,7 +1156,7 @@ public class user extends Controller {
 	 */
 	@Path(path = "verify")
 	public void verify() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		String value = this.getString("value");
 
 		if (X.isEmpty(value)) {
@@ -1020,18 +1165,18 @@ public class user extends Controller {
 		}
 
 //		JSON jo = new JSON();
-		if (X.isSame(name, "name")) {
+		if (X.isSame(name, X.NAME)) {
 			try {
-//				if (User.dao.exists(W.create().and("name", value))) {
+//				if (User.dao.exists(W.create().and(X.NAME, value))) {
 //
 //					jo.put(X.STATE, 201);
 //					jo.put(X.MESSAGE, lang.get("user.name.exists"));
 //
-//					GLog.securitylog.info("user", "verify", "name=" + name + ",value=" + value + ",exists", login,
+//					GLog.securitylog.info("user", "verify", X.NAME=" + name + ",value=" + value + ",exists", login,
 //							this.ip());
 //
 //				} else {
-				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{3,16}$");
 
 				if ((!X.isEmpty(rule) && !value.matches(rule))) {
 
@@ -1090,10 +1235,10 @@ public class user extends Controller {
 			for (User e : list) {
 				JSON j = new JSON();
 				j.put("value", e.getId());
-				j.put("name", e.get("nickname") + "(" + e.get("name") + ")");
+				j.put(X.NAME, e.get("nickname") + "(" + e.get(X.NAME) + ")");
 				arr.add(j);
 			}
-			jo.put("list", arr);
+			jo.put(X.LIST, arr);
 			jo.put(X.STATE, 200);
 
 		} else {
@@ -1176,24 +1321,24 @@ public class user extends Controller {
 								View v1 = View.getVelocity();
 								String body = v1.parse(f, j1);
 								if (body != null) {
-									try {
-										if (Email.send(lang.get("mail.validation.code"), body, email)) {
-											jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
-											jo.put(X.STATE, HttpServletResponse.SC_OK);
-											Code.dao.update(W.create().and("s1", code).and("s2", email),
-													V.create(X.UPDATED, Global.now()));
-
-										} else {
-											jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
-											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-										}
-									} catch (Exception e) {
-										log.error(e.getMessage(), e);
-										GLog.applog.error("user", "forget", e.getMessage(), e, login, this.ip());
-										jo.put(X.MESSAGE,
-												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
-										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-									}
+//									try {
+//										if (Email.send(lang.get("mail.validation.code"), body, email)) {
+//											jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+//											jo.put(X.STATE, HttpServletResponse.SC_OK);
+//											Code.dao.update(W.create().and("s1", code).and("s2", email),
+//													V.create(X.UPDATED, Global.now()));
+//
+//										} else {
+//											jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+//											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+//										}
+//									} catch (Exception e) {
+//										log.error(e.getMessage(), e);
+//										GLog.applog.error("user", "forget", e.getMessage(), e, login, this.ip());
+//										jo.put(X.MESSAGE,
+//												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
+//										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+//									}
 								} else {
 									jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 									jo.put(X.MESSAGE, lang.get("user.forget.template.error"));
@@ -1281,8 +1426,7 @@ public class user extends Controller {
 
 							if (c == null || c.getExpired() < Global.now()) {
 								code = UID.digital(4);
-								Code.create(code, phone,
-										V.create("expired", Global.now() + X.AMINUTE * 6));
+								Code.create(code, phone, V.create("expired", Global.now() + X.AMINUTE * 6));
 							} else {
 								code = c.getString("s1");
 							}
@@ -1356,21 +1500,37 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "access", login = true)
+	@Path(path = "access", login = true, memo = """
+			查询当前已登录用户的全部权限令牌列表，查看用户所持访问凭证；接口要求必须登录系统才能调用。
+			""", in = """
+			(无)
+			""", out = """
+			state：200，成功，否则错误；
+			list：权限令牌列表。
+			""")
 	public void access() {
-		this.send(JSON.create().append(X.STATE, 200).append("list", login.getRole().getAccesses()));
+		this.send(JSON.create().append(X.STATE, 200).append(X.LIST, login.getRole().getAccesses()));
 	}
 
 	/**
 	 * 获取用户列表，参数：access 具有该权限的用户列表
 	 */
-	@Path(login = true, path = "list")
+	@Path(login = true, path = X.LIST, memo = """
+			根据指定权限令牌，查询所有拥有该权限令牌的用户清单；接口要求登录系统才能调用，用于查询权限归属用户。
+			""", in = """
+			access：必须，权限令牌， access.xxx.xxx.name。
+			""", out = """
+			json数据：
+			state：200，成功，否则错误；
+			error：错误信息；
+			data：用户信息列表。
+			""")
 	public void list() {
 
 		List<User> l1 = User.loadByAccess(this.get("access"));
 
 		this.send(JSON.create().append(X.STATE, 200).append("data", X.asList(l1, e -> {
-			return ((User) e).json().remove("_.*", "updated", "created", "password", "md4passwd", "locked");
+			return ((User) e).json().remove("_.*", ".*password", ".*passwd", "updated", X.CREATED, "locked");
 		})));
 
 	}
@@ -1378,7 +1538,14 @@ public class user extends Controller {
 	/**
 	 * 获取登录用户信息
 	 */
-	@Path(path = "myinfo")
+	@Path(path = "myinfo", memo = """
+			获取当前登录账号的用户基础信息，查看自己的用户名和用户相关数据。
+			""", in = """
+			(无）
+			""", out = """
+			name：用户名；
+			data：用户数据；
+			""")
 	public void myinfo() {
 
 		User u = this.user();
@@ -1388,10 +1555,10 @@ public class user extends Controller {
 			return;
 		}
 
-		u = User.dao.load(login.getId());
+		u = User.load(login.getId());
 		JSON j1 = u.json();
 
-		j1.append("ip", this.ip());
+		j1.append(X.IP, this.ip());
 		j1.append("now", lang.format(Global.now(), "yyyy-MM-dd"));
 
 		Map<String, JSON> home = new TreeMap<String, JSON>();
@@ -1399,7 +1566,7 @@ public class user extends Controller {
 				.append("roles", u.getRole() == null ? null : X.asList(u.getRole().getList(), e -> {
 					Role r = (Role) e;
 					if (!X.isEmpty(r.url)) {
-						home.put(r.url, JSON.create().append("url", r.url).append("name", r.getName()));
+						home.put(r.url, JSON.create().append("url", r.url).append(X.NAME, r.getName()));
 					}
 					return r.getName();
 //
@@ -1410,9 +1577,15 @@ public class user extends Controller {
 		if (!home.isEmpty()) {
 			jo.append("home", home.values());
 		}
-		jo.put("home_title", lang.get("home.title"));
+		Node n = Local.node();
+		if (!X.isSame(n.color, "green")) {
+			jo.put("home_title", lang.get("home.title") + "(试用已过期)");
+		} else {
+			jo.put("home_title", lang.get("home.title"));
+		}
+
 		jo.put("bg.watermark", Global.getInt("web.bg.watermark", 0));
-		jo.put("name", u.name);
+		jo.put(X.NAME, u.name);
 
 		this.send(jo);
 
@@ -1431,17 +1604,28 @@ public class user extends Controller {
 				v.append(name, s);
 			}
 		}
-		if (!v.isEmpty()) {
-			User.dao.update(login.id, v);
+		try {
+			if (!v.isEmpty()) {
+				User.update(login.id, v);
+			}
+			this.set(X.MESSAGE, lang.get("save.success")).send(200);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			this.set(X.ERROR, e.getMessage()).send(201);
 		}
-		this.set(X.MESSAGE, lang.get("save.success")).send(200);
 
 	}
 
 	/**
 	 * 修改个人密码
 	 */
-	@Path(login = true, path = "passwd")
+	@Path(login = true, path = "passwd", in = """
+			pwd1：可选，加密新密码；
+			pwd：可选，明码新秘密；
+			""", out = """
+			state：200， 成功，否则失败；
+			message：成功/错误信息。
+			""")
 	public void passwd() {
 
 		if (this.method.isPost()) {
@@ -1453,8 +1637,7 @@ public class user extends Controller {
 					pwd1 = new String(Base64.getDecoder().decode(pwd1));
 				}
 
-				User.update(login.getId(),
-						V.create().append("password", pwd1).append("passwordtime", Global.now()));
+				User.update(login.getId(), V.create().append("password", pwd1).append("passwordtime", Global.now()));
 
 				GLog.securitylog.warn("user", "passwd", lang.get("user.passwd.change"), login, this.ip());
 
@@ -1490,12 +1673,24 @@ public class user extends Controller {
 
 	}
 
+	@Deprecated
 	@Path(path = "timestamp")
 	public void timestamp() {
 		this.print(Long.toString(Global.now()));
 	}
 
-	@Path(path = "sso/login", method = "POST")
+	@Path(path = "sso/login", method = "POST", oplog = true, loglevel = "warn", in = """
+			appid：必须，应用名appid；
+			secret：必须，应用密钥；
+			cookiename：必须，会话的Cookie名；
+			cookievalue：必须，会话的Cookie值；
+			username：必须，模拟登录用户名，如果不存在，则创建, 用户名（长度）必须符合系统配置的名称规则；
+			nickname：可选，用户昵称。
+			""", out = """
+			json数据：
+			state：200，成功，否则失败；
+			error：错误信息。
+			""")
 	public void sso_login() {
 
 		String appid = this.get("appid");
@@ -1526,7 +1721,7 @@ public class user extends Controller {
 			return;
 		}
 
-		if (X.isEmpty(username) || username.length() < 4) {
+		if (X.isEmpty(username)) {
 			this.set(X.ERROR, "bad username [" + username + "]").send(201);
 			return;
 		}
@@ -1541,7 +1736,7 @@ public class user extends Controller {
 		if (u == null) {
 			// create a new
 			V v = V.create();
-			v.append("name", username);
+			v.append(X.NAME, username);
 			v.append("nickname", nickname);
 			v.append("createdua", "sso");
 			v.append("password", UID.random(12));
@@ -1550,7 +1745,7 @@ public class user extends Controller {
 				long id = User.create(v);
 				GLog.securitylog.warn("sso", "createuser", "name=" + username, null, this.ip());
 
-				u = User.dao.load(id);
+				u = User.load(id);
 
 				String role = Global.getString("user.login.sso.role", X.EMPTY);
 				if (!X.isEmpty(role)) {
@@ -1576,7 +1771,15 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "sso/logout", method = "POST")
+	@Path(path = "sso/logout", method = "POST", in = """
+			appid：应用名appid；
+			secret：应用密钥；
+			cookievalue：会话cookie值。
+			""", out = """
+			json数据：
+			state：200， 成功，否则失败；
+			error：错误信息。
+			""")
 	public void sso_logout() {
 		String appid = this.get("appid");
 		String secret = this.get("secret");

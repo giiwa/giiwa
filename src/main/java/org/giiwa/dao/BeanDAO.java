@@ -14,25 +14,28 @@
 */
 package org.giiwa.dao;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
+import org.giiwa.bean.Key;
 import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.SM4;
 import org.giiwa.dao.Helper.DBHelper;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.task.Consumer;
 import org.giiwa.task.Function;
+import org.giiwa.task.Task;
 
 /**
  * the DAO helper class, used to access database
@@ -42,7 +45,9 @@ import org.giiwa.task.Function;
  * @param <I> the type of primary key
  * @param <T> the Bean
  */
-public final class BeanDAO<I, T extends Bean> {
+public final class BeanDAO<I, T extends Bean> implements Serializable{
+
+	private static final long serialVersionUID = 1L;
 
 	/** The log utility */
 	protected static Log log = LogFactory.getLog(BeanDAO.class);
@@ -54,6 +59,7 @@ public final class BeanDAO<I, T extends Bean> {
 
 		this.t = t;
 		this.cleanupfunc = cleanfunc;
+
 //		_ensureIndex();
 
 	}
@@ -62,19 +68,19 @@ public final class BeanDAO<I, T extends Bean> {
 //		// ensureIndex
 //		try {
 //			String tablename = this.tableName();
-//			for (String key : new String[] { "id" }) {
+//			for (String key : new String[] { X.ID }) {
 //				LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 //				m.put(key, 1);
 //				Helper.createIndex(tablename, m, true);
 //			}
 //
-//			for (String key : new String[] { "created", "updated" }) {
+//			for (String key : new String[] { X.CREATED, "updated" }) {
 //				LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 //				m.put(key, 1);
 //				Helper.createIndex(tablename, m, false);
 //			}
 //
-//			for (String key : new String[] { "created", "updated" }) {
+//			for (String key : new String[] { X.CREATED, "updated" }) {
 //				LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 //				m.put(key, -1);
 //				Helper.createIndex(tablename, m, false);
@@ -108,7 +114,7 @@ public final class BeanDAO<I, T extends Bean> {
 				return helper.load(tableName(), q, t);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -119,10 +125,10 @@ public final class BeanDAO<I, T extends Bean> {
 			if (helper == null) {
 				return Helper.load(q, t);
 			} else {
-				helper.load(tableName(), q, t);
+				return helper.load(tableName(), q, t);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -143,18 +149,18 @@ public final class BeanDAO<I, T extends Bean> {
 	 */
 	public T load(W q, Consumer<T> func) throws SQLException {
 
-		Lock door = Global.getLock("data." + tableName());
+//		Lock door = Global.getLock("data." + tableName());
 
-		door.lock();
-		try {
-			T t = load(q);
-			if (func != null && t != null) {
-				func.accept(t);
-			}
-			return t;
-		} finally {
-			door.unlock();
+//		door.lock();
+//		try {
+		T t = load(q);
+		if (func != null && t != null) {
+			func.accept(t);
 		}
+		return t;
+//		} finally {
+//			door.unlock();
+//		}
 	}
 
 	private String _tablename;
@@ -167,7 +173,11 @@ public final class BeanDAO<I, T extends Bean> {
 	 */
 	public String tableName() throws SQLException {
 		if (_tablename == null) {
-			_tablename = Helper.getTable(t);
+			synchronized (this) {
+				if (_tablename == null) {
+					_tablename = Helper.getTable(t);
+				}
+			}
 		}
 		return _tablename;
 	}
@@ -197,15 +207,46 @@ public final class BeanDAO<I, T extends Bean> {
 			}
 			return copy(t1);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=(id=" + id, e);
 		}
 		return null;
 	}
 
+	/**
+	 * 统一接口， 查询数据库
+	 * 
+	 * @param sql - 类SQL语句
+	 * @param s   - 起始位置
+	 * @param n   - 条数
+	 * @return
+	 * @throws SQLException
+	 */
 	public Beans<T> load(String sql, int s, int n) throws SQLException {
 		W q = W.create();
 		q.and(sql);
 		return load(q, s, n);
+	}
+
+	/**
+	 * 全SQL查询， 仅对关系型数据库
+	 * 
+	 * @param sql
+	 * @param s
+	 * @param n
+	 * @return
+	 * @throws SQLException
+	 */
+	public Beans<T> query(String sql, int s, int n) throws SQLException {
+		try {
+			Beans<T> bs = helper == null ? Helper.query(sql, t) : helper.query(sql, t);
+			if (bs != null) {
+				bs.dao = this;
+			}
+			return bs;
+		} catch (Exception e) {
+			log.error("sql=" + sql, e);
+		}
+		return Beans.create();
 	}
 
 	/**
@@ -228,7 +269,7 @@ public final class BeanDAO<I, T extends Bean> {
 			}
 			return bs;
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return Beans.create();
 	}
@@ -245,17 +286,17 @@ public final class BeanDAO<I, T extends Bean> {
 	 */
 	public Beans<T> load(W q, int s, int n, Consumer<Beans<T>> func) throws SQLException {
 
-		Lock door = Global.getLock("data." + tableName());
-		door.lock();
-		try {
-			Beans<T> bs = load(q, s, n);
-			if (func != null && bs != null && !bs.isEmpty()) {
-				func.accept(bs);
-			}
-			return bs;
-		} finally {
-			door.unlock();
+//		Lock door = Global.getLock("data." + tableName());
+//		door.lock();
+//		try {
+		Beans<T> bs = load(q, s, n);
+		if (func != null && bs != null && !bs.isEmpty()) {
+			func.accept(bs);
 		}
+		return bs;
+//		} finally {
+//			door.unlock();
+//		}
 	}
 
 	/**
@@ -266,7 +307,6 @@ public final class BeanDAO<I, T extends Bean> {
 	 * @return
 	 * @throws Exception
 	 */
-	@Deprecated
 	public boolean stream(W q, Function<T, Boolean> func) throws Exception {
 		return stream(q, 0, func);
 	}
@@ -279,7 +319,6 @@ public final class BeanDAO<I, T extends Bean> {
 	 * @param n the limit
 	 * @return
 	 */
-	@Deprecated
 	public boolean stream(W q, long offset, Function<T, Boolean> func) throws Exception {
 
 		_check(q);
@@ -311,6 +350,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return exists(q);
 		} catch (Exception e) {
+			log.error("sql=" + q.toSQL(), e);
 			return false;
 		}
 	}
@@ -329,6 +369,7 @@ public final class BeanDAO<I, T extends Bean> {
 		try {
 			return exists(id);
 		} catch (Throwable e) {
+			log.error("sql=(id=" + id, e);
 			return false;
 		}
 	}
@@ -344,13 +385,14 @@ public final class BeanDAO<I, T extends Bean> {
 	public int update(W q, V v) {
 
 		try {
+
 			TimingCache.remove(t);
 
 			_check(v);
 
 			return helper == null ? Helper.update(tableName(), q, v) : helper.updateTable(tableName(), q, v);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return 0;
 	}
@@ -367,7 +409,7 @@ public final class BeanDAO<I, T extends Bean> {
 		try {
 			return update(W.create().and(X.ID, id), v);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=(id=" + id, e);
 		}
 		return 0;
 	}
@@ -384,6 +426,7 @@ public final class BeanDAO<I, T extends Bean> {
 			TimingCache.remove(t);
 
 			if (X.isEmpty(v.value(X.ID))) {
+				// 记录告警日志
 				log.error("v=" + v, new Exception("id missed in V"));
 			}
 
@@ -430,7 +473,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.delete(tableName(), q) : helper.delete(tableName(), q);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return 0;
 	}
@@ -447,7 +490,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.count(tableName(), q) : helper.count(tableName(), q);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return 0;
 	}
@@ -474,7 +517,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.sum(tableName(), name, q) : helper.sum(tableName(), q, name);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("name=" + name + ", sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -492,7 +535,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.max(this.tableName(), name, q) : helper.max(tableName(), q, name);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("name=" + name + ", sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -502,7 +545,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.median(this.tableName(), name, q) : helper.median(tableName(), q, name);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("name=" + name + ", sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -546,7 +589,7 @@ public final class BeanDAO<I, T extends Bean> {
 			_check(q);
 			return helper == null ? Helper.distinct(tableName(), name, q) : helper.distinct(tableName(), name, q);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("name=" + name + ", sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
@@ -570,7 +613,7 @@ public final class BeanDAO<I, T extends Bean> {
 
 			return helper == null ? Helper.inc(tableName(), name, n, q, v) : helper.inc(tableName(), q, name, n, v);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("name=" + name + ", sql=" + q.toSQL(), e);
 		}
 		return 0;
 	}
@@ -585,7 +628,7 @@ public final class BeanDAO<I, T extends Bean> {
 
 			return helper == null ? Helper.inc(tableName(), incvalue, q, v) : helper.inc(tableName(), q, incvalue, v);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return 0;
 	}
@@ -629,11 +672,11 @@ public final class BeanDAO<I, T extends Bean> {
 
 		BeanDAO<D, E> dao = new BeanDAO<D, E>(t, cleanfunc);
 
-		if (Helper.primary instanceof RDSHelper) {
+		if (!(Helper.primary instanceof MongoHelper)) {
 			// RDBMS
 			Table table = (Table) t.getAnnotation(Table.class);
 			if (table != null && !X.isEmpty(table.name())) {
-				dao.createTable(table.name(), table.memo(), JSON.create().append("distributed", table.distributed()?1:0));
+				dao._createTable(table);
 			}
 		} else {
 			log.info("bean [" + t + "], using " + Helper.primary);
@@ -642,13 +685,24 @@ public final class BeanDAO<I, T extends Bean> {
 		return dao;
 	}
 
+	private void _createTable(Table table) {
+		if (helper == null && Helper.primary == null) {
+			Task.schedule(t1 -> {
+				_createTable(table);
+			}, 1000);
+		} else {
+			createTable(table.name(), table.memo(), JSON.create().append("distributed", table.distributed() ? 1 : 0));
+		}
+	}
+
 	public void setHelper(DBHelper helper) {
 		this.helper = helper;
 		if (this.helper != null && this.helper instanceof RDSHelper) {
 			// RDBMS
 			Table table = (Table) t.getAnnotation(Table.class);
 			if (table != null && !X.isEmpty(table.name())) {
-				this.createTable(table.name(), table.memo(), JSON.create().append("distributed", table.distributed()?1:0));
+				this.createTable(table.name(), table.memo(),
+						JSON.create().append("distributed", table.distributed() ? 1 : 0));
 			}
 		}
 	}
@@ -701,7 +755,7 @@ public final class BeanDAO<I, T extends Bean> {
 				if (cleanupfunc != null) {
 					q = cleanupfunc.apply(Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30));
 				} else {
-					q = W.create().and("created", Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt);
+					q = W.create().and(X.CREATED, Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt);
 				}
 
 				this.optimize(q);
@@ -725,8 +779,8 @@ public final class BeanDAO<I, T extends Bean> {
 	 */
 	public void cleanup(Function<T, Boolean> func) throws SQLException {
 
-		W q = W.create().and("created", Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
-				.sort("created", 1);
+		W q = W.create().and(X.CREATED, Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
+				.sort(X.CREATED, 1);
 
 		if (func != null) {
 			try {
@@ -745,7 +799,7 @@ public final class BeanDAO<I, T extends Bean> {
 	}
 
 	/**
-	 * generate the query object
+	 * 返回空查询条件
 	 * 
 	 * @return
 	 */
@@ -756,30 +810,55 @@ public final class BeanDAO<I, T extends Bean> {
 		return q;
 	}
 
+	/**
+	 * 分组计算条数
+	 * 
+	 * @param q
+	 * @param group
+	 * @param n
+	 * @return
+	 */
 	public List<JSON> count(W q, String[] group, int n) {
 		try {
 			_check(q);
 			return helper == null ? Helper.count(this.tableName(), q, group, n)
 					: helper.count(tableName(), q, group, n);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 //		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
+	/**
+	 * 分组计算条数
+	 * 
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param n
+	 * @return
+	 */
 	public List<JSON> count(W q, String name, String[] group, int n) {
 		try {
 			_check(q);
 			return helper == null ? Helper.count(this.tableName(), name, q, group, n)
 					: helper.count(tableName(), q, name, group, n);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 //		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
+	/**
+	 * 计算和
+	 * 
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @return
+	 */
 	public List<JSON> sum(W q, String name, String[] group) {
 		try {
 
@@ -788,22 +867,38 @@ public final class BeanDAO<I, T extends Bean> {
 			return helper == null ? Helper.sum(this.tableName(), name, q, group)
 					: helper.sum(tableName(), q, name, group);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
 
+	/**
+	 * 分组聚合
+	 * 
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @return
+	 */
 	public List<JSON> aggregate(W q, String[] name, String[] group) {
 		try {
 			_check(q);
 			return helper == null ? Helper.aggregate(this.tableName(), name, q, group)
 					: helper.aggregate(tableName(), name, q, group);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 	}
 
+	/**
+	 * 计算均值
+	 * 
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @return
+	 */
 	public List<JSON> avg(W q, String name, String[] group) {
 
 		try {
@@ -811,12 +906,36 @@ public final class BeanDAO<I, T extends Bean> {
 			return helper == null ? Helper.avg(this.tableName(), name, q, group)
 					: helper.avg(tableName(), q, name, group);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 		return null;
 
 	}
 
+	/**
+	 * 加密数据
+	 * 
+	 * @param password
+	 * @return
+	 */
+	public Object encode(String password) {
+		if (X.isEmpty(password)) {
+			return V.ignore;
+		}
+		try {
+			String s = SM4.encode(password, Key.get("password", 20));
+			return "$$3" + s;
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
+		}
+		return password;
+	}
+
+	/**
+	 * 使用q查询优化数据库索引
+	 * 
+	 * @param q
+	 */
 	public void optimize(W q) {
 		try {
 			_check(q);
@@ -826,59 +945,74 @@ public final class BeanDAO<I, T extends Bean> {
 				helper.getOptimizer().optimize(tableName(), q);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("sql=" + q.toSQL(), e);
 		}
 	}
 
-	public boolean tryLock() {
+//	public boolean tryLock() {
+//
+//		try {
+//			Lock door = Global.getLock("dao/" + this.tableName());
+//			return door.tryLock();
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		}
+//
+//		return false;
+//	}
 
-		try {
-			Lock door = Global.getLock("dao/" + this.tableName());
-			return door.tryLock();
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+//	public void unlock() {
+//
+//		try {
+//			Lock door = Global.getLock("dao/" + this.tableName());
+//			door.unlock();
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		}
+//
+//	}
 
-		return false;
-	}
+//	public void lock() {
+//
+//		try {
+//			Lock door = Global.getLock("dao/" + this.tableName());
+//			door.lock();
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		}
+//
+//	}
 
-	public void unlock() {
-
-		try {
-			Lock door = Global.getLock("dao/" + this.tableName());
-			door.unlock();
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-	}
-
-	public void lock() {
-
-		try {
-			Lock door = Global.getLock("dao/" + this.tableName());
-			door.lock();
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-	}
-
-	private Map<String, Field> _fields;
+	private volatile Map<String, Field> _fields;
 
 	private Map<String, Field> _check() {
 		if (_fields == null) {
-			try {
-				Bean b = t.getDeclaredConstructor().newInstance();
-				_fields = b.getFields();
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+			synchronized (this) {
+				if (_fields == null) {
+					try {
+						Bean b = t.getDeclaredConstructor().newInstance();
+						_fields = b.getFields();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				}
 			}
 		}
 		return _fields;
 	}
 
 	public <E extends Bean> void createTable(String tablename, String memo, JSON prop) {
+
+		/**
+		 * 如果表存在，直接退出，否则创建表
+		 */
+		if (helper == null) {
+			if (Helper.primary != null && Helper.primary.exists(tablename)) {
+				return;
+			}
+		} else if (helper.exists(tablename)) {
+			return;
+		}
 
 		try {
 
@@ -894,8 +1028,8 @@ public final class BeanDAO<I, T extends Bean> {
 					Column c1 = f1.getAnnotation(Column.class);
 					if (c1 != null) {
 						JSON j1 = JSON.create();
-						j1.append("name", X.isEmpty(c1.name()) ? name : c1.name());
-						if (keys.contains(j1.getString("name"))) {
+						j1.append(X.NAME, X.isEmpty(c1.name()) ? name : c1.name());
+						if (keys.contains(j1.getString(X.NAME))) {
 							continue;
 						}
 
@@ -933,7 +1067,7 @@ public final class BeanDAO<I, T extends Bean> {
 						if (c1.unique()) {
 							j1.append("key", 1);
 						}
-						keys.add(j1.getString("name"));
+						keys.add(j1.getString(X.NAME));
 						l1.add(j1);
 					}
 
@@ -981,22 +1115,25 @@ public final class BeanDAO<I, T extends Bean> {
 	}
 
 	private void _check(V v) {
+
 		if (v == null) {
 			return;
 		}
 
 		Map<String, Field> st = _check();
-		String[] ss = v.names().toArray(new String[v.size()]);
-		for (String name : ss) {
-			Field f1 = st.get(name);
-			if (f1 != null) {
-				Column c1 = f1.getAnnotation(Column.class);
-				if (c1 == null || X.isEmpty(c1.name()) || X.isSame(name, c1.name())) {
-					continue;
+		if (st != null) {
+			String[] ss = v.names().toArray(new String[v.size()]);
+			for (String name : ss) {
+				Field f1 = st.get(name);
+				if (f1 != null) {
+					Column c1 = f1.getAnnotation(Column.class);
+					if (c1 == null || X.isEmpty(c1.name()) || X.isSame(name, c1.name())) {
+						continue;
+					}
+					Object o = v.value(name);
+					v.remove(name);
+					v.set(c1.name(), o);
 				}
-				Object o = v.value(name);
-				v.remove(name);
-				v.set(c1.name(), o);
 			}
 		}
 

@@ -14,9 +14,11 @@
 */
 package org.giiwa.app.web;
 
+import org.giiwa.auth.ICaptcha;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
+import org.giiwa.bean.User;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -30,10 +32,12 @@ import org.giiwa.web.Path;
  * web api: <a href='/captcha' target='_blank'>/captcha</a><br>
  * provides web api to get the captcha image and verify which linked with sid
  * (session key)
- *  @Deprecated
+ * 
+ * @Deprecated
  * @author wujun
  *
  */
+@Deprecated
 public class captcha extends Controller {
 
 	/**
@@ -47,31 +51,51 @@ public class captcha extends Controller {
 	@Path()
 	public void onGet() {
 
-		JSON jo = new JSON();
-		Temp t = Temp.create("code.jpg");
-		try {
+		String option = Global.getString("user.captcha.option", "");
 
-			Captcha.create(this.sid(true), Global.now() + 5 * X.AMINUTE, 200, 60,
-					t.getOutputStream(), 4);
+		if (X.isSame(option, "image")) {
+			JSON jo = new JSON();
+			Temp t = Temp.create("code.jpg");
+			try {
 
-			String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/")
-					+ Global.now() + "_" + UID.random(10) + ".jpg";
-			DFile f1 = Disk.seek(filename);
-			t.save(f1);
+				Captcha.create(this.sid(true), Global.now() + 5 * X.AMINUTE, 200, 60, t.getOutputStream(), 4);
 
-			jo.put(X.STATE, 200);
-			jo.put("sid", sid(false));
-			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + Global.now());
+				String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/") + Global.now() + "_"
+						+ UID.random(10) + ".jpg";
+				DFile f1 = Disk.seek(filename);
+				t.save(f1);
 
-		} catch (Exception e1) {
-			log.error(e1.getMessage(), e1);
-			GLog.securitylog.error(captcha.class, "", e1.getMessage(), e1, login, this.ip());
+				jo.put(X.STATE, 200);
+				jo.put("sid", sid(false));
+				jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + Global.now());
 
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, e1.getMessage());
+			} catch (Exception e1) {
+				log.error(e1.getMessage(), e1);
+				GLog.securitylog.error(captcha.class, "", e1.getMessage(), e1, login, this.ip());
+
+				jo.put(X.STATE, 201);
+				jo.put(X.MESSAGE, e1.getMessage());
+			}
+
+			this.send(jo);
+		} else {
+
+			String name = this.getString(X.NAME);
+			if (!X.isEmpty(name)) {
+
+				User user = User.load(name);
+				if (user != null) {
+					ICaptcha c = ICaptcha.get(option);
+					if (c.init(user)) {
+						this.set(X.MESSAGE, "sent").send(200);
+					} else {
+						this.set(X.MESSAGE, "failed").send(201);
+					}
+				}
+			}
+
 		}
 
-		this.send(jo);
 	}
 
 	/**

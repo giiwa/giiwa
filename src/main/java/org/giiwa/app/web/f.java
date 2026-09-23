@@ -30,6 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.fileupload2.core.FileItem;
+import org.giiwa.auth.ICaptcha;
 import org.giiwa.bean.App;
 import org.giiwa.bean.Policy;
 import org.giiwa.bean.Data;
@@ -37,12 +38,15 @@ import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Menu;
 import org.giiwa.bean.Message;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.Temp;
 import org.giiwa.bean.User;
 import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.crypto.Base32;
 import org.giiwa.dao.Beans;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.Counter;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.TimeStamp;
@@ -52,7 +56,6 @@ import org.giiwa.dao.sql.SQL;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Base32;
 import org.giiwa.misc.Captcha;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.Url;
@@ -65,6 +68,13 @@ import org.giiwa.web.Path;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * 资源接口
+ * 
+ * @author joe
+ *
+ */
+@Comment(text = "文件资源与平台基础工具 - 提供文件存储上传、在线预览、文件下载，同时集成系统健康探测、调试回显、验证码、公钥获取等平台基础辅助功能")
 public class f extends Controller {
 
 	/**
@@ -103,7 +113,15 @@ public class f extends Controller {
 	 * @param id
 	 * @param name
 	 */
-	@Path(path = "g/(.*)/(.*)")
+	@Path(path = "g/(.*)/(.*)", memo = """
+			在线预览文件仓库内的资源文件，可直接在浏览器或播放器打开图片、视频、文档；访问链接：/f/g/[id]/[name]。图片支持指定宽高自动缩放。访问受权限管控：部分仓库要求登录或访问来源在白名单；仓库关闭预览功能时会自动切换为文件下载；系统安全策略根据访问来源控制是否放行。
+			""", in = """
+			id：必须，文件内部唯一ID，拼接在预览链接首段；
+			name：必须，带扩展名的文件名，拼接在预览链接第二段。
+			size：可选，仅图片生效，自动缩放图片，格式：宽度x高度，示例：size=100x50，输出100×50尺寸图片。
+			""", out = """
+			返回Content-Type与文件二进制流，供浏览器/播放器在线预览资源，或直接下载文件。
+			""")
 	public void g(String id, String name) {
 
 		TimeStamp t = TimeStamp.create();
@@ -179,8 +197,14 @@ public class f extends Controller {
 				if (X.isIn(mime, "text/html")) {
 					mime = "text/html;charset=UTF-8";
 				}
+				if (X.isEmpty(mime)) {
+					// download
+					d(id, name);
+					return;
+				}
 				this.setContentType(mime);
 
+				log.warn("mime=" + mime + ", filename=" + f1.getFilename());
 				_send(f1.getInputStream(), f1.length());
 
 			} else {
@@ -269,7 +293,8 @@ public class f extends Controller {
 //							throw new IOException("get dfile error");
 //
 //						GImage.scale1(t2.getInputStream(), t1.getOutputStream(), X.toInt(ss[0]), X.toInt(ss[1]));
-						GImage.scale1(f1.getInputStream(), t1.getOutputStream(), X.toInt(ss[0]), X.toInt(ss[1]));
+						GImage.scale(f1.getInputStream(), t1.getOutputStream(), X.toInt(ss[0]), X.toInt(ss[1]),
+								f1.getExt());
 						t1.upload();
 
 					} else if (log.isDebugEnabled()) {
@@ -282,7 +307,7 @@ public class f extends Controller {
 							log.debug("load the scaled image from " + f.getFilename());
 						}
 
-						this.setContentType(Controller.getMimeType("a.png"));
+						this.setContentType(Controller.getMimeType("a.jpg"));
 
 						_send(f.getInputStream(), f.length());
 
@@ -504,7 +529,15 @@ public class f extends Controller {
 	 * @param id
 	 * @param name
 	 */
-	@Path(path = "d/(.*)/(.*)")
+	@Path(path = "d/(.*)/(.*)", memo = """
+			下载文件仓库里的资源文件，生成文件下载链接/f/d/[id]/[name]；支持图片缩放，传入size参数可自动调整图片尺寸，返回二进制文件流供浏览器执行下载。访问受权限控制，部分资源需要用户登录或者访问来源在白名单内；系统安全策略会依据访问凭证与来源放行或拦截请求。
+			""", in = """
+			id：必须，拼接在链接中的第一个参数， 文件的内部ID；
+			name：必须，拼接在链接中的第二个参数，文件名，包含扩展名。
+			size：可选，用于图片资源自动缩放，size=宽度x高度，比如：size=100x50，输出的图片大小为100x50。
+			""", out = """
+			Content-Type=application/octet-stream和文件二进制内容，用于指导浏览器下载。
+			""")
 	public void d(String id, String name) {
 
 		TimeStamp t = TimeStamp.create();
@@ -549,7 +582,22 @@ public class f extends Controller {
 	/**
 	 * upload file
 	 */
-	@Path(path = "upload")
+	@Path(path = "upload", memo = """
+			上传文件至临时文件仓库，支持断点续传、大文件分片上传。可比对本地文件修改时间做断点检测：首次上传数据包，若服务端已有同文件且修改时间匹配，则返回已上传偏移位置，客户端直接续传剩余分片。上传权限受系统配置控制，支持匿名上传，或要求登录、访问来源在白名单内。
+			""", in = """
+			file： 必须，multiple-body的part，包含文件名和二进制数据；
+			Content-Range：可选，range, position/total， 用于断点上传；
+			lastModified：可选，本地文件最后修改时间，如果与服务器上文件一致，传递第一个数据包的时候，服务器会返回当前文件大小，告诉客户端直接上传后续数据包，实现断点上传。
+			""", out = """
+			state：200，正常，否则错误；
+			error：0，正常，否则错误，与state类似，兼容不同插件设计；
+			repo：文件仓库id；
+			url：访问链接；
+			preview：预览链接；
+			pos：服务器当前文件大小；
+			size：客户端文件大小；
+			name：文件名。
+			""")
 	public void upload() {
 
 		if (Global.getInt("f.upload.login", 1) == 1) {
@@ -650,12 +698,15 @@ public class f extends Controller {
 			}
 		}
 
-		this.send(jo.append("path", path).append("node", Local.label()));
+		this.send(jo.append("path", path).append(X.NODE, Local.label()));
 
 	}
 
 	private boolean _store(FileItem<?> file, String path, String filename, JSON jo) {
 //		String tag = this.getString("tag");
+
+		TimeStamp t = TimeStamp.create();
+		DFile f1 = null;
 
 		try {
 
@@ -696,11 +747,19 @@ public class f extends Controller {
 						+ ", total=" + total + ", last=" + lastModified);
 			}
 
-			DFile f1 = _get(id, filename);
+			TimeStamp t1 = TimeStamp.create();
+			f1 = _get(id, filename);
+			if (log.isDebugEnabled()) {
+				log.debug("seek file, cost=" + t1.past() + ", filename=" + f1.getFilename());
+				t1.reset();
+			}
 
 			try {
 				if (!f1.exists() || f1.length() == position) {
 					f1.upload(position, file.getInputStream());
+					if (log.isDebugEnabled()) {
+						log.debug("upload file, cost=" + t1.past() + ", filename=" + f1.getFilename());
+					}
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -721,7 +780,7 @@ public class f extends Controller {
 					this.put("repo", url);
 					this.put("preview", view);
 					if (total > 0) {
-						this.put("name", filename);
+						this.put(X.NAME, filename);
 						this.put("pos", pos);
 						this.put("size", total);
 					}
@@ -730,7 +789,7 @@ public class f extends Controller {
 					jo.put("repo", url);
 					this.put("preview", view);
 					jo.put(X.ERROR, 0);
-					jo.put("name", filename);
+					jo.put(X.NAME, filename);
 					jo.put("type", Controller.getMimeType(filename));
 					if (total > 0) {
 						jo.put("pos", pos);
@@ -770,6 +829,12 @@ public class f extends Controller {
 				jo.put(X.MESSAGE, e.getMessage());
 				jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
+		} finally {
+			if (t.pastms() > 1000) {
+				// upload 很慢
+				GLog.oplog.warn(getClass(), "upload", "cost=" + t.past() + ",filename=" + f1 + ", result=" + jo, null,
+						this.ip());
+			}
 		}
 
 		return false;
@@ -777,6 +842,9 @@ public class f extends Controller {
 
 	private boolean _store(byte[] bb, String path, String filename, JSON jo) {
 //		String tag = this.getString("tag");
+
+		TimeStamp t = TimeStamp.create();
+		DFile f1 = null;
 
 		try {
 
@@ -817,7 +885,7 @@ public class f extends Controller {
 						+ ", total=" + total + ", last=" + lastModified);
 			}
 
-			DFile f1 = _get(id, filename);
+			f1 = _get(id, filename);
 
 			try {
 				if (!f1.exists() || f1.length() == position) {
@@ -842,7 +910,7 @@ public class f extends Controller {
 					this.put("repo", url);
 					this.put("preview", view);
 					if (total > 0) {
-						this.put("name", filename);
+						this.put(X.NAME, filename);
 						this.put("pos", pos);
 						this.put("size", total);
 					}
@@ -851,7 +919,7 @@ public class f extends Controller {
 					jo.put("repo", url);
 					this.put("preview", view);
 					jo.put(X.ERROR, 0);
-					jo.put("name", filename);
+					jo.put(X.NAME, filename);
 					jo.put("type", Controller.getMimeType(filename));
 					if (total > 0) {
 						jo.put("pos", pos);
@@ -890,6 +958,12 @@ public class f extends Controller {
 				jo.put(X.MESSAGE, e.getMessage());
 				jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
+		} finally {
+			if (t.pastms() > 1000) {
+				// upload 很慢
+				GLog.oplog.warn(getClass(), "upload", "cost=" + t.past() + ", filename=" + f1 + ", result=" + jo, null,
+						this.ip());
+			}
 		}
 
 		return false;
@@ -898,7 +972,6 @@ public class f extends Controller {
 	/**
 	 * get temp file
 	 */
-	@SuppressWarnings("resource")
 	@Path(path = "temp/(.*)/(.*)", login = true)
 	public void temp(String id, String name) {
 
@@ -930,16 +1003,27 @@ public class f extends Controller {
 
 	}
 
-	@Path(path = "alive")
+	@Path(path = "alive", memo = """
+			探测系统/服务器实时运行健康状态，查询服务负载、请求统计、缓存等监控指标，用来判断服务是否可用、查看当前服务压力。
+			""", out = """
+			state：200，正常，否则系统异常；
+			online：当前在线请求数；
+			uptime：启动时间；
+			tps：请求/秒；
+			latency：延时；
+			total：总服务次数；
+			ip：来源IP；
+			cached：临时cached对象大小。
+			""")
 	public void alive() {
-		int n = this.getInt("m", 3);
-		if (Local.node().isAlive() && Task.tasksDelay() < n) {
+		if (Local.node().isAlive()) {
 			this.set("online", GiiwaServlet.online());
 			this.set("uptime", Controller.UPTIME);
 			this.set("tps", GiiwaServlet.tps());
+			this.set("latency", GiiwaServlet.latency());
 			this.set("total", GiiwaServlet.total());
-			this.set("node", Local.label());
-			this.set("ip", this.ip());
+			this.set(X.NODE, Local.label());
+			this.set(X.IP, this.ip());
 			this.set("cached", TimingCache.getCached());
 			this.send(200);
 		} else {
@@ -948,20 +1032,167 @@ public class f extends Controller {
 		}
 	}
 
-	@Path(path = "echo")
+	@Path(path = "ping", memo = """
+			Ping检测系统/服务器连通性，快速校验网络是否通畅、服务能否正常访问，用于简易的服务可用性测试。
+			""", out = """
+			ok - 正常
+			（其他） - 错误
+			""")
+	public void ping() {
+		print("ok");
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Path(path = "echo", memo = """
+			调试专用工具，回显并反射展示请求头部与全部入参信息，查看原始输入数据，用于排查参数、请求内容问题。
+			""", in = """
+			任意
+			""", out = """
+			反射输入头和参数信息
+			""")
 	public void echo() {
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("=======head=======<br>");
+		sb.append("=======node=======\n");
+		sb.append("node: " + Local.label() + "\n");
+
+		sb.append("=======head=======\n");
 		for (NameValue s : this.heads()) {
-			sb.append(s.name).append("=").append(s.value).append("<br>");
+			if (!X.isSame(s.name, "Host")) {
+				sb.append(s.name).append(": ").append(s.value).append("\n");
+			}
 		}
-		sb.append("=======body=======<br>");
+		sb.append("\n=======body:1=======\n");
 		for (String name : this.names()) {
-			sb.append(name).append("=").append(this.getHtml(name)).append("<br>");
+			String s = this.getHtml(name);
+			if (s != null) {
+				sb.append(name).append(": ").append(s).append("\n");
+			} else {
+				FileItem f = this.file(name);
+				if (f != null) {
+					sb.append(name).append(": ").append("{name=" + f.getName() + ", size=" + f.getSize() + "}")
+							.append("\n");
+				} else {
+					sb.append(name).append(": null\n");
+				}
+			}
 		}
+		sb.append("\n=======body:2=======\n");
+		sb.append(this.body());
+		sb.append("\n");
 		this.print(sb.toString());
 	}
+
+	@Path(path = "info")
+	public void info() {
+
+		W q = W.create().sort("label");
+		Beans<Node> bs = Node.dao.load(q, 0, 1024);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("=== global ===\n");
+		sb.append("global.id: " + Global.id() + "\n");
+		sb.append("global.code: " + Global.getString("global.code", "") + "\n");
+
+		sb.append("=== nodes ===\n");
+		for (Node e : bs) {
+			sb.append(e.label).append(": ").append(e.id).append("\n");
+			sb.append("\t").append(e.ip).append("\n");
+			sb.append("\t").append(e.giiwa).append("\n");
+			sb.append("\t").append(e.modules).append("\n");
+			sb.append("\n");
+		}
+
+		sb.append("=== license ===\n");
+		org.giiwa.web.Module m = org.giiwa.web.Module.home;
+		while (m != null) {
+			sb.append(m.getName() + ": " + (X.isEmpty(m.get("company")) ? "" : ("//" + m.get("company")))).append("\n");
+			JSON j1 = m.license();
+			for (String name : j1.keySet()) {
+				sb.append("\t" + name + "=" + j1.get(name)).append("\n");
+			}
+			m = m.floor();
+		}
+
+		this.print(sb.toString());
+
+	}
+
+//	void _send(InputStream in, long total) {
+//
+//		try {
+//
+//			String range = this.head("range");
+//
+//			if (log.isDebugEnabled()) {
+//				log.debug("range=" + range);
+//			}
+//
+//			long start = 0;
+//			long end = total - 1;
+//			if (!X.isEmpty(range)) {
+//
+////				Range: bytes=0-499 表示第 0-499 字节范围的内容 
+////				Range: bytes=500-999 表示第 500-999 字节范围的内容 
+////				Range: bytes=-500 表示最后 500 字节的内容 
+////				Range: bytes=500- 表示从第 500 字节开始到文件结束部分的内容 
+////				Range: bytes=0-0,-1 表示第一个和最后一个字节 
+////				Range: bytes=500-600,601-999 同时指定几个范围
+//				int i = range.indexOf("=");
+//				if (i > 0) {
+//					range = range.substring(i + 1).trim();
+//				}
+//				i = range.indexOf("-");
+//				if (i > 0) {
+//					start = X.toLong(range.substring(0, i));
+//				} else {
+//					// total - end
+//					start = -1;
+//				}
+//				String s2 = range.substring(i + 1);
+//				if (!X.isEmpty(s2)) {
+//					end = Math.min(total, X.toLong(s2));
+//					if (start == -1) {
+//						start = total - end;
+//						end = total - 1;
+//					}
+//				}
+//			}
+//
+//			if (end <= start) {
+//				end = start + 1024 * 32;
+//			}
+//
+//			if (end > total - 1) {
+//				end = total - 1;
+//			}
+//
+//			long length = end - start + 1;
+//
+//			if (start == 0) {
+//				this.head("Accept-Ranges", "bytes");
+//			}
+//			this.head("Content-Length", Long.toString(length));
+//
+//			if (end < total - 1) {
+//				this.status(206);
+//			}
+//			this.head("Content-Range", "bytes " + start + "-" + (end) + "/" + total);
+//
+//			if (length > 0) {
+//
+//				OutputStream out = this.getOutputStream();
+//				X.IO.copy(in, out, start, end, false);
+//				out.flush();
+//
+//			}
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		} finally {
+//			X.close(in);
+//		}
+//
+//	}
 
 	void _send(InputStream in, long total) {
 
@@ -1002,35 +1233,70 @@ public class f extends Controller {
 						end = total - 1;
 					}
 				}
-			}
 
-			if (end <= start) {
-				end = start + 1024 * 32;
-			}
+				if (end <= start) {
+					end = start + 1024 * 32;
+				}
 
-			if (end > total - 1) {
-				end = total - 1;
-			}
+				if (end > total - 1) {
+					end = total - 1;
+				}
 
-			long length = end - start + 1;
+				long length = end - start + 1;
 
-			if (start == 0) {
-				this.head("Accept-Ranges", "bytes");
-			}
-			this.head("Content-Length", Long.toString(length));
+				if (start == 0) {
+					this.head("Accept-Ranges", "bytes");
+				}
+				this.head("Content-Length", Long.toString(length));
 
-			if (end < total - 1) {
+//				if (X.isEmpty(range)) {
+//					this.status(200);
+//				} else {
 				this.status(206);
+//					this.head("range2", range);
+//				}
+
+				this.head("Content-Range", "bytes " + start + "-" + (end) + "/" + total);
+
+				if (length > 0) {
+
+					OutputStream out = this.getOutputStream();
+					X.IO.copy(in, out, start, end, false);
+					out.flush();
+
+				}
+
+			} else {
+				// 200
+				if (end <= start) {
+					end = start + 1024 * 32;
+				}
+
+				if (end > total - 1) {
+					end = total - 1;
+				}
+
+				long length = end - start + 1;
+
+//				if (start == 0) {
+//					this.head("Accept-Ranges", "bytes");
+//				}
+				this.head("Content-Length", Long.toString(length));
+
+				this.status(200);
+
+//				this.head("Content-Range", "bytes " + start + "-" + (end) + "/" + total);
+
+				if (length > 0) {
+
+					OutputStream out = this.getOutputStream();
+					X.IO.copy(in, out, start, end, false);
+					out.flush();
+
+				}
+
 			}
-			this.head("Content-Range", "bytes " + start + "-" + (end) + "/" + total);
 
-			if (length > 0) {
-
-				OutputStream out = this.getOutputStream();
-				X.IO.copy(in, out, start, end, false);
-				out.flush();
-
-			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -1047,14 +1313,14 @@ public class f extends Controller {
 	@Path(path = "t/state", login = true)
 	public void t_state() {
 
-		long id = this.getLong("id", -1);
+		long id = this.getLong(X.ID, -1);
 		String access = this.get("access");
 		if (X.isEmpty(access)) {
 			access = X.EMPTY;
 		}
 
 		JSON jo = Monitor.get(id, access);
-		int state = jo == null ? 0 : jo.getInt("state");
+		int state = jo == null ? 0 : jo.getInt(X.STATE);
 		this.send(JSON.create().append(X.STATE, state > 0 && state != 200 ? 201 : 200).append("data", jo));
 //				.append("params", req.getParameterMap()).append("ct", req.getContentType())
 //				.append("url", req.getRequestURI()));
@@ -1066,7 +1332,7 @@ public class f extends Controller {
 	/**
 	 * 获取前端通知消息
 	 */
-	@Path(path = "message", login = true)
+	@Path(path = "message")
 	public void message() {
 
 		String sid = sid();
@@ -1077,8 +1343,8 @@ public class f extends Controller {
 
 		W q = W.create();
 		q.and("sid", sid);
-		q.and("created", t, W.OP.gt);
-		q.sort("created", -1);
+		q.and(X.CREATED, t, W.OP.gt);
+		q.sort(X.CREATED, -1);
 
 		if (!_message_optimized) {
 			Helper.primary.getOptimizer().query("gi_message", q);
@@ -1104,9 +1370,9 @@ public class f extends Controller {
 
 		this.set("t", t);
 		if (bs != null) {
-			this.set("list", bs.asList(e -> {
+			this.set(X.LIST, bs.asList(e -> {
 				JSON j1 = e.json();
-				j1.remove(X.ID, "_id", "updated", "created", "_node", "sid");
+				j1.remove(X.ID, "_id", "updated", X.CREATED, "_node", "sid");
 				return j1;
 			}));
 		}
@@ -1117,32 +1383,52 @@ public class f extends Controller {
 	@Path(path = "captcha")
 	public void captcha() {
 
-		JSON jo = new JSON();
-		Temp t = Temp.create("code.jpg");
-		try {
+		String option = Global.getString("user.captcha.option", "");
 
-			Captcha.create(this.sid(true), Global.now() + 5 * X.AMINUTE, 200, 60, t.getOutputStream(), 4);
+		if (X.isSame(option, "image")) {
+			JSON jo = new JSON();
+			Temp t = Temp.create("code.jpg");
+			try {
 
-			String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/") + Global.now() + "_"
-					+ UID.random(10) + ".jpg";
+				Captcha.create(this.sid(true), Global.now() + 5 * X.AMINUTE, 200, 60, t.getOutputStream(), 4);
 
-			DFile f1 = Disk.seek(filename);
-			f1.upload(t.getInputStream());
+				String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/") + Global.now() + "_"
+						+ UID.random(10) + ".jpg";
 
-			jo.put(X.STATE, 200);
-			jo.put("sid", sid(false));
-			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + Global.now());
+				DFile f1 = Disk.seek(filename);
+				f1.upload(t.getInputStream());
 
-		} catch (Exception e1) {
+				jo.put(X.STATE, 200);
+				jo.put("sid", sid(false));
+				jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + Global.now());
 
-			log.error(e1.getMessage(), e1);
-			GLog.securitylog.error(f.class, "", e1.getMessage(), e1, login, this.ip());
+			} catch (Exception e1) {
 
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, e1.getMessage());
+				log.error(e1.getMessage(), e1);
+				GLog.securitylog.error(f.class, "", e1.getMessage(), e1, login, this.ip());
+
+				jo.put(X.STATE, 201);
+				jo.put(X.MESSAGE, e1.getMessage());
+			}
+
+			this.send(jo);
+		} else {
+
+			String name = this.get(X.NAME);
+			if (!X.isEmpty(name)) {
+
+				User user = User.load(name);
+				if (user != null) {
+					ICaptcha c = ICaptcha.get(option);
+					if (c.init(user)) {
+						this.set(X.MESSAGE, lang.get("captcha." + option + ".sent")).send(200);
+					} else {
+						this.set(X.MESSAGE, lang.get("captcha." + option + ".failed")).send(201);
+					}
+				}
+			}
+
 		}
-
-		this.send(jo);
 	}
 
 	@Path(path = "verify")
@@ -1171,7 +1457,7 @@ public class f extends Controller {
 		User me = this.user();
 
 		long id = this.getLong("root");
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		Beans<Menu> bs = null;
 		Menu m = null;
@@ -1222,7 +1508,7 @@ public class f extends Controller {
 				 * set the text width language
 				 */
 				jo.put("text", lang.get(m.getName()));
-				jo.put("id", m.getId());
+				jo.put(X.ID, m.getId());
 				if (!X.isEmpty(m.getClasses())) {
 					jo.put("classes", m.getClasses());
 				}
@@ -1246,7 +1532,7 @@ public class f extends Controller {
 				}
 
 				jo.put("seq", m.getSeq());
-				jo.put("tag", m.getTag());
+				jo.put(X.TAG, m.getTag());
 				if (!X.isEmpty(m.getLoad1())) {
 					jo.put("load", m.getLoad1() + "?__node=" + this.getString("__node"));
 				}
@@ -1302,13 +1588,13 @@ public class f extends Controller {
 			return true;
 		});
 
-		this.set("id", tid).send(200);
+		this.set(X.ID, tid).send(200);
 
 	}
 
 	@Path(path = "console/close", login = true)
 	public void console_close() {
-		long tid = this.getLong("id");
+		long tid = this.getLong(X.ID);
 		_cached.remove(tid);
 		this.send(200);
 	}
@@ -1317,7 +1603,7 @@ public class f extends Controller {
 	@Path(path = "console/list", login = true)
 	public void console_list() {
 
-		long tid = this.getLong("id");
+		long tid = this.getLong(X.ID);
 		Object[] oo = _cached.get(tid);
 		List<String> l1 = (List<String>) oo[1];
 		List<String> l2 = new ArrayList<String>();
@@ -1337,7 +1623,7 @@ public class f extends Controller {
 			log.error(e.getMessage(), e);
 		}
 
-		this.set("list", l2).send(200);
+		this.set(X.LIST, l2).send(200);
 	}
 
 	public static void clean() {
@@ -1384,8 +1670,8 @@ public class f extends Controller {
 			}
 
 			String table = param.getString("table");
-			int s = param.getInt("s");
-			int n = param.getInt("n", 10);
+			int s = param.getInt(X.S);
+			int n = param.getInt(X.N, 10);
 			String sql = param.getString("sql");
 
 			W q = SQL.where(sql);
@@ -1399,7 +1685,7 @@ public class f extends Controller {
 					q = W.create().and(q).and("id>0");
 				}
 			}
-			q.sort("created");
+			q.sort(X.CREATED);
 			Beans<Data> bs = Helper.primary.load(table, q, s, n, Data.class);
 			List<JSON> l1 = bs.asList(d -> {
 				JSON j1 = d.json();
@@ -1407,7 +1693,7 @@ public class f extends Controller {
 				return j1;
 			});
 
-			this.set("s", s).set("n", n).set("list", App.encode(JSON.toString(l1), a.getSecret())).send(200);
+			this.set(X.S, s).set(X.N, n).set(X.LIST, App.encode(JSON.toString(l1), a.getSecret())).send(200);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1509,6 +1795,22 @@ public class f extends Controller {
 		}
 
 		return sb.toString();
+	}
+
+	@Path(path = "pubkey", memo = """
+			获取系统RSA公钥，供客户端进行数据加密；同时返回服务端系统时钟，用来和客户端时钟做比对，时间敏感的加密场景可直接使用该服务端时间。
+			""", out = """
+			state：200 正常，否则错误;
+			key：公钥；
+			time：系统时钟，用于比对客户端时钟，对时间敏感的加密，可以直接使用这个时间。
+			""")
+	public void pubkey() {
+
+		this.set("key",
+				"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCNom9BdQZ4z6YyiqijBpR3LsG9Q2Pqd3KyMX/zzBMrDbe5gEKiocHB2R86pH6TiU6LXxK4BRF7RtYrtiw5scgNs2xjBJi7pTQzKqHF04jkyjtwbCnc5edkUFcez3awHVX0ntBphVd07CwLJVgKHUdEb4UClluqGv3ocXe6Of5c/QIDAQAB");
+		this.set("time", Global.now());
+		this.send(200);
+
 	}
 
 }

@@ -38,7 +38,7 @@ public class tcpestablished extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -50,15 +50,15 @@ public class tcpestablished extends portlet {
 			this.set("name1", id);
 		}
 
-		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 
 		}
 
-		long max = X.toLong(1.1 *Stat.max("n13", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+		long max = X.toLong(1.1 * Stat.max("n13", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
 				W.create().and("time", Global.now() - X.AHOUR, W.OP.gte)));
 
 		this.set("max", max);
@@ -69,22 +69,22 @@ public class tcpestablished extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
 
-		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
 			long max = Stat.max("n13", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
 					W.create().and("time", Global.now() - X.AHOUR, W.OP.gte));
 
 			JSON p = JSON.create();
-			p.append("name", (n != null ? n.label : "") + " - " + lang.get("tcp.established")).append("color",
+			p.append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("tcp.established")).append("color",
 					"#25840a");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
@@ -100,7 +100,7 @@ public class tcpestablished extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -118,7 +118,7 @@ public class tcpestablished extends portlet {
 				W.create().and("dataid", id).and("time", time, W.OP.gte).sort("time", -1), 0, 30 * 24 * 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/tcpestablished.more.html");
 

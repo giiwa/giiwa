@@ -16,14 +16,44 @@ package org.giiwa.dao;
 
 import java.sql.SQLException;
 
+/**
+ * 访问权限接口
+ * 
+ * @author joe
+ *
+ */
 public interface IAccess {
 
+	/**
+	 * 是否可读
+	 * 
+	 * @param table - 表
+	 * @throws SQLException - 不可读
+	 */
 	void checkRead(String table) throws SQLException;
 
+	/**
+	 * 是否可写
+	 * 
+	 * @param table - 表
+	 * @throws SQLException - 不可写
+	 */
 	void checkWrite(String table) throws SQLException;
 
+	/**
+	 * 加密数据
+	 * 
+	 * @param table - 表
+	 * @param e     - 数据对象
+	 */
 	void encode(String table, Object e);
 
+	/**
+	 * 解密数据
+	 * 
+	 * @param table - 表
+	 * @param e     - 数据对象
+	 */
 	void decode(String table, Object e);
 
 }

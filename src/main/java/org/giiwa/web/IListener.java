@@ -15,13 +15,12 @@
 package org.giiwa.web;
 
 import org.apache.commons.configuration2.Configuration;
-
 /**
  * the life listener which will be invoked when the system "start", "stop" <br>
  * the life listener is configured in module.xml
  * 
  * <pre>
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?xml version="1.0" encoding=X.UTF8?&gt;
 &lt;module version="1.0"&gt;
   ...
   &lt;listener&gt;

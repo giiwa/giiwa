@@ -14,54 +14,84 @@
 */
 package org.giiwa.misc;
 
+import java.security.SecureRandom;
+import java.security.Security;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bouncycastle.crypto.engines.SM4Engine;
-import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * SM4 => DES/AES
  * 
  * @author yjiang
  */
+@Deprecated
 public class SM4 {
 
 	static Log log = LogFactory.getLog(SM4.class);
 
-	public static final int BLOCK_SIZE = 16;
+	private static final String ALGORITHM_NAME = "SM4";
+	private static final String ALGORITHM_ECB_PKCS5PADDING = "SM4/ECB/PKCS5Padding";
 
 	/**
-	 * ECB
-	 * 
-	 * @param in
-	 * @param keyBytes
-	 * @return
+	 * SM4算法目前只支持128位（即密钥16字节）
 	 */
-	public static byte[] encode(byte[] in, byte[] keyBytes) {
+	private static final int DEFAULT_KEY_SIZE = 128;
 
-		SM4Engine engine = new SM4Engine();
-		engine.init(true, new KeyParameter(keyBytes));
-		int inLen = in.length;
-		byte[] out = new byte[inLen];
-
-		int times = inLen / BLOCK_SIZE;
-
-		for (int i = 0; i < times; i++) {
-			engine.processBlock(in, i * BLOCK_SIZE, out, i * BLOCK_SIZE);
+	static {
+		if (null == Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)) {
+			Security.addProvider(new BouncyCastleProvider());
 		}
+	}
 
-		return out;
+	private static byte[] key(String seed) {
+		try {
+			KeyGenerator kg = KeyGenerator.getInstance(ALGORITHM_NAME, BouncyCastleProvider.PROVIDER_NAME);
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+			random.setSeed(seed.getBytes());
+			kg.init(DEFAULT_KEY_SIZE, random);
+			return kg.generateKey().getEncoded();
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
+		}
+		return null;
 	}
 
 	/**
 	 * 
 	 * @param in
-	 * @param keyBytes
+	 * @param seed
 	 * @return
 	 */
-	public static String encode_string(byte[] in, byte[] keyBytes) {
-		byte[] out = encode(in, keyBytes);
-		String cipher = org.bouncycastle.util.encoders.Hex.toHexString(out);
+	public static byte[] encode(byte[] in, String seed) {
+
+		try {
+			SecretKeySpec sm4Key = new SecretKeySpec(key(seed), ALGORITHM_NAME);
+			Cipher cipher = Cipher.getInstance(ALGORITHM_ECB_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME);
+			cipher.init(Cipher.ENCRYPT_MODE, sm4Key);
+			return cipher.doFinal(in);
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
+		}
+
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param in
+	 * @param seed
+	 * @return
+	 */
+	public static String encode_string(byte[] in, String seed) {
+		byte[] out = encode(in, seed);
+		String cipher = Base64.getEncoder().encodeToString(out);
 		return cipher;
 	}
 
@@ -71,60 +101,52 @@ public class SM4 {
 	 * @param key
 	 * @return
 	 */
-	public static String encode(String content, String key) {
-		byte[] in = Hex.decode(content);
-		byte[] keyBytes = Hex.decode(key);
-
-		String cipher = encode_string(in, keyBytes);
+	public static String encode(String content, String seed) {
+		String cipher = encode_string(content.getBytes(), seed);
 		return cipher;
 	}
 
 	/**
 	 * 
 	 * @param in
-	 * @param keyBytes
+	 * @param seed
 	 * @return
 	 */
-	public static byte[] decode(byte[] in, byte[] keyBytes) {
+	public static byte[] decode(byte[] in, String seed) {
 
-		SM4Engine engine = new SM4Engine();
-		engine.init(false, new KeyParameter(keyBytes));
-		int inLen = in.length;
-		byte[] out = new byte[inLen];
-
-		int times = inLen / BLOCK_SIZE;
-
-		for (int i = 0; i < times; i++) {
-			engine.processBlock(in, i * BLOCK_SIZE, out, i * BLOCK_SIZE);
+		try {
+			SecretKeySpec sm4Key = new SecretKeySpec(key(seed), ALGORITHM_NAME);
+			Cipher cipher = Cipher.getInstance(ALGORITHM_ECB_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME);
+			cipher.init(Cipher.DECRYPT_MODE, sm4Key);
+			return cipher.doFinal(in);
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
 		}
 
-		return out;
+		return null;
 
 	}
 
 	/**
 	 * 
 	 * @param in
-	 * @param keyBytes
+	 * @param seed
 	 * @return
 	 */
-	public static String decode_string(byte[] in, byte[] keyBytes) {
-		byte[] out = decode(in, keyBytes);
-		String plain = org.bouncycastle.util.encoders.Hex.toHexString(out);
+	public static String decode_string(byte[] in, String seed) {
+		byte[] out = decode(in, seed);
+		String plain = new String(out);
 		return plain;
 	}
 
 	/**
 	 * 
-	 * @param cipher
-	 * @param key
+	 * @param content
+	 * @param seed
 	 * @return
 	 */
-	public static String decode(String cipher, String key) {
-		byte[] in = Hex.decode(cipher);
-		byte[] keyBytes = Hex.decode(key);
-
-		String plain = decode_string(in, keyBytes);
+	public static String decode(String content, String seed) {
+		String plain = decode_string(Base64.getDecoder().decode(content), seed);
 		return plain;
 	}
 

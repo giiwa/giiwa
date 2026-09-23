@@ -37,7 +37,7 @@ public class times extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -49,25 +49,25 @@ public class times extends portlet {
 			this.set("name1", id);
 		}
 
-		W q = W.create().and("node", id).and("name", "read")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.NAME, "read").and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte)
+				.sort(X.CREATED, -1);
 		_DB.Record.dao.optimize(q);
-		
+
 		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("list1", bs);
 
-			Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
-					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+			Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "write")
+					.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
 
 		}
 
-		long max = X.toLong(1.1 * X.toLong(_DB.Record.dao.max("times",
-				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
+		long max = X.toLong(1.1
+				* X.toLong(_DB.Record.dao.max("times", W.create().and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte))));
 
 		this.set("max", max);
 
@@ -77,7 +77,7 @@ public class times extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -89,14 +89,14 @@ public class times extends portlet {
 			this.set("name1", id);
 		}
 
-		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create().and("node", id).and("name", "read")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create().and(X.NODE, id).and(X.NAME, "read")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			List<JSON> data = JSON.createList();
 			JSON p = JSON.create();
-			p.append("name", lang.get("db.read.times")).append("color", "#0a5ea0");
+			p.append(X.NAME, lang.get("db.read.times")).append("color", "#0a5ea0");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -104,12 +104,12 @@ public class times extends portlet {
 			p.append("data", l1);
 			data.add(p);
 
-			bs = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
-					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+			bs = _DB.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "write")
+					.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
 				p = JSON.create();
-				p.append("name", lang.get("db.write.times")).append("color", "#0dad76");
+				p.append(X.NAME, lang.get("db.write.times")).append("color", "#0dad76");
 				List<JSON> l2 = JSON.createList();
 				bs.forEach(e -> {
 					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -129,7 +129,7 @@ public class times extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -144,15 +144,15 @@ public class times extends portlet {
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
-				W.create().and("node", id).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, id).and(X.NAME, "read").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 			this.set("list1", bs);
 		}
 
-		Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
-				.and("created", time, W.OP.gte).sort("created", -1), 0, 24 * 60 * 2);
+		Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "write")
+				.and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0, 24 * 60 * 2);
 		if (list2 != null && !list2.isEmpty()) {
 			Collections.reverse(list2);
 			this.set("list2", list2);

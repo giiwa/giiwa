@@ -42,7 +42,7 @@ public class glog extends Controller {
 	/**
 	 * Deleteall.
 	 */
-	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void deleteall() {
 
 		JSON jo = new JSON();
@@ -52,7 +52,7 @@ public class glog extends Controller {
 
 		Task.schedule(t -> {
 			try {
-				int i = GLog.dao.delete(W.create().and("created", Global.now() - X.ADAY, W.OP.lte));
+				int i = GLog.dao.delete(W.create().and(X.CREATED, Global.now() - X.ADAY, W.OP.lte));
 				GLog.oplog.warn(this, "deleteall", lang.get("glog.deleteall", i));
 
 				Helper.primary.repair(GLog.dao.tableName());
@@ -72,10 +72,10 @@ public class glog extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
-		this.set("s", s);
+		this.set(X.S, s);
 
 		W q = W.create();
 
@@ -84,10 +84,10 @@ public class glog extends Controller {
 			q.and("op", op);
 			this.set("op", op);
 		}
-		String ip = this.get("ip");
+		String ip = this.get(X.IP);
 		if (!X.isEmpty(ip)) {
-			q.and("ip", ip);
-			this.set("ip", ip);
+			q.and(X.IP, ip);
+			this.set(X.IP, ip);
 		}
 
 		String type = this.get("type");
@@ -102,11 +102,11 @@ public class glog extends Controller {
 			this.set("level", level);
 		}
 
-		String node = this.get("node");
+		String node = this.get(X.NODE);
 		if (!X.isEmpty(node)) {
 			org.giiwa.bean.Node e = org.giiwa.bean.Node.dao.load(W.create().and("label", node));
-			q.and("node", e.id);
-			this.set("node", node);
+			q.and(X.NODE, e.id);
+			this.set(X.NODE, node);
 		}
 
 		String model = this.get("model");
@@ -138,7 +138,7 @@ public class glog extends Controller {
 			this.set("thread", thread);
 		}
 
-		q.sort("created", -1);
+		q.sort(X.CREATED, -1);
 
 		GLog.dao.optimize(q);
 
@@ -153,26 +153,26 @@ public class glog extends Controller {
 
 	@Path(path = "detail", login = true, access = "access.config.admin")
 	public void detail() {
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 
 		if (!X.isEmpty(id)) {
 			GLog d = GLog.dao.load(id);
 			this.set("b", d);
-			this.set("id", id);
+			this.set(X.ID, id);
 		} else {
 			long prev = this.getLong("prev");
 			if (prev > 0) {
-				GLog d = GLog.dao.load(W.create().and("created", prev, W.OP.lt).sort("created", -1));
+				GLog d = GLog.dao.load(W.create().and(X.CREATED, prev, W.OP.lt).sort(X.CREATED, -1));
 				if (d != null) {
 					this.set("b", d);
-					this.set("id", d.get(X.ID));
+					this.set(X.ID, d.get(X.ID));
 				}
 			} else {
 				long next = this.getLong("next");
-				GLog d = GLog.dao.load(W.create().and("created", next, W.OP.gt).sort("created", 1));
+				GLog d = GLog.dao.load(W.create().and(X.CREATED, next, W.OP.gt).sort(X.CREATED, 1));
 				if (d != null) {
 					this.set("b", d);
-					this.set("id", d.get(X.ID));
+					this.set(X.ID, d.get(X.ID));
 				}
 			}
 		}

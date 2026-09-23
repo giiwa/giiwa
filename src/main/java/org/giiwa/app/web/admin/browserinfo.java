@@ -14,6 +14,7 @@
 */
 package org.giiwa.app.web.admin;
 
+import org.giiwa.dao.X;
 import org.giiwa.web.*;
 
 /**
@@ -39,7 +40,7 @@ public class browserinfo extends Controller {
 	@Override
 	@Path()
 	public void onGet() {
-		this.set("list", this.heads());
+		this.set(X.LIST, this.heads());
 		this.show("/admin/browserinfo.html");
 
 	}

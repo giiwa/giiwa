@@ -75,7 +75,7 @@ public class logs extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.logs.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.logs.admin", oplog = true, loglevel="warn")
 	public void delete() {
 		JSON jo = new JSON();
 		String f = this.getString("f");
@@ -109,7 +109,7 @@ public class logs extends Controller {
 
 		this.set("root", X.getCanonicalPath(f.getAbsolutePath()));
 		File[] ff = f.listFiles();
-		this.set("list", ff);
+		this.set(X.LIST, ff);
 
 		this.show("/admin/logs.index.html");
 	}

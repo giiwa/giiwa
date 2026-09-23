@@ -46,10 +46,10 @@ public final class AuthToken extends Bean {
 
 	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class, time -> {
 		// return cleanup query
-		return W.create().and("created", Global.now() - X.ADAY * 7, W.OP.lte);
+		return W.create().and(X.CREATED, Global.now() - X.ADAY * 7, W.OP.lte);
 	});
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size = 64)
 	private String id;
 
 	@Column(memo = "用户ID")
@@ -106,14 +106,18 @@ public final class AuthToken extends Bean {
 	 */
 	public User getUser_obj() {
 		if (user_obj == null) {
-			user_obj = User.dao.load(this.getUid());
+			user_obj = User.load(this.getUid());
 		}
 		return user_obj;
 	}
 
 	public static AuthToken create(long uid, String ip) {
-		long expired = Global.now() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-
+		// 缺省1周
+		long a = Global.getLong("session.alive", X.AWEEK / X.AHOUR);
+		if (a <= 0) {
+			a = 7 * 24;
+		}
+		long expired = Global.now() + a * X.AHOUR;
 		return create(uid, ip, V.create("expired", expired));
 	}
 
@@ -127,7 +131,7 @@ public final class AuthToken extends Bean {
 	public static AuthToken create(long uid, String ip, V v) {
 
 		try {
-			v = v.append("uid", uid).append("ip", ip);
+			v = v.append("uid", uid).append(X.IP, ip);
 			String token = UID.random(20);
 			while (dao.exists(token)) {
 				// update
@@ -194,8 +198,12 @@ public final class AuthToken extends Bean {
 	}
 
 	public static AuthToken update(long uid, String sid, String ip) {
-		long expired = Global.now() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-
+		// 缺省1周
+		long a = Global.getLong("session.alive", X.AWEEK / X.AHOUR);
+		if (a <= 0) {
+			a = 7 * 24;
+		}
+		long expired = Global.now() + a * X.AHOUR;
 		return update(uid, sid, ip, V.create("expired", expired));
 	}
 
@@ -212,7 +220,7 @@ public final class AuthToken extends Bean {
 
 		String id = UID.id(uid, sid, ip, token);
 
-		v = v.append("uid", uid).append("sid", sid).append("token", token).append("ip", ip);
+		v = v.append("uid", uid).append("sid", sid).append("token", token).append(X.IP, ip);
 
 		try {
 			if (dao.exists(id)) {

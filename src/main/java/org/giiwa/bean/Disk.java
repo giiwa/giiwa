@@ -15,6 +15,7 @@
 package org.giiwa.bean;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,7 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.crypto.Base32;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
@@ -48,13 +49,14 @@ import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.dfile.LocalDFile;
 import org.giiwa.dfile.NfsDFile;
+import org.giiwa.dfile.ObsDFile;
+import org.giiwa.dfile.S3DFile;
 import org.giiwa.dfile.SmbDFile;
-import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Task;
 
 /**
- * Demo bean
+ * 文件仓库配置类
  * 
  * @author joe
  * 
@@ -68,6 +70,9 @@ public final class Disk extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	private static Log log = LogFactory.getLog(Disk.class);
+
+	// 最大磁盘数
+	public final static int MAX_DISKS = 128;
 
 	public static final BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
@@ -88,12 +93,13 @@ public final class Disk extends Bean {
 	@Column(memo = "优先级")
 	public int priority;
 
+	@Column(memo = "优先级", size = 64)
 	public String code;
 
 	@Column(memo = "检查时间")
 	long checktime;
 
-	@Column(memo = "开关")
+	@Column(memo = "开关", value = "1:ok, 0:disabled, 2:umount")
 	public int enabled; // 1: ok, 0: disabled
 
 	@Column(memo = "总空间")
@@ -103,10 +109,10 @@ public final class Disk extends Bean {
 	public long free;
 
 	@Column(memo = "状态", value = "1:good, 0:bad")
-	int state;
+	public int state;
 
-	@Column(memo = "配额", value = "Byte")
-	long quota;
+	@Column(memo = "配额", value = "GB")
+	public long quota;
 
 	@Column(name = "_domain", memo = "域名", size = 50)
 	public String domain;
@@ -117,6 +123,7 @@ public final class Disk extends Bean {
 	@Column(memo = "密码", size = 100)
 	public String password;
 
+	@Column(memo = "错误", size = 512)
 	String _error;
 
 	@Column(memo = "文件数")
@@ -188,6 +195,7 @@ public final class Disk extends Bean {
 		return this.total - this.free;
 	}
 
+	@Deprecated
 	public long reloadCount() {
 		// scan files
 		return IOUtil.count(this.getFile_obj());
@@ -236,18 +244,47 @@ public final class Disk extends Bean {
 		Beans<Disk> bs = null;
 		TimeStamp t = TimeStamp.create();
 		try {
+			if (filename.startsWith("/s/")) {
+				S e = S.dao.load(filename.substring(3));
+				if (e != null) {
+					filename = e.url;
+				}
+			}
+
+			// 继续处理
 			if (filename.startsWith("/f/g/") || filename.startsWith("/f/d/")) {
+				/**
+				 * /f/g/wewewewewaea <br>
+				 * /f/d/wewewewewaea
+				 */
 				String[] ss = X.split(filename, "/");
 				if (ss.length > 2) {
-					filename = new String(Base32.decode(ss[2]));
+					try {
+						filename = new String(Base32.decode(ss[2]));
+					} catch (Exception err) {
+						// ignore
+//						log.error(err.getMessage(), err);
+						filename = "/null";
+					}
 				}
 			} else if (filename.startsWith("/ghp/") || filename.startsWith("/wsf/")) {
+				// 废弃不用了
 				String[] ss = X.split(filename, "/");
 				if (ss.length > 1) {
 					filename = new String(Base32.decode(ss[1]));
 				}
 			} else if (filename.startsWith("/f/s/")) {
 				filename = filename.substring(4);
+			} else if (filename.startsWith("/f/")) {
+				String[] ss = X.split(filename, "/");
+				if (ss.length > 1) {
+					try {
+						filename = new String(Base32.decode(ss[1]));
+					} catch (Exception err) {
+						// ignore
+						filename = "/null";
+					}
+				}
 			}
 
 			if (!filename.startsWith("/")) {
@@ -255,8 +292,18 @@ public final class Disk extends Bean {
 				try {
 					filename = new String(Base32.decode(filename));
 				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+					// ignore
+//					log.error(e.getMessage(), e);
+					filename = "/null";
 				}
+			}
+
+			if (!filename.startsWith("/")) {
+				filename = "/" + filename;
+			}
+
+			while (filename.startsWith("//")) {
+				filename = filename.substring(1);
 			}
 
 			if (Helper.isConfigured() && !X.isEmpty(filename)) {
@@ -267,9 +314,15 @@ public final class Disk extends Bean {
 
 				if (bs != null) {
 					for (Disk e : bs) {
+
+//						log.info("filename=" + filename + ", disk=" + e + ", isOk=" + e.isOk(filename));
+
 						if (e.isOk(filename)) {
 							DFile d = e.create(filename);
 							try {
+
+//								log.info("filename=" + filename + ", disk=" + e + ", d=" + d);
+
 								if (d != null && d.exists()) {
 									if (f == null) {
 										f = d;
@@ -293,7 +346,8 @@ public final class Disk extends Bean {
 
 			Disk d1 = _pickup(filename);
 			if (d1 == null) {
-				return null;
+				throw new IOException("can not seek the disk for [" + filename + "]");
+//				return null;
 			}
 
 			f = d1.create(filename);
@@ -308,7 +362,7 @@ public final class Disk extends Bean {
 	}
 
 	private void bad(String error) {
-		dao.update(id, V.create().append("state", 0).append("_error", error + "/" + Local.label()));
+		dao.update(id, V.create().append(X.STATE, 0).append("_error", error + "/" + Local.label()));
 	}
 
 	public static boolean exists(String filename) throws Exception {
@@ -346,6 +400,10 @@ public final class Disk extends Bean {
 			return NfsDFile.create(this, filename);
 		} else if (X.isSame(proto, "smb")) {
 			return SmbDFile.create(this, filename);
+		} else if (X.isIn(proto, "http", "https")) {
+			return S3DFile.create(this, filename);
+		} else if (X.isIn(proto, "obs")) {
+			return ObsDFile.create(this, filename);
 		} else {
 			IDiskFactory df = _factory.get(proto);
 			if (df != null) {
@@ -503,8 +561,8 @@ public final class Disk extends Bean {
 	private static Beans<Disk> disks() {
 
 		if (X.isEmpty(_disks) || Global.now() - _disks.created > X.AMINUTE) {
-			W q = W.create().and("enabled", 1).and("state", 1);
-			_disks = dao.load(q, 0, 128);
+			W q = W.create().and("enabled", 1).and(X.STATE, 1);
+			_disks = dao.load(q, 0, MAX_DISKS);
 		}
 
 		if (X.isEmpty(_disks)) {
@@ -531,7 +589,6 @@ public final class Disk extends Bean {
 
 	}
 
-	@SuppressWarnings("deprecation")
 	public static void repair() {
 
 		if (Helper.isConfigured()) {
@@ -668,7 +725,7 @@ public final class Disk extends Bean {
 
 		public void onExecute() {
 
-			Beans<Disk> l1 = dao.load(W.create(), 0, 128);
+			Beans<Disk> l1 = dao.load(W.create(), 0, MAX_DISKS);
 			log.info("disk checking ... n=" + l1.size());
 
 			for (Disk e : l1) {
@@ -676,42 +733,10 @@ public final class Disk extends Bean {
 				if (e.enabled == 1) {
 
 //					log.info("disk checking: " + e.url);
+					e.check(v);
 
-					if (!e.mount.endsWith("/")) {
-						e.mount += "/";
-						v.append("mount", e.mount);
-					}
-
-					DFile f1 = e.create("/");
-					try {
-						if (f1.exists()) {
-							long free = f1.getFreeSpace();
-							long total = f1.getTotalSpace();
-							long used = total - free;
-
-							if (e.quota > 0) {
-								total = Math.min(e.quota, f1.getTotalSpace());
-								free = total - used;
-								if (free < 0) {
-									free = 0;
-								}
-							}
-
-							v.append("state", free > 0 ? 1 : 0);
-							v.append("total", total);
-							v.append("free", free);
-
-						} else {
-							throw new Exception("[" + e.path + "] not found!");
-						}
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
-						v.append("_error", e1.getMessage() + "/" + Local.label());
-						v.append("state", 0);
-						GLog.applog.error("sys", "disk", e1.getMessage(), e1);
-					}
 				} else {
-					v.append("state", 0);
+					v.append(X.STATE, 0);
 				}
 
 				dao.update(e.id, v);
@@ -736,6 +761,54 @@ public final class Disk extends Bean {
 		return total;
 	}
 
+	public void check(V v) {
+
+		if (!mount.endsWith("/")) {
+			mount += "/";
+			if (v != null) {
+				v.append("mount", mount);
+			}
+		}
+
+		DFile f1 = create("/");
+		try {
+			if (f1.exists()) {
+				free = f1.getFreeSpace();
+				total = f1.getTotalSpace();
+				long used = total - free;
+
+				if (quota > 0) {
+					total = Math.min(quota * X.GB, f1.getTotalSpace());
+					free = total - used;
+					if (free < 0) {
+						free = 0;
+					}
+				}
+
+				state = 1;
+
+				if (v != null) {
+					v.append(X.STATE, state);
+					v.append("total", total);
+					v.append("free", free);
+					v.append("_error", X.EMPTY);
+				}
+
+			} else {
+				throw new Exception("[" + path + "] not found!");
+			}
+		} catch (Exception e1) {
+			log.error(this, e1);
+			GLog.applog.error("sys", "disk", e1.getMessage(), e1);
+			if (v != null) {
+				v.append("_error", e1.getMessage() + "/" + Local.label());
+				v.append(X.STATE, 0);
+			}
+			state = 0;
+		}
+
+	}
+
 	public static long getFreeSpace() {
 		Beans<Disk> bs = disks();
 		long total = 0;
@@ -758,8 +831,27 @@ public final class Disk extends Bean {
 		public static Counter read(Disk d) {
 			Counter e = read.get(d.id);
 			if (e == null) {
-				e = new Counter();
-				read.put(d.id, e);
+				synchronized (read) {
+					e = read.get(d.id);
+					if (e == null) {
+						e = new Counter();
+						read.put(d.id, e);
+					}
+				}
+			}
+			return e;
+		}
+
+		public static Counter read(long id) {
+			Counter e = read.get(id);
+			if (e == null) {
+				synchronized (read) {
+					e = read.get(id);
+					if (e == null) {
+						e = new Counter();
+						read.put(id, e);
+					}
+				}
 			}
 			return e;
 		}
@@ -767,8 +859,27 @@ public final class Disk extends Bean {
 		public static Counter write(Disk d) {
 			Counter e = write.get(d.id);
 			if (e == null) {
-				e = new Counter();
-				write.put(d.id, e);
+				synchronized (write) {
+					e = write.get(d.id);
+					if (e == null) {
+						e = new Counter();
+						write.put(d.id, e);
+					}
+				}
+			}
+			return e;
+		}
+
+		public static Counter write(long id) {
+			Counter e = write.get(id);
+			if (e == null) {
+				synchronized (write) {
+					e = write.get(id);
+					if (e == null) {
+						e = new Counter();
+						write.put(id, e);
+					}
+				}
 			}
 			return e;
 		}
@@ -780,53 +891,16 @@ public final class Disk extends Bean {
 
 		public synchronized long avg() {
 
-			if (cost > 0) {
-				try {
+			try {
+				if (cost > 0) {
 					return bytes * 1000 / cost; // KB/s
-				} finally {
-					cost = 0;
-					bytes = 0;
 				}
+			} finally {
+				cost = 0;
+				bytes = 0;
 			}
 			return 0;
 		}
-	}
-
-	// stat
-	public static void stat() {
-
-		Lock door = Global.getLock("giiwa.disk.stat");
-
-		if (door.tryLock()) {
-			try {
-				Beans<Disk> l1 = dao.load(W.create(), 0, 128);
-
-				for (Disk e : l1) {
-
-					V v = V.create();
-					Counter str = Counter.read(e);
-					long r = str.avg();
-					if (r > 0) {
-						v.append("stat_read_avg", r);
-					}
-
-					Counter stw = Counter.write(e);
-					long w = stw.avg();
-					if (w > 0) {
-						v.append("stat_write_avg", w);
-					}
-
-					if (!v.isEmpty()) {
-						dao.update(e.id, v);
-						Stat.snapshot(Global.now(), "disk.stat", W.create().and("dataid", e.id),
-								V.create().append("dataid", e.id), new long[] { r, w });
-					}
-				}
-			} finally {
-				door.unlock();
-			}
-		}
-
 	}
 
 	private Pattern p = null;
@@ -874,4 +948,77 @@ public final class Disk extends Bean {
 		DFile create(Disk disk, String filename);
 	}
 
+	public static void check() {
+		if (!Task.isScheduled(stat.getName())) {
+			stat.schedule((long) (X.AMINUTE * Math.random()), true);
+		}
+	}
+
+	private static Task stat = new Task() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public String getName() {
+			return "gi.disk.stat";
+		}
+
+		@Override
+		public void onExecute() {
+			Beans<Disk> l1 = dao.load(W.create(), 0, MAX_DISKS);
+
+			// 总吞出性能
+			long[] c0 = new long[2];
+
+			for (Disk e : l1) {
+
+				V v = V.create();
+
+				// 每个磁盘
+				long[] cc = new long[2];
+				try {
+					Task.call("disk/counter", e.id, r -> {
+						try {
+							long[] c = r.get();
+							if (c != null && c.length == 2) {
+								cc[0] += c[0];
+								cc[1] += c[1];
+							}
+						} catch (Exception err) {
+							log.error(err.getMessage(), err);
+						}
+						return true;
+					});
+				} catch (Exception err) {
+					log.error(err.getMessage(), err);
+				}
+
+				long r = cc[0];
+				long w = cc[1];
+				v.append("stat_read_avg", r);
+				v.append("stat_write_avg", w);
+
+				c0[0] += r;
+				c0[1] += w;
+
+				if (!v.isEmpty()) {
+					dao.update(e.id, v);
+					Stat.snapshot(Global.now(), "disk.stat", W.create().and("dataid", e.id),
+							V.create().append("dataid", e.id), new long[] { r, w });
+				}
+			}
+
+			Stat.snapshot(Global.now(), "disk.stat", W.create().and("dataid", -1), V.create().append("dataid", -1),
+					new long[] { c0[0], c0[1] });
+
+		}
+
+		@Override
+		public void onFinish() {
+			this.schedule(X.AMINUTE, true);
+		}
+
+	};
 }

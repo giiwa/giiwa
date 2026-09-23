@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
 
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.dom4j.Attribute;
@@ -44,12 +46,14 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
+import org.giiwa.dfile.DFile;
 import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.StringFinder;
 import org.giiwa.misc.Url;
 import org.giiwa.task.BiConsumer;
+import org.giiwa.task.Consumer;
 import org.giiwa.web.Language;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -63,6 +67,7 @@ import com.google.gson.stream.JsonReader;
  * 
  * @author wujun
  */
+@Comment(text = "JSON对象")
 public final class JSON extends HashMap<String, Object> implements Comparable<JSON>, Cloneable {
 
 	/**
@@ -71,6 +76,10 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	private static final long serialVersionUID = 1L;
 
 	private static Log log = LogFactory.getLog(JSON.class);
+
+	public static JSON parse(Object json) {
+		return fromObject(json);
+	}
 
 	/**
 	 * parse the json object to JSON
@@ -100,6 +109,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		JSON j = null;
 		try {
 			if (json == null) {
+				// 上层判断null， 不要修改这个
 				return null;
 			} else if (json instanceof JSON) {
 				j = (JSON) json;
@@ -120,7 +130,13 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 
 			} else if (json instanceof Map) {
 				j = JSON.create((Map) json);
-
+			} else if (json instanceof org.bson.BSONObject) {
+				org.bson.BSONObject a = (org.bson.BSONObject) json;
+				j = JSON.create(a.toMap());
+				// TODO
+//			} else if (json instanceof org.sbson.BSONObject) {
+//				org.sbson.BSONObject a = (org.sbson.BSONObject) json;
+//				j = JSON.create(a.toMap());
 			} else if (json instanceof String) {
 
 				String s1 = ((String) json).trim();
@@ -173,9 +189,9 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					Gson g = _gson();
 					j = g.fromJson(new InputStreamReader(in), JSON.class);
 				} finally {
-					if (!lenient) {
-						X.close(in);
-					}
+//					if (!lenient) {
+					X.close(in);
+//					}
 				}
 			} else if (json instanceof File) {
 				Reader re = null;
@@ -188,15 +204,26 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 				} finally {
 					X.close(re);
 				}
+			} else if (json instanceof DFile) {
+				InputStream in = null;
+				try {
+					in = ((DFile) json).getInputStream();
+					Gson g = _gson();
+					j = g.fromJson(new InputStreamReader(in), JSON.class);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				} finally {
+					X.close(in);
+				}
 			} else if (json instanceof Reader) {
 				Reader re = (Reader) json;
 				try {
 					Gson g = _gson();
 					j = g.fromJson(re, JSON.class);
 				} finally {
-					if (!lenient) {
-						X.close(re);
-					}
+//					if (!lenient) {
+					X.close(re);
+//					}
 				}
 			} else if (json instanceof byte[]) {
 
@@ -271,31 +298,158 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return j;
 	}
 
+	private static Gson _gson;
+
 	private static Gson _gson() {
-		return new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).excludeFieldsWithoutExposeAnnotation()
-				.serializeSpecialFloatingPointValues().serializeNulls().create();
+		if (_gson == null) {
+			_gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
+					.excludeFieldsWithoutExposeAnnotation().serializeSpecialFloatingPointValues().serializeNulls()
+					.create();
+		}
+		return _gson;
 	}
 
+	/**
+	 * 流式分段解析JSON数组，逐条回调，不加载全部到内存
+	 * 
+	 * @param input    输入：File/InputStream/Reader/byte[]
+	 * @param consumer 每条JSON回调
+	 */
+	public static void stream(Object input, Consumer<JSON> consumer) throws Exception {
+		if (input == null || consumer == null)
+			return;
+		JsonReader reader = null;
+		InputStream in = null;
+		Reader r = null;
+		try {
+			Gson g = _gson();
+			if (input instanceof File) {
+				r = new FileReader((File) input);
+				reader = new JsonReader(r);
+			} else if (input instanceof InputStream) {
+				in = (InputStream) input;
+				reader = new JsonReader(new InputStreamReader(in));
+			} else if (input instanceof Reader) {
+				r = (Reader) input;
+				reader = new JsonReader(r);
+			} else if (input instanceof byte[]) {
+				in = new ByteArrayInputStream((byte[]) input);
+				reader = new JsonReader(new InputStreamReader(in));
+			} else if (input instanceof String) {
+				r = new StringReader((String) input);
+				reader = new JsonReader(r);
+			} else {
+				throw new IllegalArgumentException("不支持的输入类型");
+			}
+			reader.setLenient(true);
+			reader.beginArray();
+			while (reader.hasNext()) {
+				JSON item = g.fromJson(reader, JSON.class);
+				_refine(item, 0);
+				consumer.accept(item);
+			}
+			reader.endArray();
+		} finally {
+			X.close(reader);
+			X.close(r);
+			X.close(in);
+		}
+	}
+
+	/**
+	 * 批量分段解析JSON数组，每batchSize条回调一次
+	 * 
+	 * @param input     输入源
+	 * @param batchSize 批次大小，如1000
+	 * @param consumer  批次回调
+	 */
+	public static void stream(Object input, int batchSize, Consumer<List<JSON>> consumer) throws Exception {
+		if (batchSize <= 0)
+			batchSize = 1000;
+		List<JSON> batch = new ArrayList<>(batchSize);
+
+		int batchSize1 = batchSize;
+		stream(input, item -> {
+			batch.add(item);
+			if (batch.size() >= batchSize1) {
+				consumer.accept(new ArrayList<>(batch));
+				batch.clear();
+			}
+		});
+
+		// 处理剩余不足一批的数据
+		if (!batch.isEmpty()) {
+			consumer.accept(batch);
+		}
+	}
+
+	/**
+	 * 分段读取ResultSet，逐条回调，百万行不OOM
+	 */
+	public static void stream(ResultSet rs, Consumer<JSON> consumer) throws SQLException {
+		if (rs == null)
+			return;
+		ResultSetMetaData rmd = rs.getMetaData();
+		int colCount = rmd.getColumnCount();
+		while (rs.next()) {
+			JSON j = JSON.create();
+			for (int i = 0; i < colCount; i++) {
+				String col = rmd.getColumnName(i + 1);
+				j.put(col, rs.getObject(i + 1));
+			}
+			_refine(j, 0);
+			consumer.accept(j);
+		}
+	}
+
+	/**
+	 * ResultSet 批量分段
+	 */
+	public static void stream(ResultSet rs, int batchSize, Consumer<List<JSON>> consumer) throws SQLException {
+		if (batchSize <= 0)
+			batchSize = 1000;
+		List<JSON> batch = new ArrayList<>(batchSize);
+
+		int batchSize1 = batchSize;
+		stream(rs, item -> {
+			batch.add(item);
+			if (batch.size() >= batchSize1) {
+				consumer.accept(new ArrayList<>(batch));
+				batch.clear();
+			}
+		});
+		if (!batch.isEmpty()) {
+			consumer.accept(batch);
+		}
+	}
+
+	/**
+	 * @see X.isArray
+	 * @param jsons
+	 * @return
+	 */
+	@Deprecated
 	public static boolean isArray(Object jsons) {
 
-		if (jsons instanceof Collection) {
-			return true;
-		} else if (jsons instanceof String) {
-			if (((String) jsons).startsWith("{")) {
-				return false;
-			} else {
-				return true;
-			}
-		} else if (jsons instanceof ScriptObjectMirror) {
-			ScriptObjectMirror m = (ScriptObjectMirror) jsons;
-			if (m.isArray()) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		return false;
+		return X.isArray(jsons);
+//		if (jsons instanceof Collection) {
+//			return true;
+//		} else if (jsons instanceof String) {
+//			if (((String) jsons).startsWith("{")) {
+//				return false;
+//			} else {
+//				return true;
+//			}
+//		} else if (jsons instanceof ScriptObjectMirror) {
+//			ScriptObjectMirror m = (ScriptObjectMirror) jsons;
+//			if (m.isArray()) {
+//				return true;
+//			} else {
+//				return false;
+//			}
+//		}
+//
+//		return false;
 	}
 
 	/**
@@ -410,7 +564,10 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					try {
 						String s = (String) o;
 						if (s.startsWith("{")) {
-							list.set(i, fromObject(s));
+							JSON j1 = fromObject(s);
+							if (j1 != null) {
+								list.set(i, j1);
+							}
 						}
 					} catch (Throwable e) {
 						// ignore
@@ -503,7 +660,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	/**
 	 * create a json string
 	 */
-	public synchronized String toString() {
+	public String toString() {
 		Gson g = _gson();
 		return g.toJson(this);
 	}
@@ -521,17 +678,49 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	/**
-	 * convert the json to a url string
+	 * 转换json为url链接，并作url编码
 	 * 
-	 * @return url string
+	 * @return
 	 */
-	public String toUrl() {
+	@Comment(text = "转换为url链接，进行url编码")
+	public String toUrl2() {
 		StringBuilder sb = new StringBuilder();
 		for (String name : this.keySet()) {
+			Object o = this.get(name);
+			if (o != null && o instanceof FileItem) {
+				// 不打印
+				continue;
+			}
 			if (sb.length() > 0)
 				sb.append("&");
 			sb.append(name).append("=");
+			if (o != null) {
+				if (o instanceof String) {
+					o = Url.encode((String) o);
+				}
+				sb.append(o);
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 转换json为url链接，不作编码
+	 * 
+	 * @return url string
+	 */
+	@Comment(text = "转换为url链接，不作编码")
+	public String toUrl() {
+		StringBuilder sb = new StringBuilder();
+		for (String name : this.keySet()) {
 			Object o = this.get(name);
+			if (o != null && o instanceof FileItem) {
+				// 不打印
+				continue;
+			}
+			if (sb.length() > 0)
+				sb.append("&");
+			sb.append(name).append("=");
 			if (o != null) {
 				sb.append(o);
 			}
@@ -539,7 +728,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return sb.toString();
 	}
 
-	public synchronized String toPrettyString() {
+	public String toPrettyString() {
 		Gson gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
 				.excludeFieldsWithoutExposeAnnotation().serializeSpecialFloatingPointValues().setPrettyPrinting()
 				.serializeNulls().create();
@@ -917,7 +1106,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * @param value the value
 	 * @return the JSON
 	 */
-	public JSON append(String name, Object value) {
+	@Comment(text = "添加元素")
+	public JSON append(@Comment(text = X.NAME) String name, @Comment(text = "value") Object value) {
 		if (X.isEmpty(name))
 			return this;
 
@@ -941,6 +1131,16 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	/**
+	 * 复制一个新的json
+	 * 
+	 * @param names
+	 * @return
+	 */
+	public JSON json(String... names) {
+		return copy(names);
+	}
+
+	/**
 	 * copy this json, and return a new one
 	 * 
 	 * @return
@@ -958,11 +1158,16 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 			}
 		} else {
 			for (String s : names) {
-				Object o = this.get(s);
+				String[] s1 = X.split(s, "[:：]");
+				Object o = this.get(s1[0]);
 				if (o instanceof JSON) {
 					o = ((JSON) o).copy();
 				}
-				j.put(s, o);
+				if (s1.length > 1) {
+					j.put(s1[1], o);
+				} else {
+					j.put(s1[0], o);
+				}
 			}
 		}
 		return j;
@@ -975,7 +1180,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * @param name
 	 * @return
 	 */
-	public JSON copy(Map<String, Object> m, String... name) {
+	@Comment(text = "copy")
+	public JSON copy(@Comment(text = "from") Map<String, Object> m, @Comment(text = "names") String... name) {
 		if (m == null)
 			return this;
 
@@ -999,7 +1205,12 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public JSON merge(JSON jo) {
+	@Comment(text = "合并")
+	public JSON merge(@Comment(text = "from") JSON jo) {
+
+		if (this == jo) {
+			return this;
+		}
 
 		if (jo != null && !jo.isEmpty()) {
 
@@ -1028,19 +1239,22 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@Override
-	public boolean remove(Object key1, Object key2) {
+	@Comment(text = "remove")
+	public boolean remove(@Comment(text = "key1") Object key1, @Comment(text = "key2") Object key2) {
 		remove(new String[] { key1.toString(), key2.toString() });
 		return true;
 	}
 
 	@Override
-	public Object remove(Object key) {
+	@Comment(text = "remove")
+	public Object remove(@Comment(text = "key") Object key) {
 		Object o = this.get(key);
 		remove(new String[] { key.toString() });
 		return o;
 	}
 
-	public JSON remove(String... names) {
+	@Comment(text = "remove")
+	public JSON remove(@Comment(text = "names") String... names) {
 		if (names != null && names.length > 0) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
@@ -1064,7 +1278,23 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@Override
-	public synchronized Object get(Object key) {
+	public boolean containsKey(Object key) {
+		if (super.containsKey(key)) {
+			return true;
+		}
+
+		String name = key.toString();
+		int i = name.indexOf(".");
+		if (i < 0) {
+			return false;
+		}
+
+		return this.get(name) != null;
+	}
+
+	@Override
+	@Comment(text = "get")
+	public synchronized Object get(@Comment(text = "key") Object key) {
 
 		if (key == null) {
 			return null;
@@ -1102,7 +1332,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return j;
 	}
 
-	public String toXml(String encoding) {
+	@Comment(text = "toXML")
+	public String toXml(@Comment(text = "encoding") String encoding) {
 		StringBuilder sb = new StringBuilder();
 		if (!X.isEmpty(encoding)) {
 			sb.append("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>").append("\r\n");
@@ -1224,7 +1455,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * @param name
 	 * @return
 	 */
-	public JSON create(String name) {
+	@Comment(text = "create a empty json node")
+	public JSON create(@Comment(text = X.NAME) String name) {
 		JSON j = JSON.create();
 		this.append(name, j);
 		return j;
@@ -1236,7 +1468,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * @param name
 	 * @return
 	 */
-	public List<JSON> createList(String name) {
+	@Comment(text = "create a empty json list")
+	public List<JSON> createList(@Comment(text = X.NAME) String name) {
 		List<JSON> l1 = JSON.createList();
 		this.append(name, l1);
 		return l1;
@@ -1256,7 +1489,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		});
 	}
 
-	public JSON scan(BiConsumer<JSON, String> func) {
+	@Comment(text = "遍历所有健")
+	public JSON scan(@Comment(text = "(node,name)") BiConsumer<JSON, String> func) {
 
 		String[] ss = this.keySet().toArray(new String[this.size()]);
 		for (String s : ss) {
@@ -1275,12 +1509,18 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return this;
 	}
 
-	public JSON scan(ScriptObjectMirror m) {
-		return this.scan((p, e) -> {
-			m.call(p, e);
-		});
-	}
+//	@Comment(text = "scan")
+//	public JSON scan(@Comment(text = "javascript") ScriptObjectMirror m) {
+//		return this.scan((p, e) -> {
+//			m.call(p, e);
+//		});
+//	}
 
+	/**
+	 * 返回本this对象
+	 * 
+	 * @return
+	 */
 	public JSON json() {
 		return this;
 	}
@@ -1350,6 +1590,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@Override
+	@Comment(text = "复制，注意：浅度复制")
 	public synchronized Object clone() {
 		JSON j1 = JSON.create();
 		j1.putAll(this);
@@ -1357,7 +1598,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@Override
-	public synchronized Object put(String key, Object value) {
+	@Comment(text = "put")
+	public synchronized Object put(@Comment(text = "key") String key, @Comment(text = "value") Object value) {
 		if (key == null) {
 			return null;
 		}
@@ -1372,11 +1614,13 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@Override
+	@Comment(text = "keySet")
 	public synchronized Set<String> keySet() {
 		return new HashSet<String>(super.keySet());
 	}
 
 	@Override
+	@Comment(text = "values")
 	public synchronized Collection<Object> values() {
 		return new ArrayList<Object>(super.values());
 	}
@@ -1401,6 +1645,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * 
 	 * @return
 	 */
+	@Comment(text = "convert to treemap")
 	public TreeMap<String, Object> treemap() {
 		TreeMap<String, Object> m = new TreeMap<String, Object>();
 		m.putAll(this);
@@ -1519,6 +1764,10 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 
 	@Comment(text = "修改键名")
 	public void move(@Comment(text = "from") String from, @Comment(text = "to") String to) {
+		if (X.isSame(from, to)) {
+			return;
+		}
+
 		this.append(to, this.get(from));
 		this.remove(from);
 	}
@@ -1562,4 +1811,20 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return null;
 	}
 
+	@Comment(text = "模糊字段，用于模糊密码之类的")
+	public JSON mix(String... name) {
+		JSON j1 = JSON.create();
+		for (String s : this.keySet()) {
+			if (X.isIn(s, name)) {
+				j1.put(s, "***");
+			} else {
+				Object o = this.get(s);
+				if (o instanceof Map) {
+					o = JSON.fromObject(o).mix(name);
+				}
+				j1.put(s, o);
+			}
+		}
+		return j1;
+	}
 }

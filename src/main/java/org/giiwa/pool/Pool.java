@@ -15,17 +15,17 @@
 package org.giiwa.pool;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
-import org.giiwa.dao.X;
 import org.giiwa.task.Task;
 
 /**
@@ -34,20 +34,25 @@ import org.giiwa.task.Task;
  * @author joe
  *
  */
-public class Pool<E> {
+public final class Pool<E> {
 
-	static Log log = LogFactory.getLog(Pool.class);
+	private static Log log = LogFactory.getLog(Pool.class);
 
-//	private ReentrantLock lock = new ReentrantLock();
-//	private Condition door = lock.newCondition();
+	// 空闲的
+	private Set<E> idle = new LinkedHashSet<E>();
 
-	private List<E> idle = new ArrayList<E>();
-	private Map<E, _O> outside = new HashMap<E, _O>();
+	// 已经外借的
+	private Set<E> outside = new HashSet<E>();
 
 	private int initial = 10;
 	private int max = 10;
 	private int created = 0;
-	private long MAX_TIME_OUTSIDE = X.AMINUTE;
+
+	// 创建链接的时长
+	private Map<E, Long> ages = new HashMap<E, Long>();
+
+	// 连接最大生命周期
+	private long _age = -1;// -1: 无限期
 
 	public long activetime = Global.now();
 
@@ -56,12 +61,12 @@ public class Pool<E> {
 	private String name;
 
 	/**
-	 * create a pool by initial, max and factory.
+	 * 创建链接池
 	 *
-	 * @param <E>     the element type
-	 * @param initial the initial
-	 * @param max     the max
-	 * @param factory the factory
+	 * @param <E>     链接类型
+	 * @param initial 初始化链接数
+	 * @param max     最大链接数
+	 * @param factory 链接创建方法
 	 * @return the pool
 	 */
 	public static <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
@@ -72,9 +77,6 @@ public class Pool<E> {
 		p.max = max;
 		p.factory = factory;
 		p.factory.pool = p;
-
-		// log.info("create RDSHelper, max=" + max + ", factory=" + factory, new
-		// Exception("trace only"));
 
 		Task.schedule(t -> {
 			try {
@@ -99,7 +101,7 @@ public class Pool<E> {
 			}
 		}
 		synchronized (this) {
-			this.notifyAll();
+			this.notify();
 		}
 	}
 
@@ -108,36 +110,31 @@ public class Pool<E> {
 	 *
 	 * @param t the t
 	 */
-	void release(E t) {
+	void release(E e) {
 
 		activetime = Global.now();
 
 		if (log.isDebugEnabled()) {
-			log.debug("release t=" + t);
+			log.debug("release t=" + e);
 		}
 
-		if (t == null)
+		if (e == null)
 			return;
 
 		synchronized (this) {
-			long otime = _remove(t);
-			if (otime > -1) {
-				if (otime > MAX_TIME_OUTSIDE || !factory.check0(t)) {
-					factory.destroy0(t);
-					log.warn("release a bad one, [" + t + "]");
-					created--;
+			// 防止重复release
+			if (outside.remove(e)) {
+				Long createTs = ages.get(e);
+				boolean validAge = _age <= 0 || (createTs != null && System.currentTimeMillis() - createTs < _age);
+
+				if (factory.check0(e) && validAge) {
+					idle.add(e);
 				} else {
-					if (outside.size() + idle.size() >= max) {
-						log.warn(
-								"error, the size[" + idle.size() + "] of exceed max[" + max + "], close this one=" + t);
-						factory.destroy0(t);
-						return;
-					} else if (!idle.contains(t)) {
-						idle.add(t);
-					}
+					factory.destroy0(e);
+					ages.remove(e);
+					created--;
 				}
 			}
-			// still using by
 		}
 	}
 
@@ -146,13 +143,25 @@ public class Pool<E> {
 	 */
 	public void destroy() {
 		synchronized (this) {
-			for (int i = idle.size() - 1; i >= 0; i--) {
-				factory.destroy0(idle.get(i));
+			for (E e : idle) {
+				factory.destroy0(e);
 			}
 			outside.clear();
 			idle.clear();
 			created = 0;
+			ages.clear();
 		}
+	}
+
+	/**
+	 * 设置每个链接的最大age
+	 * 
+	 * @param age - 毫秒
+	 * @return
+	 */
+	public Pool<E> age(long age) {
+		this._age = age;
+		return this;
 	}
 
 	/**
@@ -173,29 +182,32 @@ public class Pool<E> {
 		synchronized (this) {
 
 			while (t1 > 0) {
-				E e = _outside();
-				if (e != null) {
-					return e;
-				}
 
 				if (!idle.isEmpty()) {
-					e = idle.remove(0);
-					if (factory.check0(e)) {
-						_add(e);
+					E e = idle.iterator().next();
+					idle.remove(e);
+
+					Long createTs = ages.get(e);
+					boolean validAge = _age <= 0 || (createTs != null && System.currentTimeMillis() - createTs < _age);
+
+					if (factory.check0(e) && validAge) {
+						// 链接是正常的，age小于设定的
+						_outside(e);
 						return e;
 					} else {
 						if (log.isInfoEnabled()) {
 							log.info("got bad one, destory, [" + name + "], max=" + max);
 						}
 						factory.destroy0(e);
+						ages.remove(e);
 						created--;
 					}
 				} else {
 					if (created < max) {
-						e = factory.create0();
+						E e = factory.create0();
 						if (e != null) {
 							created++;
-							_add(e);
+							_outside(e);
 							return e;
 						} else {
 							throw new Exception("create E failed, [" + name + "], e=" + e + ", factory=" + factory);
@@ -206,38 +218,57 @@ public class Pool<E> {
 							if (log.isDebugEnabled()) {
 								log.debug("waiting for get, [" + name + "], max=" + max);
 							}
-							this.wait(t1);
+							if (!_check_outside()) {
+								try {
+									this.wait(t1);
+								} catch (InterruptedException ie) {
+									Thread.currentThread().interrupt();
+									throw new Exception("pool get thread interrupted", ie);
+								}
+							}
 						}
 					}
 				}
+
+				// 检查outside， 是否存在过期连接
+				_check_outside();
+
 			}
 		}
 
 		log.warn("pool.get failed, " + name + ", idle=" + idle.size() + ", created=" + created + ", max=" + max
-				+ ", outside=" + outside);
+				+ ", outsideSize=" + outside.size());
 
 		return null;
 	}
 
-	private E _outside() {
-		synchronized (this) {
-			if (outside.isEmpty()) {
-				if (created != idle.size()) {
-					log.warn("outside error, empty, idle=" + idle.size() + ", created=" + created);
-					created = idle.size();
-				}
-				return null;
-			}
+	private boolean _check_outside() {
 
-			// 不同线程不能共享，DM数据库连接共享会卡顿
-			Thread th = Thread.currentThread();
-			for (_O e : outside.values()) {
-				if (th.getId() == e.th.getId()) {
-					return e.get();
+		if (_age <= 0) {
+			return false;
+		}
+		boolean hasClean = false;
+
+		synchronized (this) {
+			// 拷贝借出集合快照，只处理占用中的连接
+			Set<E> snapshot = new HashSet<>(outside);
+			long now = System.currentTimeMillis();
+			for (E e : snapshot) {
+				Long createTs = ages.get(e);
+				if (createTs == null)
+					continue;
+				if (now - createTs > _age) {
+					hasClean = true;
+					log.warn("force destroy overtime leased connection: " + e);
+					outside.remove(e);
+					factory.destroy0(e);
+					ages.remove(e);
+					created--;
 				}
 			}
 		}
-		return null;
+		return hasClean;
+
 	}
 
 	/**
@@ -282,6 +313,7 @@ public class Pool<E> {
 
 		@SuppressWarnings("unchecked")
 		private void destroy0(E t) {
+
 			WeakReference<Delegator> o = Delegator._cache.get(t);
 			if (o != null && o.get() != null) {
 				destroy((E) o.get().obj);
@@ -307,7 +339,7 @@ public class Pool<E> {
 		return max;
 	}
 
-	public int avaliable() {
+	public int available() {
 		return idle.size();
 	}
 
@@ -316,70 +348,17 @@ public class Pool<E> {
 		return "Pool [" + name + "=(initial=" + initial + ", created=" + created + ", max=" + max + ")]";
 	}
 
-	private void _add(E e) {
+	private void _outside(E e) {
 		synchronized (this) {
-			if (outside.containsKey(e)) {
+			if (outside.contains(e)) {
 				log.error("outside error, already in outside=" + outside);
 			}
 			if (outside.size() >= max) {
 				log.warn("outside put, e=" + e + ", created=" + created + ", max=" + max, new Exception());
 			}
-			outside.put(e, new _O(e));
+			outside.add(e);
+			ages.put(e, System.currentTimeMillis());
 		}
-	}
-
-	private long _remove(E e) {
-		synchronized (this) {
-			_O o = outside.get(e);
-			if (o == null) {
-				log.warn("outside error, o=null, e=" + e.toString());
-				outside.remove(e);
-				// 这个连接失控了， 关掉
-				return Long.MAX_VALUE;
-			} else if (o.release()) {
-				outside.remove(e);
-				if (log.isDebugEnabled()) {
-					log.debug("outside ok, removed, e=" + e.toString() + ", outside=" + outside + ", idle=" + idle
-							+ ", created=" + created + ", max=" + max);
-				}
-				return o.time.pastms();
-			} else {
-				if (log.isDebugEnabled()) {
-					log.debug("outside refer=" + o.refer + ", e=" + e.toString());
-				}
-				return -1;
-			}
-		}
-	}
-
-	class _O {
-
-		TimeStamp time = TimeStamp.create();
-		Thread th;
-		E e;
-		int refer = 1;
-
-		_O(E e) {
-			this.e = e;
-			this.refer = 1;
-			th = Thread.currentThread();
-		}
-
-		public synchronized E get() {
-			refer++;
-			return e;
-		}
-
-		public synchronized boolean release() {
-			refer--;
-			return refer == 0;
-		}
-
-		@Override
-		public String toString() {
-			return "_O[cost = " + time.past() + ", refer=" + refer + ", thread=" + th.getName() + "]";
-		}
-
 	}
 
 }

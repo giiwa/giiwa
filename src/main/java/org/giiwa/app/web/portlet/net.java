@@ -38,7 +38,7 @@ public class net extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -50,11 +50,11 @@ public class net extends portlet {
 			this.set("name1", id);
 		}
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
-		W q = W.create().and("node", id).and("name", name)
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.NAME, name).and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte)
+				.sort(X.CREATED, -1);
 		_Net.Record.dao.optimize(q);
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(q, 0, 60);
@@ -62,13 +62,13 @@ public class net extends portlet {
 			Collections.reverse(bs);
 
 			this.set("inet", bs.get(0).get("inet"));
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 
-		long max1 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("rxbytes",
-				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
-		long max2 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("txbytes",
-				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
+		long max1 = X.toLong(1.1 * X
+				.toLong(_Net.Record.dao.max("rxbytes", W.create().and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte))));
+		long max2 = X.toLong(1.1 * X
+				.toLong(_Net.Record.dao.max("txbytes", W.create().and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte))));
 
 		this.set("max", Math.max(max1, max2));
 
@@ -79,21 +79,19 @@ public class net extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
-		int hours = this.getInt("n", 1);
+		int hours = this.getInt(X.N, 1);
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(
-				W.create().and("node", id).and("name", name)
-						.and("created", Global.now() - X.AHOUR * hours, W.OP.gte).sort("created", -1),
-				0, 60 * hours);
+		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create().and(X.NODE, id).and(X.NAME, name)
+				.and(X.CREATED, Global.now() - X.AHOUR * hours, W.OP.gte).sort(X.CREATED, -1), 0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -104,9 +102,9 @@ public class net extends portlet {
 			// in $list) {x:$this.time($c), y:$c.txbytes,
 			// hint:"$!lang.size($c.txbytes)"},.end]}
 
-			JSON p1 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("net.rxbytes.speed"))
+			JSON p1 = JSON.create().append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("net.rxbytes.speed"))
 					.append("color", "#0dad76");
-			JSON p2 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("net.txbytes.speed"))
+			JSON p2 = JSON.create().append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("net.txbytes.speed"))
 					.append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
@@ -131,7 +129,7 @@ public class net extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -143,17 +141,17 @@ public class net extends portlet {
 			this.set("name1", id);
 		}
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(
-				W.create().and("node", id).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create().and(X.NODE, id).and(X.NAME, name).and(X.CREATED, time, W.OP.gte).sort(X.CREATED, 1), 0,
 				7 * 24 * 60);
 
 		if (bs != null && !bs.isEmpty()) {
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/net.more.html");
 

@@ -19,9 +19,10 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 
 /**
- * web api: /admin/task <br>
- * used to manage task,<br>
- * required "access.config.admin"
+ * 接口: /admin/mo <br>
+ * 
+ * 监测请求任务<br>
+ * 权限 "access.config.admin"
  * 
  * @author joe
  *
@@ -41,15 +42,25 @@ public class mo extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		this.set("list", Processing.getAll());
+		this.set(X.LIST, Processing.getAll());
+//		this.set("local", Local.label());
 
 		this.show("/admin/mo.index.html");
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "global", login = true, access = "access.config.admin")
+	public void global() {
+
+		this.set(X.LIST, Processing.getAll2());
+//		this.set("local", Local.label());
+
+		this.show("/admin/mo.global.html");
+	}
+
+	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void kill() {
 
-		int id = this.getInt("id");
+		int id = this.getInt(X.ID);
 		Processing.kill(id);
 
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "killed"));
@@ -59,7 +70,7 @@ public class mo extends Controller {
 	@Path(path = "dump", login = true, access = "access.config.admin", oplog = true)
 	public void dump() {
 
-		int id = this.getInt("id");
+		int id = this.getInt(X.ID);
 		Controller mo = Processing.get(id);
 		if (mo == null) {
 			this.set(X.ERROR, lang.get("task.notfound")).send(201);

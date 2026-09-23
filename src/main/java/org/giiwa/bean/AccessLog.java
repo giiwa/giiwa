@@ -50,7 +50,7 @@ public final class AccessLog extends Bean {
 
 	static AtomicLong seq = new AtomicLong(0);
 
-	@Column(memo = "主键", size = 50)
+	@Column(memo = "主键", size = 64, unique = true)
 	private String id;
 
 	@Column(memo = "链接", size = 255)
@@ -59,10 +59,10 @@ public final class AccessLog extends Bean {
 	@Column(name = "访问IP", size = 100)
 	private String ip;
 
-	@Column(name = "节点", size = 100)
+	@Column(memo = "节点", size = 100)
 	private String node;
 
-	@Column(name = X.CREATED)
+	@Column(memo="创建时间")
 	private long created;
 
 	/**
@@ -77,8 +77,8 @@ public final class AccessLog extends Bean {
 			String node = Local.id();
 			String id = UID.id(url, ip, created, node);
 			V v = V.create();
-			v.append("id", id);
-			dao.insert(v.set(X.ID, id).set("ip", ip).append("node", node).append("url", url));
+			v.append(X.ID, id);
+			dao.insert(v.set(X.ID, id).set(X.IP, ip).append(X.NODE, node).append(X.URL, url));
 		}
 	}
 

@@ -26,7 +26,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import org.giiwa.app.task.BackupTask;
 import org.giiwa.bean.AutoBackup;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
@@ -101,7 +100,7 @@ public class backup extends Controller {
 			});
 
 			this.set("root", _BackupTask.ROOT);
-			this.set("list", list);
+			this.set(X.LIST, list);
 
 			this.show("/admin/backup.index.html");
 
@@ -115,11 +114,11 @@ public class backup extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
 		try {
-			String name = this.getString("name");
+			String name = this.getString(X.NAME);
 			DFile f = Disk.seek(_BackupTask.ROOT + "/" + name);
 
 			if (log.isDebugEnabled()) {
@@ -186,7 +185,7 @@ public class backup extends Controller {
 
 		if (method.isPost()) {
 
-			String[] ss = this.getStrings("name");
+			String[] ss = this.getStrings(X.NAME);
 			if (ss != null && ss.length > 0) {
 
 				new _BackupTask(ss, Global.getString("backup.url", null)).schedule(0);
@@ -207,7 +206,7 @@ public class backup extends Controller {
 //			try {
 //				String table = Helper.getTable(c);
 //				if (!X.isEmpty(table) && !l2.containsKey(table)) {
-//					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+//					JSON j = JSON.create().append(X.NAME, c.getName()).append("table", table).append("size",
 //							Helper.count(table, W.create()));
 //					l2.put(table, j);
 //				}
@@ -215,10 +214,10 @@ public class backup extends Controller {
 //				log.error(e.getMessage(), e);
 //			}
 //		}
-//		this.set("list", l2.values());
+//		this.set(X.LIST, l2.values());
 
 		List<JSON> l2 = Schema.load(lang);
-		this.set("list", l2);
+		this.set(X.LIST, l2);
 
 		this.show("/admin/backup.create.html");
 
@@ -232,7 +231,7 @@ public class backup extends Controller {
 		// this.getRemoteHost());
 
 		if (method.isPost()) {
-			String[] ss = this.getStrings("name");
+			String[] ss = this.getStrings(X.NAME);
 			if (ss != null && ss.length > 0) {
 
 				new _BackupTask(ss, null).schedule(0);
@@ -251,7 +250,7 @@ public class backup extends Controller {
 							continue;
 
 						Map<String, Class<?>> st = new TreeMap<String, Class<?>>();
-						Beans<Bean> bs = Helper.primary.load(s, W.create().sort("created", -1), 0, 10, Bean.class);
+						Beans<Bean> bs = Helper.primary.load(s, W.create().sort(X.CREATED, -1), 0, 10, Bean.class);
 						for (Bean b : bs) {
 							Map<String, Object> m = b.getAll();
 							for (String name : m.keySet()) {
@@ -281,7 +280,7 @@ public class backup extends Controller {
 							} else if (c1.equals(Double.class)) {
 								t1 = "double";
 							} else if (c1.isArray()) {
-								t1 = "list";
+								t1 = X.LIST;
 							}
 							ex.print(new String[] { s1, t1 });
 						}
@@ -310,7 +309,7 @@ public class backup extends Controller {
 			try {
 				String table = Helper.getTable(c);
 				if (!X.isEmpty(table) && !l2.containsKey(table)) {
-					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+					JSON j = JSON.create().append(X.NAME, c.getName()).append("table", table).append("size",
 							Helper.primary.count(table, W.create()));
 					l2.put(table, j);
 				}
@@ -319,7 +318,7 @@ public class backup extends Controller {
 			}
 		}
 
-		this.set("list", l2.values());
+		this.set(X.LIST, l2.values());
 		this.show("/admin/backup.er.html");
 
 	}
@@ -327,15 +326,15 @@ public class backup extends Controller {
 	@Path(path = "auto", login = true, access = "access.config.admin")
 	public void auto() {
 
-		String name = this.get("name");
+		String name = this.get(X.NAME);
 		W q = W.create();
 		if (!X.isEmpty(name)) {
-			q.and("name", name, W.OP.like);
-			this.put("name", name);
+			q.and(X.NAME, name, W.OP.like);
+			this.put(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
 		Beans<AutoBackup> bs = AutoBackup.dao.load(q, s, n);
 		if (bs != null) {
@@ -351,7 +350,7 @@ public class backup extends Controller {
 	public void auto_innertask() {
 
 		List<JSON> l2 = Schema.load(lang);
-		this.set("list", l2);
+		this.set(X.LIST, l2);
 		this.show("/admin/backup.auto.innertask.html");
 
 	}
@@ -385,7 +384,7 @@ public class backup extends Controller {
 				url = url.trim();
 			}
 			v.append("url", url);
-			v.append("name", this.get("name"));
+			v.append(X.NAME, this.get(X.NAME));
 			v.append("clean", X.isSame("on", this.getString("clean")) ? 1 : 0);
 			v.append("keeps", this.get("keeps"));
 
@@ -393,7 +392,7 @@ public class backup extends Controller {
 			AutoBackup a = AutoBackup.dao.load(id);
 			a.next(null);
 
-			BackupTask.init();
+//			BackupTask.init();
 
 			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
@@ -404,10 +403,10 @@ public class backup extends Controller {
 
 	}
 
-	@Path(path = "auto/delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "auto/delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void auto_delete() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		AutoBackup.dao.delete(id);
 
@@ -418,7 +417,7 @@ public class backup extends Controller {
 	@Path(path = "auto/edit", login = true, access = "access.config.admin", oplog = true)
 	public void auto_edit() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
@@ -429,7 +428,7 @@ public class backup extends Controller {
 			v.append("table", name);
 			v.append("enabled", X.isSame("on", this.get("enabled")) ? 1 : 0);
 			v.append("time", this.get("time"));
-			v.append("state", 0);
+			v.append(X.STATE, 0);
 
 			ss = this.getStrings("days");
 			String days = X.join(ss, ",");
@@ -446,7 +445,7 @@ public class backup extends Controller {
 				url = url.trim();
 			}
 			v.append("url", url);
-			v.append("name", this.get("name"));
+			v.append(X.NAME, this.get(X.NAME));
 			v.append("clean", X.isSame("on", this.get("clean")) ? 1 : 0);
 			v.append("keeps", this.get("keeps"));
 
@@ -454,7 +453,7 @@ public class backup extends Controller {
 			AutoBackup a = AutoBackup.dao.load(id);
 			a.next(null);
 
-			BackupTask.init();
+//			BackupTask.init();
 
 			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
@@ -466,7 +465,7 @@ public class backup extends Controller {
 		if (a.type != 2) {
 			// 不是外部命令
 			List<JSON> l2 = Schema.load(lang);
-			this.set("list", l2);
+			this.set(X.LIST, l2);
 		}
 
 		this.show("/admin/backup.auto.edit.html");
@@ -478,17 +477,17 @@ public class backup extends Controller {
 	/**
 	 * Restore.
 	 */
-	@Path(path = "restore", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "restore", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public synchronized void restore() {
 
 		JSON jo = new JSON();
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		if (rtask == null || rtask.finished) {
 			rtask = new _RecoverTask(name);
 			try {
 				long id = Monitor.start(rtask, 10);
-				jo.put("id", id);
+				jo.put(X.ID, id);
 			} catch (Exception e) {
 				this.error(e);
 				return;

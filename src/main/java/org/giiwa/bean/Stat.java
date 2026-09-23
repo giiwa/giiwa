@@ -21,12 +21,12 @@ import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Column;
 import org.giiwa.dao.Helper;
+import org.giiwa.dao.RDSHelper;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.RDSHelper;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Language;
 
@@ -69,6 +69,9 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 	@Column(memo = "统计时间")
 	protected long time; // 时间
+
+	@Column(memo = "用户id")
+	protected long uid;
 
 	@Column(memo = "统计粒度", size = 50)
 	protected String size;// size of the stat data
@@ -136,7 +139,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 				v.append("date", date).append("size", size.toString()).append("module", module);
 				for (int i = 0; i < n.length; i++) {
-					v.set("n" + i, n[i]);
+					v.set(X.N + i, n[i]);
 				}
 
 				if (log.isDebugEnabled()) {
@@ -164,7 +167,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 				 * only update if count > original
 				 */
 				for (int i = 0; i < n.length; i++) {
-					v.set("n" + i, n[i]);
+					v.set(X.N + i, n[i]);
 				}
 				return Helper.primary.updateTable(table, q, v);
 			}
@@ -329,7 +332,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 		if (s1 != null) {
 			long[] n1 = new long[n.length];
 			for (int i = 0; i < n1.length; i++) {
-				n1[i] = s1.getLong("n" + i);
+				n1[i] = s1.getLong(X.N + i);
 			}
 
 			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
@@ -373,7 +376,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
-			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
+			d[i] = s1 == null ? n[i] : n[i] + s1.getLong(X.N + i);
 		}
 
 		v.append("time", time);
@@ -487,7 +490,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 //			long[] n1 = new long[n.length];
 //			for (int i = 0; i < n1.length; i++) {
-//				n1[i] = s1.getLong("n" + i);
+//				n1[i] = s1.getLong(X.N + i);
 //			}
 
 		for (SIZE s2 : new SIZE[] { SIZE.hour, SIZE.day, SIZE.week, SIZE.month, SIZE.year }) {
@@ -531,7 +534,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
-			d[i] = (s1 == null) ? 0 : (n[i] - s1.getLong("n" + i));
+			d[i] = (s1 == null) ? 0 : (n[i] - s1.getLong(X.N + i));
 		}
 
 		v.append("time", time);
@@ -588,7 +591,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 		}
 		q.and("module", name + "." + type.toString()).and("size", size.toString());
 
-		Data d = Helper.primary.load(table(name), q.copy().sort(name, -1), Data.class);
+		Bean d = Helper.primary.load(table(name), q.copy().sort(name, -1), Bean.class);
 		if (d != null) {
 			return X.toLong(d.get(name));
 		}
@@ -660,7 +663,8 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long toweek(long time) {
-		return lang.parse(lang.format(time, "yyyy-w"), "yyyy-w");
+		// 星期天-1d，移到上周， 然后+1d，确保周一为第一天
+		return lang.parse(lang.format(time - X.ADAY, "yyyy-w"), "yyyy-w") + X.ADAY;
 	}
 
 	/**
@@ -721,7 +725,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 							Stat s = bs.get(0);
 
 							for (String name : s.keySet()) {
-								if (name.startsWith("n")) {
+								if (name.startsWith(X.N)) {
 									Object o1 = s.get(name);
 									if (o1 instanceof Long) {
 										long v = func.call(name, bs);
@@ -815,7 +819,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 		List<JSON> l1 = Helper.primary.listTables(null, 10000);
 		for (JSON j1 : l1) {
 
-			String name = j1.getString("name");
+			String name = j1.getString(X.NAME);
 			if (name.startsWith("gi_stat_") && CleanupTask.inCleanupTime()) {
 
 //				task.attach("table", name);

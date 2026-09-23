@@ -30,6 +30,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.ResultSet;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,8 +67,10 @@ public final class X {
 
 	private static Log log = LogFactory.getLog(X.class);
 
+	public static final long ASECOND = 1000;
+
 	/** The Constant 60*1000. */
-	public static final long AMINUTE = 1000 * 60;
+	public static final long AMINUTE = ASECOND * 60;
 
 	/** The Constant 60*AMINUTE. */
 	public static final long AHOUR = AMINUTE * 60;
@@ -84,7 +87,7 @@ public final class X {
 	/** The Constant 365*ADAY. */
 	final static public long AYEAR = 365 * ADAY;
 
-	/** The Constant "id". */
+	/** The Constant X.ID. */
 	public static final String ID = "id";
 
 	/** The Constant "state". */
@@ -105,6 +108,10 @@ public final class X {
 	/** The Constant "UTF-8". */
 	public static final String UTF8 = "UTF-8";
 
+	public static final String GBK = "GBK";
+
+	public static final String GB2312 = "gb2312";
+
 	/** The Constant "none". */
 	public static final String NONE = "none";
 
@@ -119,15 +126,42 @@ public final class X {
 	/** the Constant "error" . */
 	public static final String ERROR = "error";
 
-	/** the Constant "created" */
+	/** the Constant X.CREATED */
 	public static final String CREATED = "created";
+
+	public static final String LIST = "list";
+
+	public static final String S = "s";
+
+	public static final String N = "n";
 
 	/** the Constant "updated" */
 	public static final String UPDATED = "updated";
 
-	public static final String VERSION = "_version";
+	public static final String NAME = "name";
+
+	public static final String OK = "ok";
+
+	public static final String YES = "yes";
+
+	public static final String NO = "no";
+
+	public static final String _VERSION = "_version";
 
 	public static final int ITEMS_PER_PAGE = 20;
+
+	/** The Constant X.IP. */
+	public static final String IP = "ip";
+
+	/** The Constant X.NODE. */
+	public static final String NODE = "node";
+
+	/** The Constant "accessed". */
+	public static final String ACCESSED = "accessed";
+
+	public static final String MD5 = "md5";
+
+	public static final String TAG = "tag";
 
 	public static final X inst = new X();
 
@@ -166,7 +200,7 @@ public final class X {
 				double d1 = X.toDouble(s1);
 				double d2 = X.toDouble(s2);
 				// 0.10000000149011612
-				return d1 > (d2 - 0.00000001) && d1 < (d2 + 0.00000001);
+				return d1 > (d2 - 0.00000000001) && d1 < (d2 + 0.00000000001);
 			}
 		}
 
@@ -622,12 +656,14 @@ public final class X {
 			"零壹贰叁肆伍陆柒捌玖拾".toCharArray() };
 
 	public static final int KB = 1024;
-	public static final int MB = 1000 * KB;
-	public static final int GB = 1000 * MB;
-	public static final int TB = 1000 * GB;
+	public static final int MB = 1024 * KB;
+	public static final int GB = 1024 * MB;
+	public static final int TB = 1024 * GB;
+
+	public static final String OS = "os";
 
 	/**
-	 * test the "s" and return a number, that convert Chinese number to real number.
+	 * test the X.S and return a number, that convert Chinese number to real number.
 	 *
 	 * @param s the s
 	 * @return char
@@ -814,7 +850,7 @@ public final class X {
 	}
 
 	/**
-	 * test the "s" is number.
+	 * test the X.S is number.
 	 *
 	 * @param s the s
 	 * @return boolean
@@ -845,10 +881,10 @@ public final class X {
 	}
 
 	/**
-	 * test is ascii
+	 * 测试字符串是否全是ASCII
 	 * 
-	 * @param s
-	 * @return
+	 * @param s - 字符串
+	 * @return true： 是
 	 */
 	public static boolean isAscii(Object s) {
 		if (s == null) {
@@ -1035,7 +1071,7 @@ public final class X {
 	}
 
 	/**
-	 * close all
+	 * 安全关闭所有链接
 	 * 
 	 * @param ss the cloeable object
 	 */
@@ -1049,12 +1085,19 @@ public final class X {
 			try {
 				s.close();
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				// ignore
+				// log.error(e.getMessage(), e);
 			}
 		}
 
 	}
 
+	/**
+	 * 求和
+	 * 
+	 * @param ii - 整数数组
+	 * @return
+	 */
 	public static int sum(int[] ii) {
 		int sum = 0;
 		if (ii != null) {
@@ -1187,6 +1230,12 @@ public final class X {
 		return l2;
 	}
 
+	/**
+	 * 判断对象是否队列/数组
+	 * 
+	 * @param o - 对象
+	 * @return
+	 */
 	public static boolean isArray(Object o) {
 
 		if (o == null) {
@@ -1218,7 +1267,18 @@ public final class X {
 	}
 
 	/**
-	 * to list
+	 * 转换为队列
+	 * 
+	 * @param <T>
+	 * @param o   - 对象
+	 * @return
+	 */
+	public static <T> List<T> asList(Object o) {
+		return asList(o, null);
+	}
+
+	/**
+	 * 转换为队列
 	 * 
 	 * @param <T>
 	 * @param <E>
@@ -1231,6 +1291,15 @@ public final class X {
 
 		if (o == null) {
 			return new ArrayList<T>();
+		}
+
+		if (cb == null) {
+			if (o instanceof List) {
+				return (List) o;
+			}
+			if (o instanceof Collection) {
+				return new ArrayList((Collection) o);
+			}
 		}
 
 		List<T> l2 = new ArrayList<T>();
@@ -1499,7 +1568,7 @@ public final class X {
 	}
 
 	/**
-	 * Descartes list
+	 * 构建笛卡尔队列
 	 * 
 	 * @param l1 the list
 	 * @param l2 the list
@@ -1784,11 +1853,41 @@ public final class X {
 			}
 			sb.append("]");
 			return sb.toString();
+		} else if (o instanceof ResultSet) {
+			StringBuilder sb = new StringBuilder("{");
+			ResultSet r = (ResultSet) o;
+			try {
+				for (int i = 0; i < r.getMetaData().getColumnCount(); i++) {
+					if (i > 0) {
+						sb.append(",");
+					}
+					sb.append(r.getMetaData().getColumnName(i + 1) + "=" + r.getObject(i + 1));
+				}
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+			sb.append("}");
+			return sb.toString();
 		} else if (o instanceof Throwable) {
+
+			Throwable ex = (Throwable) o;
+			StackTraceElement[] originalTrace = ex.getStackTrace();
+			List<StackTraceElement> filtered = new ArrayList<>();
+
+			for (StackTraceElement element : originalTrace) {
+				// 排除 JDK 底层类，只保留你项目自己的代码
+				if (!element.getClassName().startsWith("java.") && !element.getClassName().startsWith("javax.")
+						&& !element.getClassName().startsWith("sun.")) {
+					filtered.add(element);
+				}
+			}
+
+			// 将过滤后的堆栈覆盖原堆栈
+			ex.setStackTrace(filtered.toArray(new StackTraceElement[0]));
 
 			StringWriter sw = new StringWriter();
 			PrintWriter out = new PrintWriter(sw);
-			((Throwable) o).printStackTrace(out);
+			ex.printStackTrace(out);
 
 			String s = sw.toString();
 			int i = s.indexOf("\n");
@@ -1820,6 +1919,9 @@ public final class X {
 		try {
 			ObjectOutputStream out = new ObjectOutputStream(bb);
 			out.writeObject(o);
+		} catch (Exception err) {
+			log.error(o.getClass(), err);
+			throw err;
 		} finally {
 			X.close(bb);
 		}
@@ -1896,6 +1998,13 @@ public final class X {
 
 	}
 
+	/**
+	 * 对象深度复制
+	 * 
+	 * @param <T>
+	 * @param data - 对象
+	 * @return
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <T> T clone(T data) {
 
@@ -1962,6 +2071,13 @@ public final class X {
 		IOUtil.lines(s, func);
 	}
 
+	/**
+	 * 对象比较
+	 * 
+	 * @param o1
+	 * @param o2
+	 * @return -1: o1小， 1: o1大，0:相等
+	 */
 	public static int compareTo(Object o1, Object o2) {
 
 		if (o1 == null && o2 == null) {
@@ -2136,7 +2252,7 @@ public final class X {
 				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AWEEK;
 			} else if (s.endsWith("y") || s.endsWith("Y")) {
 				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AYEAR;
-			} else if (s.endsWith("s") || s.endsWith("S")) {
+			} else if (s.endsWith(X.S) || s.endsWith("S")) {
 				t2 = X.toInt(s.substring(0, s.length() - 1)) * 1000;
 			} else if (!X.isEmpty(s)) {
 				// micro-seconds
@@ -2160,10 +2276,24 @@ public final class X {
 
 	}
 
+	/**
+	 * 压缩字节
+	 * 
+	 * @param bytes
+	 * @return
+	 * @throws IOException
+	 */
 	public static byte[] zip(byte[] bytes) throws IOException {
 		return Zip.zip(bytes);
 	}
 
+	/**
+	 * 解压字节
+	 * 
+	 * @param bb
+	 * @return
+	 * @throws Exception
+	 */
 	public static byte[] unzip(byte[] bb) throws Exception {
 		return Zip.unzip(bb);
 	}
@@ -2214,7 +2344,7 @@ public final class X {
 	}
 
 	/**
-	 * format filename
+	 * 格式化文件名， 替换 \\/:*?\"<>|
 	 * 
 	 * @param filename
 	 * @return
@@ -2257,6 +2387,19 @@ public final class X {
 		}
 
 		return sb;
+	}
+
+	/**
+	 * 去除前导和后导空格/汉字空格
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public static String trim(String s) {
+		if (s == null) {
+			return s;
+		}
+		return s.trim().strip();
 	}
 
 }

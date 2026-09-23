@@ -33,6 +33,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
  * 
  * @author yjiang
  */
+@Deprecated
 public class RSA {
 
 	static Log log = LogFactory.getLog(RSA.class);
@@ -74,7 +75,7 @@ public class RSA {
 
 			return deBytes;
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 			log.error(e.getMessage(), e);
 		}
 
@@ -125,7 +126,7 @@ public class RSA {
 			return enBytes;
 		} catch (Exception e) {
 			log.error("key=" + key + ", data.length=" + data.length, e);
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 
 		return null;
@@ -158,7 +159,7 @@ public class RSA {
 			return k;
 
 		} catch (Exception e) {
-
+			log.error(e.getMessage(), e);
 		}
 
 		return null;

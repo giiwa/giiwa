@@ -61,50 +61,75 @@ $(function(){
 </script>
 
 <div class="header">
+    #if($global.getLong('user.login.showmessage', 1) == 1)
 	#if($message)
 	<div id="messageBox" class="alert alert-error">
 		<label id="loginError" class="error">$message</label>
 	</div>
 	#end
+	#end
 </div>
 <h1 class="form-signin-heading">
 	<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a>$lang.get('site.title')</div>
 </h1>
-<form id="loginForm" class="form-signin" action="/user/login" method="post" enctype="multipart/form-data">
+<form id="loginForm" class="form-signin" onsubmit="return false;">
     #if($tips2)<p style='color:#bf1717'>$!tips2</p>#end
 	<div class=''>
 		<input type="hidden" name="tips" value="$!tips" /> 
 		<input type="hidden" name="callback" value="$!callback" /> 
 		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
-		<input type="text" id="username" name="name" value="" class="form-control" required />
+		<input type="text" id="name" name="name" value="" class="form-control" required />
 	</div>
 	<div class=''>
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
-		<input type='hidden' name="pwd1" />
-		<input type="password" id="password" value="" autocomplete="new-password" class="form-control" onchange="_pwd();" required />
+		<input type="password" id="password" value="" autocomplete="new-password" class="form-control" required />
 	</div>
 	#if($global.getInt('user.captcha', 0) == 1)
 	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
 		<input type="text" id="validateCode" name="code" maxlength="4" required class="form-control">
-		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
-		<a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh ">$lang.get('a.refresh')</a>
+        <p class="item-title">
+            $lang.get('capticha.' + $global.getString('user.captcha.option', '') + '.code')
+        </p>
+        <p style="overflow: auto;">
+            <input name="code" value="$!code" tabindex="3" maxlength="4" required style="width: 161px;float: left;" />
+			#if($global.getString('user.captcha.option', '') == 'image')
+            <img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="height: 40px; width:108px;float: left;margin-top: 3px;margin-left:13px;cursor: pointer;">
+            <a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh" style="float:left;margin-left: 10px; cursor: pointer;margin-top: 13px;font-size:14px;">$lang.get('a.refresh')</a>
+            #elseif($global.getString('user.captcha.option', '') == 'sms')
+            <a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh" style="float:left;margin-left: 10px; cursor: pointer;margin-top: 13px;font-size:14px;">$lang.get('a.refresh.sms')</a>
+            #elseif($global.getString('user.captcha.option', '') == 'email')
+            <a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh" style="float:left;margin-left: 10px; cursor: pointer;margin-top: 13px;font-size:14px;">$lang.get('a.refresh.email')</a>
+            #end
+        </p>
 		<script>
-			function _oncaptcha() {
-				$.get('/f/captcha', {}, function(d) {
-					if (d.state == 200) {
-						$('#validateImg').attr('src', d.uri);
-					}
-				})
-			}
-			$(function(){
-				_oncaptcha();
-			})
+	        function _oncaptcha() {
+            	var name = $('input[name=name]').val().trim()
+				#if($global.getString('user.captcha.option', '') != 'image')
+            	if(!name || name =='') {
+            		$('#message').text('请输入用户名!')
+            		$('#message').show()
+            	}
+				#end
+                $.post('/f/captcha', {name:name}, function(d) {
+	                if (d.state == 200 && d.uri) {
+	                    $('#validateImg').attr('src', d.uri);
+	                } else {
+	            		$('#message').text(d.message)
+	            		$('#message').show()
+	                }
+	            })
+	        }
+			#if($global.getString('user.captcha.option', '') == 'image')
+	        $(function() {
+	            _oncaptcha();
+	        })
+	        #end
 		</script>
 	</div>
 	#end
 	
-	<button class="btn btn-large btn-primary btn-block" type="submit" formmethod="post">$lang.get('btn.ok')</button>
+	<button class="btn btn-large btn-primary btn-block" onclick="_submit()">$lang.get('btn.ok')</button>
 	#if($module.getFile('/user/thirdlogin.html'))
 	#parse('/user/thirdlogin.html')
 	#end
@@ -121,11 +146,31 @@ $(function(){
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
 <script>
-function _pwd(){
-	var s = $('#password').val();
-	s = giiwa.encode(s);
-	$('input[name=pwd1]').val(s);
-}
+    function _submit() {
+        var name = $('#name').val();
+        var pwd = $('#password').val();
+        $.post('/f/pubkey', function(r){
+            var pubkey = r.key
+            var time = r.time
+            var s = name + '$$' + pwd + '$$' + time
+            const jse = new JSEncrypt();
+            jse.setPublicKey(pubkey);
+            var auth = jse.encrypt(s);
+            
+            $.post('/user/login', {auth: auth}, function(r){
+                if(r.state == 200) {
+                    if(r.uri) {
+                        window.location.href = r.uri
+                    } else {
+                        window.location.href = '/'
+                    }
+                } else {
+                    $('#message').text(r.error)
+                    $('#message').show()
+                }
+            })
+        })
+    }
 </script>
 #parse('/user/foot.html')
 

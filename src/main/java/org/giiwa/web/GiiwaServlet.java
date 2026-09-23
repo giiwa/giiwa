@@ -15,6 +15,7 @@
 package org.giiwa.web;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,6 +54,8 @@ public class GiiwaServlet extends HttpServlet {
 			throw new IOException("not inited");
 		}
 
+		TimeStamp t = TimeStamp.create();
+
 		try {
 
 			TPS.add();
@@ -60,12 +63,10 @@ public class GiiwaServlet extends HttpServlet {
 			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 			Thread.currentThread().setName("http." + _seq.incrementAndGet());
 
-			TimeStamp t = TimeStamp.create();
-
 			RequestHelper r1 = RequestHelper.create((HttpServletRequest) req);
 			HttpServletResponse r2 = (HttpServletResponse) resp;
 
-			String uri = r1.getRequestURI();
+			final String uri = r1.getRequestURI();
 
 			if (log.isDebugEnabled()) {
 				log.debug(req.getMethod() + " - " + uri + " - " + _ip(req));
@@ -79,20 +80,24 @@ public class GiiwaServlet extends HttpServlet {
 
 			Controller mo = null;
 			try {
+				log.info(r1.getMethod() + " - " + uri + ", incoming - " + _ip(req));
 				mo = Controller.process(uri, r1, r2, req.getMethod(), t);
 			} catch (Exception e) {
 				throw new IOException(e);
 			} finally {
 				if (t.pastms() > 3000) {
 					// 超过3秒
-					log.warn(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req) + ", body="
-							+ (mo == null ? null : mo.json()));
+					String body = mo == null ? null : mo.json().toString();
+					if (body != null && body.length() > 100) {
+						body = body.substring(0, 97) + "...";
+					}
+					log.warn(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req) + ", body=" + body);
 				} else if (log.isInfoEnabled()) {
 					log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req));
 				}
 			}
 		} finally {
-			TPS.dec();
+			TPS.dec(t.pastms());
 		}
 
 	}
@@ -129,40 +134,75 @@ public class GiiwaServlet extends HttpServlet {
 
 	static class TPS {
 
-		static long total;
-		static long last;
-		static long now;
-		static long online;
+		static long total; // 总请求
+		static long last; // 上1分钟请求数
+		static long lastduration; // 上一次时长
+		static long lastcost; // 上1分钟耗时
+
+		static long now; // 当前分钟请求数
+		static long nowcost; // 当前分钟耗时
+		static long online; // 当前处理的请求
 
 		static long started = 0;
 
-		static boolean inited = false;
+		private static final ReentrantLock door = new ReentrantLock();
 
-		public synchronized static void add() {
-			if (!inited) {
+		static {
+			door.lock();
+			try {
 				Node n = Local.node();
-				total = n.totalrequest;
-				inited = true;
-			}
-			now++;
-			online++;
-			total++;
-			if (Global.now() - started > X.AMINUTE) {
-				last = now;
-				now = 0;
-				started = Global.now();
-
-				Node.dao.update(Local.id(), V.create().append("totalrequest", total));
-
+				total = (n != null) ? n.totalrequest : 0;
+			} finally {
+				door.unlock();
 			}
 		}
 
-		public synchronized static void dec() {
-			online--;
+		public static void add() {
+			door.lock();
+			try {
+				now++;
+				online++;
+				total++;
+			} finally {
+				door.unlock();
+			}
 		}
 
-		public synchronized static long get() {
-			return last / 60;
+		public static void dec(long cost) {
+			door.lock();
+			try {
+				online--;
+				nowcost += cost;
+			} finally {
+				door.unlock();
+			}
+		}
+
+		public static long get() {
+			door.lock();
+			try {
+				if (Global.now() - started > X.AMINUTE) {
+					last = now;
+					lastcost = nowcost;
+					lastduration = Global.now() - started;
+
+					now = 0;
+					started = Global.now();
+					nowcost = 0;
+
+					Node.dao.update(Local.id(), V.create().append("totalrequest", total));
+				}
+				return last * 1000 / lastduration;
+			} finally {
+				door.unlock();
+			}
+		}
+
+		public static long latency() {
+			if (last > 0) {
+				return lastcost / last;
+			}
+			return 0;
 		}
 
 	}
@@ -173,6 +213,10 @@ public class GiiwaServlet extends HttpServlet {
 
 	public static long total() {
 		return TPS.total;
+	}
+
+	public static long latency() {
+		return TPS.latency();
 	}
 
 }

@@ -37,6 +37,7 @@ import org.bouncycastle.util.io.pem.PemWriter;
  * 
  * @author yjiang
  */
+@Deprecated
 public class SM2 {
 
 	static Log log = LogFactory.getLog(SM2.class);

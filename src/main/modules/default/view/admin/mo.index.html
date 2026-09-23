@@ -1,5 +1,6 @@
 <div class='tabs'>
 	<a href='/admin/mo?__node=$!__node' class='selected'>$lang.get('a.mo')</a>
+	<a href='/admin/mo/global?__node=$!__node'>$lang.get('a.mo.global')</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -9,6 +10,7 @@
 	<thead>
 		<tr>
 			<th style="width: 60px;"></th>
+			<th style="width: 80px;">Node</th>
 			<th style="width: 80px;">ID</th>
 			<th style="width: 200px;">URI</th>
 			<th style="width: 180px;">Controller</th>
@@ -24,9 +26,12 @@
 			#set($i=$i+1)
 			<td class='a'>
 				$i
+				#if($f.node == $local.label())
 				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.id")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
 				<a class="hint hint--bottom" href="javascript:;" onclick='_dump("$f.id")' data-hint="Dump" style="float: right;margin-top: 5px;"><i class='icon-reply'></i></a>
+				#end
 			</td>
+			<td>$!f.node</td>
 			<td>$!f.id</td>
 			<td>$!f.uri</td> 
 			<td>$!f.mo</td>

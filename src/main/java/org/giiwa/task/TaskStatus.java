@@ -42,7 +42,7 @@ public class TaskStatus implements Serializable {
 
 		pending = Task.tasksInQueue(Task.GLOBAL, Task.SYSGLOBAL);
 		running = Task.tasksInRunning(Task.GLOBAL, Task.SYSGLOBAL);
-		cores = Task.cores;
+		cores = Runner.cores;
 
 		list = X.asList(Task.getRunningTask(Task.GLOBAL, Task.SYSGLOBAL), e -> {
 			Task t = (Task) e;

@@ -41,7 +41,7 @@ public class _File extends Bean {
 
 	public static BeanDAO<String, _File> dao = BeanDAO.create(_File.class);
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size=64)
 	String id;
 
 	@Column(memo = "节点", size=50)
@@ -68,7 +68,7 @@ public class _File extends Bean {
 			String name = jo.name;
 
 			V v = jo.toV();
-			v.append("node", node);
+			v.append(X.NODE, node);
 			v.remove("_id");
 
 			String id = UID.id(node, name);
@@ -95,7 +95,7 @@ public class _File extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

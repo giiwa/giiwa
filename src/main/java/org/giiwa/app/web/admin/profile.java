@@ -28,7 +28,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.noti.Email;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
@@ -79,7 +78,7 @@ public class profile extends Controller {
 				s.set("lang", lang);
 				s.set("module", module);
 				s.set("__node", this.getString("__node"));
-				s.set("name", name);
+				s.set(X.NAME, name);
 				s.set("settings", names);
 				s.set("me", this.user());
 				s.show("/admin/profile.html");
@@ -99,7 +98,7 @@ public class profile extends Controller {
 	 *
 	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true, oplog = true)
+	@Path(path = "set/(.*)", login = true, oplog = true, loglevel="warn")
 	final public void set(String name) {
 
 		// this.query.path("/admin/profile/get/" + name);
@@ -117,7 +116,7 @@ public class profile extends Controller {
 
 				// s.set("lang", lang);
 				// s.set("module", module);
-				// s.set("name", name);
+				// s.set(X.NAME, name);
 				// s.set("settings", names);
 				// s.show("/admin/profile.html");
 			} catch (Exception e) {
@@ -157,7 +156,7 @@ public class profile extends Controller {
 
 		if (!names.isEmpty()) {
 			String name = names.get(0);
-			this.set("name", name);
+			this.set(X.NAME, name);
 			get(name);
 			return;
 		}
@@ -215,7 +214,7 @@ public class profile extends Controller {
 
 					login.update(v);
 
-					login = User.dao.load(login.getId());
+					login = User.load(login.getId());
 					AuthToken.delete(login.getId());
 					this.user(login, LoginType.web);
 
@@ -255,15 +254,15 @@ public class profile extends Controller {
 		if (!X.isEmpty(email)) {
 			String code = UID.random(10);
 			Code.create(email, code, V.create("expired", Global.now() + X.AMINUTE * 10));
-			try {
-				if (Email.send(lang.get("email.verify.subject"), code, email)) {
-					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
-					return;
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.ip());
-			}
+//			try {
+//				if (Email.send(lang.get("email.verify.subject"), code, email)) {
+//					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
+//					return;
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.ip());
+//			}
 		}
 		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));
 	}

@@ -6,8 +6,8 @@ group = 'org.giiwa'
 version = '1.0'
 description = 'readme'
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 17
+targetCompatibility = 17
 
 def buildno = new Date().format("yyMMddHHmm")
 
@@ -40,16 +40,19 @@ sourceSets {
 		java {
 			srcDirs = ['src/model/java']
 		}
-		test {
-			java {
-				srcDirs = ['src/test/java']
-			}
+	}
+	test {
+		java {
+			srcDirs = ['src/test/java']
 		}
 	}
 }
 
 dependencies {
 
+    implementation fileTree(dir: 'depends', include:['*.jar'])
+    implementation fileTree(dir: 'src/WEB-INF/lib', include:['*.jar'])
+    
 	// https://mvnrepository.com/artifact/com.google.iot.coap/coap
 	//implementation ('com.google.iot.coap:coap:0.02.01'){
     //	exclude group: 'org.json',module: 'json'
@@ -59,30 +62,33 @@ dependencies {
     //	exclude group: 'com.google.errorprone',module: 'error_prone_annotations'
 	//}
 
-    implementation fileTree(dir: 'depends', include:['*.jar'])
-    implementation fileTree(dir: 'src/WEB-INF/lib', include:['*.jar'])
     
 }
 
 task prepare(dependsOn: [build]) {
 	doLast {
-/*		exec { 
-			commandLine 'git', 'add', '.'
-		}
-		exec {
-			commandLine 'git', 'commit', '-m', 'auto commit'
-		}
-		exec {
-			commandLine 'git', 'tag', version + '.' + buildno
-		}
-		exec { 
-			commandLine 'git', 'push', '--tags'
+
+/*		try{	
+			exec { 
+				commandLine 'git', 'add', '.'
+			}
+			exec {
+				commandLine 'git', 'commit', '-m', 'auto commit'
+			}
+			exec {
+				commandLine 'git', 'tag', version + '.' + buildno
+			}
+			exec { 
+				commandLine 'git', 'push', '--tags'
+			}
+		}catch(Exception e){
+			println e
 		}
 */		
 		copy{
 			println 'copy source'
 		    from('src')
-		    into('build/demo/')
+		    into('build/qwen/')
 		    exclude('model')
 		    exclude('test')
 		    exclude('.DS_Store')
@@ -105,11 +111,17 @@ task prepare(dependsOn: [build]) {
 
 		copy{
 			println 'merge depends'
-		    from configurations.runtimeClasspath
-		    into('build/libs')
-		    exclude {detail->{
-		    	return detail.file.path.contains('/depends/'); 
-		    }}
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from configurations.runtimeClasspath
+            into('build/libs')
+            exclude {
+              detail->{
+                def destFile = file("depends/${detail.file.name}")
+                //if (destFile.exists()){
+                //    println detail.file.name + ': ' + detail.file.path 
+                //}
+                return destFile.exists()
+            }}
 		}
 		copy {
 			println 'copy *.jar to WEB-INF/lib'

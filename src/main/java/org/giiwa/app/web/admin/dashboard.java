@@ -70,12 +70,12 @@ public class dashboard extends Controller {
 		if (login != null && login.hasAccess("access.config.admin")) {
 
 			this.set("nets",
-					_Net.dao.load(W.create().and("node", Local.id())
+					_Net.dao.load(W.create().and(X.NODE, Local.id())
 							.and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1), 0,
 							100));
 
 			this.set("disks",
-					_DiskIO.dao.load(W.create().and("node", Local.id())
+					_DiskIO.dao.load(W.create().and(X.NODE, Local.id())
 							.and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("path", 1), 0,
 							100));
 
@@ -101,7 +101,7 @@ public class dashboard extends Controller {
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 
-			this.set("nets", _Net.dao.load(W.create().and("node", Local.id()).sort("inet", 1), 0, 100));
+			this.set("nets", _Net.dao.load(W.create().and(X.NODE, Local.id()).sort("inet", 1), 0, 100));
 
 			this.show("/admin/dashboard.html");
 

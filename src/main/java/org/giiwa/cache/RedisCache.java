@@ -39,6 +39,7 @@ public class RedisCache implements ICacheSystem {
 	/** The log. */
 	static Log log = LogFactory.getLog(RedisCache.class);
 
+	@SuppressWarnings("deprecation")
 	private JedisPool pool;
 	public String url;
 
@@ -111,8 +112,11 @@ public class RedisCache implements ICacheSystem {
 			byte[] key = name.getBytes();
 			byte[] bb = e.get(key);
 			if (bb != null) {
+				Cache.error = 0;
 				return unserialize(bb);
 			}
+		} catch (Exception err) {
+			Cache.error = 1;
 		} finally {
 			e.close();
 		}
@@ -126,15 +130,23 @@ public class RedisCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
+	@SuppressWarnings("deprecation")
 	public synchronized boolean set(String name, Object o, long expired) {
 		if (o == null) {
 			return delete(name);
 		} else {
 			Jedis e = pool.getResource();
 			try {
-				return e.psetex(name.getBytes(), expired, serialize(o)) != null;
+//				if (expired <= 0) {
+//					return false;
+//				}
+
+				boolean r = e.psetex(name.getBytes(), expired, serialize(o)) != null;
+				Cache.error = 0;
+				return r;
 			} catch (Exception e1) {
 				log.error("name=" + name + ", o=" + o + ", expired=" + expired, e1);
+				Cache.error = 1;
 			} finally {
 				e.close();
 			}
@@ -197,8 +209,9 @@ public class RedisCache implements ICacheSystem {
 
 		Jedis e = pool.getResource();
 		try {
+
 			SetParams p = new SetParams();
-			p.ex(12L);
+			p.ex(60L);
 			p.nx();
 
 			String n = e.set(name, "1", p);
@@ -211,10 +224,10 @@ public class RedisCache implements ICacheSystem {
 		}
 	}
 
-	public synchronized void expire(String name, long ms) {
+	public synchronized boolean expire(String name, long ms) {
 		Jedis e = pool.getResource();
 		try {
-			e.pexpire(name, ms);
+			return e.pexpire(name, ms) == 1;
 		} finally {
 			e.close();
 		}

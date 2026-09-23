@@ -14,6 +14,7 @@
 */
 package org.giiwa.web;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,8 +22,12 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Task;
 
 public class Processing {
 
@@ -43,6 +48,66 @@ public class Processing {
 		}
 	}
 
+	/**
+	 * 获取所有节点的请求列表
+	 * 
+	 * @return
+	 */
+	public static List<JSON> getAll2() {
+
+		List<JSON> l1 = new ArrayList<JSON>();
+
+		try {
+
+			Task.call("processing", "", req -> {
+
+				String from = req.from;
+
+				if (log.isInfoEnabled()) {
+					log.info("list task	, from=" + from);
+				}
+
+				try {
+
+					List<JSON> s = req.get();
+					if (s != null) {
+						l1.addAll(s);
+					}
+
+				} catch (Exception e) {
+					GLog.applog.error("sys", "processing", "from=" + from + ", error=" + e.getMessage(), e);
+				}
+
+				return true;
+			});
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		Collections.sort(l1, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				long cost1 = o1.getLong("cost");
+				long cost2 = o2.getLong("cost");
+				if (cost1 > cost2) {
+					return -1;
+				} else if (cost1 < cost2) {
+					return 1;
+				}
+				return 0;
+			}
+
+		});
+
+		return l1;
+	}
+
+	/**
+	 * 获取本节点请求列表
+	 * 
+	 * @return
+	 */
 	public static List<JSON> getAll() {
 
 		List<JSON> l1 = JSON.createList();
@@ -60,9 +125,10 @@ public class Processing {
 					JSON j1 = JSON.create();
 					j1.append("uri", mo.uri);
 					j1.append("browser", mo.browser());
-					j1.append("ip", mo.ipPath());
-					j1.append("id", mo.id);
+					j1.append(X.IP, mo.ipPath());
+					j1.append(X.ID, mo.id);
 					j1.append("mo", mo.getClass().getName());
+					j1.append(X.NODE, Local.label());
 					j1.append("cost", Global.now() - mo.created);
 					j1.append("thread", mo.thread.getName());
 

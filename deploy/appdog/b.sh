@@ -4,30 +4,28 @@
 
 source /etc/profile
 
-cd /home/disk1/backup/
+home=/home/disk3/backup
+
+cd $home
+
 echo '===start===='>>b.log
 echo `date` >> b.log
 
-#cleanup
-rm -rf dump
-
 #dump
-mongodump --host g09 --port 27018 -d demo
+mongodump --host s132 --port 27018 -d prod --gzip -o $home/pdc2_$(date +%Y%m%d)
 
 #restore
-#mongorestore --host g09 --port 27018 -d demo .
+#mongorestore --drop --host s110 --port 55011 -d demo dump/demo
 
-#tar, very slow
-#tar czf demo_`date +%Y%m%d`.tgz  dump
+#dump
+mongodump --host s04 --port 27018 -d prod --gzip -o $home/pdc1_$(date +%Y%m%d)
 
-#move
-mv dump /home/disk3/backup/pdc1/`date '+%Y%m%d'`/
-
-#cleanup
-rm -rf dump
+#restore
+#mongorestore --drop --host s110 --port 55011 -d dw dump/dw/
 
 #cleanup old dump
-find /home/disk3/backup/pdc1/ -maxdepth 1 -mtime +10 -type d -name "*" -exec \rm -rf {} \;
+find $home -maxdepth 1 -mtime +5 -type d -name "pdc1_*" -exec \rm -rf {} \;
+find $home -maxdepth 1 -mtime +5 -type d -name "pdc2_*" -exec \rm -rf {} \;
 
 echo `date` >> b.log
 echo '===end=====' >> b.log

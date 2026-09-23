@@ -25,6 +25,8 @@ div.limited, div.trial, div.issue, div.inactive{
 
 <div class="btns">
 	<a class="btn btn-success" href="javascript:;" onclick="_module();">$lang.get("a.upload.module")</a>
+	&nbsp;&nbsp;
+	<a class="btn btn-info" href="javascript:;" onclick="_license();">$lang.get("a.upload.license")</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -37,7 +39,6 @@ div.limited, div.trial, div.issue, div.inactive{
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
 			<th style="width:20%">$lang.get('module.readme')</th>
-			<th>$lang.get('module.javadoc')</th>
 			<th style="width:20%">$lang.get('module.license')</th>
 			<th></th>
 		</tr>
@@ -54,9 +55,14 @@ div.limited, div.trial, div.issue, div.inactive{
 			<td>$!f.version</td>
 			<td>$!f.build</td>
 			<td>$!f.readme</td>
-			<td class="a"><a href="/$!f.name/javadoc/" target="_blank">/$!f.name/javadoc/</a></td>
 			<td class="a" style="color: #888;font-style: italic;">
 				<div class="$!f.license">$!lang.get("license_$!f.license")#if($f.get('company'))//$!f.get('company')#end</div>
+				<div>
+					#set($e=$f.license())
+					#foreach($s in $e.keySet())
+					<p>${s}=${e.get($s)}</p>
+					#end
+				</div>
 			</td>
 			<td class="a">
 				#if($f.id > 0)

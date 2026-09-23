@@ -80,7 +80,7 @@ public class policy extends Controller {
 	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
@@ -112,12 +112,12 @@ public class policy extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
 		JSON jo = new JSON();
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		Policy.dao.delete(id);
 		jo.put(X.STATE, 200);
 
@@ -134,15 +134,15 @@ public class policy extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		if (!X.isEmpty(name)) {
 			q.or("client", name, W.OP.like).or("url", name, W.OP.like);
-			this.put("name", name);
+			this.put(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 		q.sort("seq");
 
 		Policy.dao.optimize(q);
@@ -151,7 +151,7 @@ public class policy extends Controller {
 		bs.count();
 		this.pages(bs, s, n);
 
-		this.set("ip", this.ip());
+		this.set(X.IP, this.ip());
 
 		this.show("/admin/policy.index.html");
 	}

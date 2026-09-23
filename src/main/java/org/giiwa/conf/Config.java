@@ -37,6 +37,8 @@ import org.giiwa.dao.X;
 import org.giiwa.web.Controller;
 
 /**
+ * 配置文件
+ * 
  * The Class Config is whole configuration of system, usually is a copy of
  * "giiwa.properties"
  */
@@ -112,7 +114,7 @@ public final class Config {
 
 			if (file != null && file.exists()) {
 				c1 = new PropertiesConfiguration();
-				re = new InputStreamReader(new FileInputStream(file), "UTF-8");
+				re = new InputStreamReader(new FileInputStream(file), X.UTF8);
 				c1.read(re);
 				re.close();
 				re = null;
@@ -137,6 +139,11 @@ public final class Config {
 			if (!conf.containsKey("site.name")) {
 				conf.setProperty("site.name", "default");
 			}
+
+			// 2026-02-07, 添加环境变量作为配置信息
+//			for (String s : System.getenv().keySet()) {
+//				conf.addProperty(s, System.getenv(s));
+//			}
 
 			// check and upgrade
 			checkAndUpgrade();
@@ -211,8 +218,8 @@ public final class Config {
 		}
 
 		if (!conf.containsKey("node.name")) {
-			conf.setProperty("node.name", conf.getString("node", X.EMPTY));
-			conf.setProperty("node", null);
+			conf.setProperty("node.name", conf.getString(X.NODE, X.EMPTY));
+			conf.setProperty(X.NODE, null);
 			c = true;
 		}
 
@@ -296,6 +303,12 @@ public final class Config {
 	 * rename the old properties, and save the new
 	 */
 	public synchronized static void save2() {
+
+		if (confFile == null) {
+			// not config file, ignroe
+			log.warn("ignore as not config the [giiwa.proerpties]");
+			return;
+		}
 
 		conf.setProperty("home", null);
 

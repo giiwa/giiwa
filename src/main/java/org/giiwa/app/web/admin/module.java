@@ -28,12 +28,12 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.bean.*;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.MD5;
+import org.giiwa.crypto.RSA;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.MD5;
-import org.giiwa.misc.RSA;
 import org.giiwa.misc.Shell;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
@@ -82,7 +82,7 @@ public class module extends Controller {
 			}
 			this.send(jo);
 		} else {
-			this.set("id", Global.getInt("module.id.next", 100));
+			this.set(X.ID, Global.getInt("module.id.next", 100));
 			this.show("/admin/module.create.html");
 		}
 	}
@@ -95,8 +95,8 @@ public class module extends Controller {
 	 */
 	public String createmodule() throws Exception {
 
-		int id = this.getInt("id");
-		String name = this.getString("name");
+		int id = this.getInt(X.ID);
+		String name = this.getString(X.NAME);
 		String package1 = this.getString("package");
 		String lifelistener = package1 + "." + name.substring(0, 1).toUpperCase() + name.substring(1) + "Listener";
 		String readme = this.getString("readme");
@@ -134,7 +134,7 @@ public class module extends Controller {
 				for (File f2 : ff1) {
 					try {
 						// if (includes || none || Jar.dao.exists(W.create("module",
-						// "default").and("name", f2.getName()))) {
+						// "default").and(X.NAME, f2.getName()))) {
 						if (f2.isFile()) {
 							if (log.isDebugEnabled())
 								log.debug("name=" + f2.getName());
@@ -181,10 +181,10 @@ public class module extends Controller {
 			Element root = doc.addElement("module");
 			root.addAttribute("version", "0");
 
-			Element e = root.addElement("id");
+			Element e = root.addElement(X.ID);
 			e.setText(Integer.toString(id));
 
-			e = root.addElement("name");
+			e = root.addElement(X.NAME);
 			e.setText(name);
 
 			e = root.addElement("package");
@@ -211,7 +211,7 @@ public class module extends Controller {
 			e = root.addElement("required");
 			e.addComment("add all required modules here");
 			Element e1 = e.addElement("module");
-			e1.addAttribute("name", "default");
+			e1.addAttribute(X.NAME, "default");
 			org.giiwa.web.Module m0 = org.giiwa.web.Module.load("default");
 			e1.addAttribute("minversion", m0.getVersion() + "." + m0.getBuild());
 			e1.addAttribute("maxversion", m0.getVersion() + ".*");
@@ -220,7 +220,7 @@ public class module extends Controller {
 			e.setText(key.pri_key);
 
 			OutputFormat format = OutputFormat.createPrettyPrint();
-			format.setEncoding("UTF-8");
+			format.setEncoding(X.UTF8);
 			XMLWriter writer = new XMLWriter(out, format);
 			writer.write(doc);
 
@@ -593,43 +593,42 @@ public class module extends Controller {
 		return out;
 	}
 
-//	@Path(path = "license", login = true, access = "access.config.admin")
-//	public void license() {
-//
-//		String url = this.getString(X.URL);
-//		Entity e = Repo.load(url);
-//		BufferedReader in = null;
-//
-//		try {
-//			in = new BufferedReader(new InputStreamReader(e.getInputStream()));
-//			String name = in.readLine();
-//
-//			String code = in.readLine();
-//			String content = in.readLine();
-//
-//			License a = new License();
-//			a.set(X.ID, name);
-//			a.set("code", code);
-//			a.set("content", content);
-//
-//			if (a.decode()) {
-//				a.store();
-//
-//				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
-//			} else {
-//				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("license.bad")));
-//			}
-//
-//		} catch (Exception e1) {
-//			log.error(e1.getMessage(), e1);
-//			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.ip());
-//
-//			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
-//		} finally {
-//			X.close(in);
-//			e.delete();
-//		}
-//	}
+	@Path(path = "license", login = true, access = "access.config.admin")
+	public void license() {
+
+		String url = this.getString(X.URL);
+		BufferedReader in = null;
+
+		try {
+			DFile f1 = Disk.seek(url);
+			in = new BufferedReader(new InputStreamReader(f1.getInputStream()));
+			String name = in.readLine();
+
+			String code = in.readLine();
+			String content = in.readLine();
+
+			License a = new License();
+			a.set(X.ID, name);
+			a.set("code", code);
+			a.set("content", content);
+
+			if (a.decode()) {
+				a.store();
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			} else {
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("license.bad")));
+			}
+
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.ip());
+
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
+		} finally {
+			X.close(in);
+		}
+
+	}
 
 	/**
 	 * Adds the.
@@ -640,6 +639,7 @@ public class module extends Controller {
 		String url = this.getString(X.URL);
 
 		JSON jo = new JSON();
+		DFile d = null;
 
 		try {
 
@@ -649,8 +649,9 @@ public class module extends Controller {
 			}
 
 			boolean restart = false;
-			DFile d = Disk.seek(url);
-			if (d.getName().endsWith(".jar")) {
+			d = Disk.seek(url);
+			if (d != null && d.getName().endsWith(".jar")) {
+				log.info("upgrade jar only: " + d.getName());
 				// upgrade jar file only
 				List<Module> l1 = Module.getAll(true);
 				for (Module m : l1) {
@@ -658,11 +659,15 @@ public class module extends Controller {
 						restart = true;
 					}
 				}
+			} else if (d != null && (d.getName().endsWith(".tgz") || d.getName().endsWith(".tar.gz"))) {
+				Temp t = d.download();
+				Shell.bash("tar xzf " + t.getFilename() + " -C " + Controller.GIIWA_HOME, X.AMINUTE * 10);
+				restart = true;
 			} else {
 				restart = org.giiwa.web.Module.prepare(d);
 			}
 
-			jo.put("result", "ok");
+			jo.put("result", X.OK);
 
 			if (restart) {
 				jo.put(X.STATE, 201);
@@ -699,6 +704,11 @@ public class module extends Controller {
 			jo.put(X.STATE, 404);
 			jo.put(X.ERROR, e1.getMessage());
 
+			// 这个包坏掉了， 删掉
+			if (d != null) {
+				d.delete();
+			}
+
 		}
 
 		org.giiwa.web.Module.reset();
@@ -721,7 +731,7 @@ public class module extends Controller {
 		}
 
 		Configuration conf = Config.getConf();
-		this.set("node", conf.getString("node.name", ""));
+		this.set(X.NODE, conf.getString("node.name", ""));
 
 		this.set("actives", actives);
 
@@ -733,7 +743,7 @@ public class module extends Controller {
 			this.set("atime", lang.format(time, "yyyy-MM-dd"));
 		}
 
-		this.set("list", org.giiwa.web.Module.getAll(false));
+		this.set(X.LIST, org.giiwa.web.Module.getAll(false));
 
 		this.show("/admin/module.index.html");
 
@@ -745,12 +755,13 @@ public class module extends Controller {
 	@Path(path = "download", login = true, access = "access.config.admin", oplog = true)
 	public void download() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		/**
 		 * zip module
 		 */
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
+
 		String file = ROOT + name + ".zip";
 		File f = m.zipTo(Controller.GIIWA_HOME + "/modules/" + file);
 		if (f != null && f.exists()) {
@@ -769,9 +780,9 @@ public class module extends Controller {
 	/**
 	 * Disable.
 	 */
-	@Path(path = "disable", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "disable", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void disable() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
 		m.setEnabled(false);
@@ -788,8 +799,8 @@ public class module extends Controller {
 	 */
 	@Path(path = "update", login = true, access = "access.config.admin", oplog = true)
 	public void update() {
-		String name = this.getString("name");
-		int id = this.getInt("id");
+		String name = this.getString(X.NAME);
+		int id = this.getInt(X.ID);
 
 		JSON jo = new JSON();
 		if (id > 0) {
@@ -810,7 +821,7 @@ public class module extends Controller {
 	 */
 	@Path(path = "enable", login = true, access = "access.config.admin", oplog = true)
 	public void enable() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
 		m.setEnabled(true);
@@ -822,9 +833,9 @@ public class module extends Controller {
 		onGet();
 	}
 
-	@Path(path = "deletelicense", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "deletelicense", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void deletelicense() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		License.dao.delete(name);
 		License.remove(name);
 
@@ -834,9 +845,9 @@ public class module extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void delete() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
 		m.delete();
 
@@ -855,9 +866,9 @@ public class module extends Controller {
 	@Path(path = "query")
 	public void _query() {
 
-		String repo = Config.getConf().getString("module.repo", "no");
-		if (X.isIn(repo, "yes")) {
-			String name = this.getString("name");
+		String repo = Config.getConf().getString("module.repo", X.NO);
+		if (X.isIn(repo, X.YES)) {
+			String name = this.getString(X.NAME);
 
 			String[] ss = X.split(name, "[,;]");
 
@@ -895,17 +906,17 @@ public class module extends Controller {
 						if (f1 != null && f1.exists()) {
 
 							JSON j1 = JSON.create();
-							j1.append("name", s);
+							j1.append(X.NAME, s);
 
 							j1.append("version", m.getVersion());
 							j1.append("build", m.getBuild());
-							j1.append("uri", "/f/d/" + f1.getId() + "/" + f1.getName());
+							j1.append(X.URI, "/f/d/" + f1.getId() + "/" + f1.getName());
 							String md5 = Global.getString("module." + s + ".md5", null);
 							if (X.isEmpty(md5)) {
 								md5 = MD5.md5(f1.getInputStream());
 								Global.setConfig("module." + s + ".md5", md5);
 							}
-							j1.append("md5", md5);
+							j1.append(X.MD5, md5);
 
 							r1.add(j1);
 						}
@@ -918,7 +929,7 @@ public class module extends Controller {
 //			log.warn("modules, 3=" + t.past() + ", r1=" + r1);
 //			t.reset();
 
-			this.set("list", r1).send(200);
+			this.set(X.LIST, r1).send(200);
 
 		} else {
 			this.set(X.ERROR, "module.repo disabled!").send(201);

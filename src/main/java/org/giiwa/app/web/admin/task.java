@@ -24,14 +24,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.bean.GLog;
-import org.giiwa.bean.Node;
-import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Host;
 import org.giiwa.misc.Shell;
-import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Task;
 import org.giiwa.task.TaskConfig;
 import org.giiwa.task.TaskStatus;
@@ -65,7 +61,7 @@ public class task extends Controller {
 //		this.set("idle", Task.idleThread());
 //		this.set("active", Task.activeThread());
 
-		this.set("list", Task.getAll());
+		this.set(X.LIST, Task.getAll());
 
 		this.show("/admin/task.index.html");
 	}
@@ -77,17 +73,11 @@ public class task extends Controller {
 		AtomicLong running = new AtomicLong(0);
 		AtomicLong cores = new AtomicLong(0);
 
-		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-		q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
-
 		List<JSON> task = new ArrayList<JSON>();
-		List<String> has = new ArrayList<String>();
 
 		try {
 
-			long n = q.count();
-
-			MQ.callTopic(Task.MQNAME, "list", "", 5000, req -> {
+			Task.call(X.LIST, "", req -> {
 
 				String from = req.from;
 
@@ -119,26 +109,18 @@ public class task extends Controller {
 				} catch (Exception e) {
 					GLog.applog.error("sys", "task", "from=" + from + ", error=" + e.getMessage(), e);
 				}
-
-				has.add(req.from);
-				if (has.size() >= n) {
-					// 结束
-					return true;
-				} else {
-					return false;
-				}
+				return true;
 			});
 		} catch (Exception e) {
-			log.error("got " + has.toString(), e);
-			GLog.applog.error("task", "checking", "got " + has.toString(), e);
+			log.error(e.getMessage(), e);
 		}
 
 		Collections.sort(task, new Comparator<JSON>() {
 
 			@Override
 			public int compare(JSON o1, JSON o2) {
-				String name1 = o1.getString("name");
-				String name2 = o2.getString("name");
+				String name1 = o1.getString(X.NAME);
+				String name2 = o2.getString(X.NAME);
 				return X.compareTo(name1, name2);
 			}
 
@@ -147,15 +129,15 @@ public class task extends Controller {
 		this.set("running", running.get());
 		this.set("cores", cores.get());
 
-		this.set("list", task);
+		this.set(X.LIST, task);
 
 		this.show("/admin/task.global.html");
 
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void kill() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		Task t = Task.get(name);
 		t.stop(false);
 
@@ -163,9 +145,9 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "dump", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "dump", login = true, access = "access.config.admin")
 	public void dump() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		Task t = Task.get(name);
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
@@ -178,18 +160,19 @@ public class task extends Controller {
 							.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
 							.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName()).append("\r");
 
-					sb.append("<div style='color: .888;'>").append(t.onDump(new StringBuilder()).toString())
+					sb.append("<div style='color: .888;'>").append(t.getState(new StringBuilder()).toString())
 							.append("</div>");
 
 					if (ss != null && ss.length > 0) {
+						sb.append(t1.getState() + "\r");
 						for (StackTraceElement e : ss) {
-
-							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("\r");
+							sb.append("  ").append(e.toString()).append("\r");
 						}
 					}
 				} else {
-					sb.append("thread is null, scheduled=" + t.isScheduled() + ", isrunning=" + t.isRunning()
-							+ ", runtimes=" + t.getRuntimes() + ", sf=" + t.getSF());
+					t.getState(sb);
+					sb.append("-------\r\nscheduled=" + t.isScheduled() + "\risrunning=" + t.isRunning()
+							+ "\rruntimes=" + t.getRuntimes() + "\rsf=" + t.getSF());
 				}
 			}
 			if (sb.length() > 0) {
@@ -211,13 +194,13 @@ public class task extends Controller {
 
 	@Path(path = "trace", login = true, access = "access.config.admin", oplog = true)
 	public void trace() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		Task t = Task.get(name);
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
 		try {
 			if (t != null) {
-				sb.append("<pre>" + t.getTrace() + "</pre>");
+				sb.append("<pre>" + t.getState(new StringBuilder()) + "</pre>");
 			}
 			if (sb.length() > 0) {
 				j.put(X.STATE, 200);
@@ -236,7 +219,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "dumpall", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "dumpall", login = true, access = "access.config.admin")
 	public void dumpall() {
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
@@ -290,7 +273,7 @@ public class task extends Controller {
 	@Path(login = true, path = "thread/kill", access = "access.config.admin", oplog = true)
 	public void thread_kill() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		try {
 			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
@@ -328,10 +311,10 @@ public class task extends Controller {
 					}
 
 					JSON j = JSON.create();
-					j.append("name", t.getName());
+					j.append(X.NAME, t.getName());
 					j.append("priority", t.getPriority());
-					j.append("id", t.getId());
-					j.append("state", t.getState());
+					j.append(X.ID, t.getId());
+					j.append(X.STATE, t.getState());
 
 					StackTraceElement[] ss = dumps.get(t);
 					StringBuilder sb2 = new StringBuilder();
@@ -353,8 +336,8 @@ public class task extends Controller {
 
 			@Override
 			public int compare(JSON o1, JSON o2) {
-				long id1 = o1.getLong("id");
-				long id2 = o2.getLong("id");
+				long id1 = o1.getLong(X.ID);
+				long id2 = o2.getLong(X.ID);
 				if (id1 == id2)
 					return 0;
 
@@ -363,7 +346,7 @@ public class task extends Controller {
 
 		});
 
-		this.set("list", l1);
+		this.set(X.LIST, l1);
 
 		this.show("/admin/task.thread.deadlock.html");
 

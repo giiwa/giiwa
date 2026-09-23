@@ -43,7 +43,7 @@ public class _Disk extends Bean {
 
 	public static BeanDAO<String, _Disk> dao = BeanDAO.create(_Disk.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "节点", size = 50)
@@ -100,9 +100,9 @@ public class _Disk extends Bean {
 
 					name = name.replace("[\\\\]", "/");
 					V v = V.create();
-					v.append("name", jo.name).append("path", jo.path);
+					v.append(X.NAME, jo.name).append("path", jo.path);
 					v.append("total", jo.total).append("free", jo.free).append("used", jo.used);
-					v.append("node", node).force("name", name).remove("_id", X.ID);
+					v.append(X.NODE, node).force(X.NAME, name).remove("_id", X.ID);
 
 					// insert
 					if (dao.exists2(id)) {
@@ -111,10 +111,10 @@ public class _Disk extends Bean {
 						dao.insert(v.copy().force(X.ID, id));
 					}
 
-					if (!Record.dao.exists(W.create().and("node", node).and("path", path).and("created",
+					if (!Record.dao.exists(W.create().and(X.NODE, node).and("path", path).and(X.CREATED,
 							Global.now() - X.AMINUTE, W.OP.gt))) {
 						// save to record per hour
-						Record.dao.insert(v.copy().force(X.ID, UID.id(id, Global.now())).append("node", node));
+						Record.dao.insert(v.copy().force(X.ID, UID.id(id, Global.now())).append(X.NODE, node));
 
 					}
 				} catch (Exception e) {
@@ -135,7 +135,7 @@ public class _Disk extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

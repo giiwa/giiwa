@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,7 @@ public class FTP implements Closeable {
 	private static Log log = LogFactory.getLog(FTP.class);
 
 	private FTPClient client;
+	private String proxy;
 
 	@Comment(hide = true)
 	public FTPClient getClient() {
@@ -54,6 +57,7 @@ public class FTP implements Closeable {
 	 * @param timeout 毫秒
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	@Comment(text = "设置超时")
 	public FTP timeout(@Comment(text = "timeout") int timeout) {
 		client.setDataTimeout(timeout);
@@ -74,6 +78,12 @@ public class FTP implements Closeable {
 		client.setBufferSize(size);
 		client.setReceiveBufferSize(size);
 
+		return this;
+	}
+
+	@Comment(text = "设置代理", demo = ".proxy('g04:3128')")
+	public FTP proxy(String proxy) {
+		this.proxy = proxy;
 		return this;
 	}
 
@@ -159,9 +169,17 @@ public class FTP implements Closeable {
 
 		client.changeWorkingDirectory(path);
 		client.enterLocalPassiveMode();
+		client.setFileType(FTPClient.BINARY_FILE_TYPE);
 //		client.enterRemotePassiveMode();
+		// Entering Extended Passive Mode
 
+		/**
+		 * 注意，不兼容win11自带的FTP服务器，因为返回文件列表格式与其他FTP不兼容
+		 */
 		FTPFile[] ff = client.listFiles();
+		if (log.isDebugEnabled()) {
+			log.debug("list [" + path + "], ff=" + ff.length);
+		}
 
 		_toFile(path, l1, ff);
 
@@ -321,6 +339,12 @@ public class FTP implements Closeable {
 		ftp.configure(config);
 		int reply;
 
+		if (!X.isEmpty(proxy)) {
+			String[] ss = X.split(proxy, "[:： ]");
+			Proxy p = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ss[0], X.toInt(ss[1])));
+			ftp.setProxy(p);
+		}
+
 		ftp.connect(url.getIp(), url.getPort(21));
 		if (log.isDebugEnabled())
 			log.debug("replaystring=" + ftp.getReplyString());
@@ -333,19 +357,64 @@ public class FTP implements Closeable {
 			return null;
 		}
 
-		if (ftp.login(username, passwd)) {
+		ftp.setConnectTimeout(10000); // 连接超时 10s
+		ftp.setDefaultTimeout(10000); // 全局IO读取超时 10s
+		ftp.setSoTimeout(10000); // Socket 读取超时 10s
+
+		if (!X.isEmpty(proxy)) {
+			// 1. 进入被动模式（客户端主动连服务器数据端口）
+			ftp.enterLocalPassiveMode();
+			// 读取真实响应
+			ftp.completePendingCommand();
+
+			log.warn("ftp=" + ftp.getReplyString());
+			ftp.setFileType(FTPClient.BINARY_FILE_TYPE);
+		}
+
+		if (X.isEmpty(username)) {
+			// 匿名登录
+			if (ftp.login("anonymous", "密码任意")) {
+				client = ftp;
+				client.setConnectTimeout(10000);
+				if (!X.isEmpty(charset)) {
+					client.setControlEncoding(charset);
+				} else {
+					client.setControlEncoding("UTF8");
+				}
+				timeout(300 * 1000);
+				buffer(1024 * 1024);
+
+				if (log.isDebugEnabled())
+					log.debug("logined");
+
+				if (!X.isEmpty(proxy)) {
+					// 1. 进入被动模式（客户端主动连服务器数据端口）
+					ftp.enterLocalPassiveMode();
+					log.warn("ftp=" + ftp.getReplyString());
+				}
+
+				return this;
+			}
+
+		} else if (ftp.login(username, passwd)) {
 			client = ftp;
 			client.setConnectTimeout(10000);
 			if (!X.isEmpty(charset)) {
 				client.setControlEncoding(charset);
 			} else {
-				client.setControlEncoding("UTF-8");
+				client.setControlEncoding("UTF8");
 			}
 			timeout(300 * 1000);
 			buffer(1024 * 1024);
 
 			if (log.isDebugEnabled())
 				log.debug("logined");
+
+			if (!X.isEmpty(proxy)) {
+				// 1. 进入被动模式（客户端主动连服务器数据端口）
+				ftp.enterLocalPassiveMode();
+				log.warn("ftp=" + ftp.getReplyString());
+			}
 
 			return this;
 		}

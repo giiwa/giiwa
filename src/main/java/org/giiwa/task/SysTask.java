@@ -15,7 +15,7 @@
 package org.giiwa.task;
 
 /**
- * using system thread queue to run this task
+ * 系统级任务， 不能被中断，最高优先级
  * 
  * @author joe
  *
@@ -28,12 +28,19 @@ public abstract class SysTask extends Task {
 	private static final long serialVersionUID = 1L;
 
 	@Override
+	public boolean interruptable() {
+		// 系统任务，默认不给中断
+		return Boolean.FALSE;
+	}
+
+	@Override
 	protected final boolean isSys() {
-		return true;
+		return Boolean.TRUE;
 	}
 
 	@Override
 	public int getPriority() {
+		// 系统任务，默认最高优先级
 		return Thread.MAX_PRIORITY;
 	}
 

@@ -67,7 +67,7 @@ public class database extends Controller {
 
 		List<JSON> l2 = Schema.load(lang);
 
-		this.set("list", l2);
+		this.set(X.LIST, l2);
 
 		this.show("/admin/database.tablelist.html");
 
@@ -76,7 +76,7 @@ public class database extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
 		String table = this.getString("table");
@@ -113,7 +113,7 @@ public class database extends Controller {
 		}
 	}
 
-	@Path(path = "drop", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "drop", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void drop() {
 
 		String t = Config.getConf().getString("drop.table");
@@ -163,7 +163,7 @@ public class database extends Controller {
 
 	}
 
-	@Path(path = "repair", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "repair", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void repair() {
 
 		String table = this.getString("table");
@@ -213,7 +213,7 @@ public class database extends Controller {
 		// this.getRemoteHost());
 
 		if (method.isPost()) {
-			String[] ss = this.getStrings("name");
+			String[] ss = this.getStrings(X.NAME);
 			if (ss != null && ss.length > 0) {
 
 				Temp t = Temp.create("er.csv");
@@ -286,7 +286,7 @@ public class database extends Controller {
 			try {
 				String table = Helper.getTable(c);
 				if (!X.isEmpty(table) && !l2.containsKey(table)) {
-					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+					JSON j = JSON.create().append(X.NAME, c.getName()).append("table", table).append("size",
 							Helper.primary.count(table, W.create()));
 					l2.put(table, j);
 				}
@@ -295,7 +295,7 @@ public class database extends Controller {
 			}
 
 		}
-		this.set("list", l2.values());
+		this.set(X.LIST, l2.values());
 		this.show("/admin/backup.er.html");
 
 	}

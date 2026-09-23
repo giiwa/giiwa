@@ -27,10 +27,10 @@ import java.nio.file.Paths;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
-import org.giiwa.dao.TimeStamp;
+import org.giiwa.crypto.Base32;
 import org.giiwa.dao.X;
-import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Consumer;
 
@@ -51,6 +51,8 @@ public class LocalDFile extends DFile {
 
 	private static Log log = LogFactory.getLog(LocalDFile.class);
 
+	private Disk disk;
+
 	private String url;
 
 	private String path;
@@ -58,12 +60,12 @@ public class LocalDFile extends DFile {
 
 	public boolean exists() {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			getInfo();
 			return info != null && info.exists;
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 
 	}
@@ -74,7 +76,7 @@ public class LocalDFile extends DFile {
 
 	protected boolean delete0(long age) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 
 			File f = new File(path + "/" + this.rewrite(filename));
@@ -92,8 +94,9 @@ public class LocalDFile extends DFile {
 
 		} catch (Exception e) {
 			log.error(url + ":" + disk_obj.path + ":" + filename, e);
-		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+			GLog.applog.error("dfile", "delete", url + ":" + disk_obj.path + ":" + filename, e);
+//		} finally {
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 
 		return false;
@@ -101,7 +104,7 @@ public class LocalDFile extends DFile {
 
 	public InputStream getInputStream() throws IOException {
 
-		return DFileInputStream.create(this, new FileInputStream(new File(path + "/" + this.rewrite(filename))));
+		return DFileInputStream.create(disk, this, new FileInputStream(new File(path + "/" + this.rewrite(filename))));
 
 	}
 
@@ -176,7 +179,7 @@ public class LocalDFile extends DFile {
 
 	public boolean mkdirs() {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			File f = new File(path + "/" + this.rewrite(filename));
 			return X.IO.mkdirs(f);
@@ -184,7 +187,7 @@ public class LocalDFile extends DFile {
 			log.error(url, e);
 //			Disk.dao.update(this.disk, V.create("bad", 1));
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 		return true;
 	}
@@ -245,7 +248,7 @@ public class LocalDFile extends DFile {
 
 	protected DFile[] list() throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			File f = new File(path + "/" + this.rewrite(filename));
 
@@ -271,7 +274,7 @@ public class LocalDFile extends DFile {
 				return l2;
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return null;
 	}
@@ -311,7 +314,7 @@ public class LocalDFile extends DFile {
 
 	public boolean move(DFile file) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 
 			File f1 = new File(path + "/" + this.rewrite(filename));
@@ -333,7 +336,7 @@ public class LocalDFile extends DFile {
 		} catch (Exception e) {
 			log.error(url, e);
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 
 		return false;
@@ -346,7 +349,7 @@ public class LocalDFile extends DFile {
 	public static DFile create(Disk d, String filename, FileInfo info) {
 
 		LocalDFile e = new LocalDFile();
-
+		e.disk = d;
 		e.filename = filename;
 		e.info = info;
 
@@ -363,7 +366,7 @@ public class LocalDFile extends DFile {
 	}
 
 	public long count(Consumer<String> moni) {
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		long n = 0;
 		try {
 			if (this.isDirectory()) {
@@ -385,7 +388,7 @@ public class LocalDFile extends DFile {
 				moni.accept(this.filename);
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return n;
 	}
@@ -428,7 +431,7 @@ public class LocalDFile extends DFile {
 
 	public long save(InputStream in, long pos) throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			if (pos == 0) {
 				if (exists()) {
@@ -438,7 +441,7 @@ public class LocalDFile extends DFile {
 
 			return IOUtil.copy(in, getOutputStream(pos));
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 	}
 

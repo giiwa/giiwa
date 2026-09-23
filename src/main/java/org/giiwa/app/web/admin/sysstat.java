@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
 import org.giiwa.misc.Host;
 import org.giiwa.web.*;
 
@@ -49,7 +50,7 @@ public class sysstat extends Controller {
 
 		try {
 			this.set("cpuperc", Host.getCpuPerc());
-			this.set("id", "cpustat" + UID.random());
+			this.set(X.ID, "cpustat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -71,8 +72,8 @@ public class sysstat extends Controller {
 	public void net() {
 
 		try {
-			this.set("list", Host.getIfstats());
-			this.set("id", "netstat" + UID.random());
+			this.set(X.LIST, Host.getIfstats());
+			this.set(X.ID, "netstat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -83,7 +84,7 @@ public class sysstat extends Controller {
 	public void net_list() {
 
 		try {
-			this.set("list", Host.getIfstats());
+			this.set(X.LIST, Host.getIfstats());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -94,8 +95,8 @@ public class sysstat extends Controller {
 	public void disk() {
 
 		try {
-			this.set("list", Host.getDisks());
-			this.set("id", "diskstat" + UID.random());
+			this.set(X.LIST, Host.getDisks());
+			this.set(X.ID, "diskstat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -106,7 +107,7 @@ public class sysstat extends Controller {
 	public void disk_list() {
 
 		try {
-			this.set("list", Host.getDisks());
+			this.set(X.LIST, Host.getDisks());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -118,8 +119,8 @@ public class sysstat extends Controller {
 
 		try {
 			this.set("stat", Host.getNetStat());
-			this.set("list", Host.getNetStats());
-			this.set("id", "netstat" + UID.random());
+			this.set(X.LIST, Host.getNetStats());
+			this.set(X.ID, "netstat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -130,7 +131,7 @@ public class sysstat extends Controller {
 	public void dbop() {
 
 		try {
-			this.set("list", Helper.primary.listOp());
+			this.set(X.LIST, Helper.primary.listOp());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

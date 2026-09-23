@@ -35,9 +35,6 @@ import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.task.BiFunction;
 
-import com.github.junrar.Archive;
-import com.github.junrar.rarfile.FileHeader;
-
 /**
  * The {@code Zip} Class used to Zip File operations,
  * 
@@ -153,22 +150,23 @@ public class Zip {
 		String name = zipfile.getName().toLowerCase();
 		if (name.endsWith(".rar")) {
 
-			Archive a = null;
-			try {
-				a = new Archive(zipfile.getInputStream());
-
-				FileHeader e = a.nextFileHeader();
-				while (e != null) {
-
-					if (X.isSame(e.getFileName(), filename)) {
-						return a.getInputStream(e);
-					}
-
-					e = a.nextFileHeader();
-				}
-			} finally {
-				X.close(a);
-			}
+			// TODO, License issue
+//			Archive a = null;
+//			try {
+//				a = new Archive(zipfile.getInputStream());
+//
+//				FileHeader e = a.nextFileHeader();
+//				while (e != null) {
+//
+//					if (X.isSame(e.getFileName(), filename)) {
+//						return a.getInputStream(e);
+//					}
+//
+//					e = a.nextFileHeader();
+//				}
+//			} finally {
+//				X.close(a);
+//			}
 
 		} else {
 			// zip
@@ -210,22 +208,23 @@ public class Zip {
 		String name = zipfile.getName().toLowerCase();
 		if (name.endsWith(".rar")) {
 
-			Archive a = null;
-			try {
-				a = new Archive(new FileInputStream(zipfile));
-
-				FileHeader e = a.nextFileHeader();
-				while (e != null) {
-
-					if (X.isSame(e.getFileName(), filename)) {
-						return a.getInputStream(e);
-					}
-
-					e = a.nextFileHeader();
-				}
-			} finally {
-				X.close(a);
-			}
+			// TODO, License issue
+//			Archive a = null;
+//			try {
+//				a = new Archive(new FileInputStream(zipfile));
+//
+//				FileHeader e = a.nextFileHeader();
+//				while (e != null) {
+//
+//					if (X.isSame(e.getFileName(), filename)) {
+//						return a.getInputStream(e);
+//					}
+//
+//					e = a.nextFileHeader();
+//				}
+//			} finally {
+//				X.close(a);
+//			}
 
 		} else {
 			// zip
@@ -460,32 +459,33 @@ public class Zip {
 		if (name.endsWith(".rar")) {
 			// rar
 
-			Archive a = null;
-			try {
-				a = new Archive(zipfile.getInputStream());
-
-				FileHeader e = a.nextFileHeader();
-				while (e != null) {
-
-					if (!e.isDirectory()) {
-						InputStream in = null;
-						try {
-							in = a.getInputStream(e);
-							if (func != null) {
-								if (!func.apply(e.getFileName(), in)) {
-									return;
-								}
-							}
-						} finally {
-							X.close(in);
-						}
-					}
-
-					e = a.nextFileHeader();
-				}
-			} finally {
-				X.close(a);
-			}
+			// TODO, License issue
+//			Archive a = null;
+//			try {
+//				a = new Archive(zipfile.getInputStream());
+//
+//				FileHeader e = a.nextFileHeader();
+//				while (e != null) {
+//
+//					if (!e.isDirectory()) {
+//						InputStream in = null;
+//						try {
+//							in = a.getInputStream(e);
+//							if (func != null) {
+//								if (!func.apply(e.getFileName(), in)) {
+//									return;
+//								}
+//							}
+//						} finally {
+//							X.close(in);
+//						}
+//					}
+//
+//					e = a.nextFileHeader();
+//				}
+//			} finally {
+//				X.close(a);
+//			}
 
 		} else {
 			// zip
@@ -529,32 +529,33 @@ public class Zip {
 		if (name.endsWith(".rar")) {
 			// rar
 
-			Archive a = null;
-			try {
-				a = new Archive(new FileInputStream(zipfile));
-
-				FileHeader e = a.nextFileHeader();
-				while (e != null) {
-
-					if (!e.isDirectory()) {
-						InputStream in = null;
-						try {
-							in = a.getInputStream(e);
-							if (func != null) {
-								if (!func.apply(e.getFileName(), in)) {
-									return;
-								}
-							}
-						} finally {
-							X.close(in);
-						}
-					}
-
-					e = a.nextFileHeader();
-				}
-			} finally {
-				X.close(a);
-			}
+			//TODO, License issue
+//			Archive a = null;
+//			try {
+//				a = new Archive(new FileInputStream(zipfile));
+//
+//				FileHeader e = a.nextFileHeader();
+//				while (e != null) {
+//
+//					if (!e.isDirectory()) {
+//						InputStream in = null;
+//						try {
+//							in = a.getInputStream(e);
+//							if (func != null) {
+//								if (!func.apply(e.getFileName(), in)) {
+//									return;
+//								}
+//							}
+//						} finally {
+//							X.close(in);
+//						}
+//					}
+//
+//					e = a.nextFileHeader();
+//				}
+//			} finally {
+//				X.close(a);
+//			}
 
 		} else {
 			// zip

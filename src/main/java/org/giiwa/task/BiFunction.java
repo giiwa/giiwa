@@ -23,6 +23,6 @@ import java.io.Serializable;
  *
  */
 @FunctionalInterface
-public interface BiFunction<K, V1, V2> extends java.util.function.BiFunction<K, V1, V2>, Serializable {
+public interface BiFunction<P1, P2, R1> extends java.util.function.BiFunction<P1, P2, R1>, Serializable {
 
 }

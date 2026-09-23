@@ -191,7 +191,7 @@ public final class Repo {
 
 		public static final BeanDAO<String, Entity> dao = BeanDAO.create(Entity.class);
 
-		@Column(memo = "唯一序号ID")
+		@Column(memo = "主键", unique = true, size = 64)
 		String id;
 
 		@Column(memo = "文件名")
@@ -244,7 +244,7 @@ public final class Repo {
 			if (e == null) {
 				V v = V.create();
 				v.append(X.ID, id);
-				v.append("name", name);
+				v.append(X.NAME, name);
 				v.append("path", path(id, path));
 
 				dao.insert(v);

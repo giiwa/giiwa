@@ -17,6 +17,7 @@ package org.giiwa.app.web.portlet;
 import org.giiwa.bean.GLog;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.X;
 
 public class loginfo extends portlet {
 
@@ -29,9 +30,9 @@ public class loginfo extends portlet {
 	public void get() {
 
 		Beans<GLog> bs = GLog.dao
-				.load(W.create().and("type1", GLog.TYPE_SECURITY).and("uid", login.getId()).sort("created", -1), 0, 5);
+				.load(W.create().and("type1", GLog.TYPE_SECURITY).and("uid", login.getId()).sort(X.CREATED, -1), 0, 5);
 
-		this.set("list", bs);
+		this.set(X.LIST, bs);
 
 		this.show("/portlet/loginfo.html");
 	}

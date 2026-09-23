@@ -54,10 +54,10 @@ public final class Message extends Bean {
 
 	public static final BeanDAO<String, Message> dao = BeanDAO.create(Message.class, time -> {
 		// return cleanup query
-		return W.create().and("created", Global.now() - X.AHOUR, W.OP.lte);
+		return W.create().and(X.CREATED, Global.now() - X.AHOUR, W.OP.lte);
 	});
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	private String id;
 
 	@Column(memo = "会话ID", size = 50)

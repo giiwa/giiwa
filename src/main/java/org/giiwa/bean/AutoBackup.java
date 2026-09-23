@@ -212,7 +212,7 @@ public final class AutoBackup extends Bean {
 		if (door.tryLock()) {
 			try {
 
-				this.next(V.create().append("state", 1));
+				this.next(V.create().append(X.STATE, 1));
 
 				if (type == 2) {
 					// 外部命令
@@ -303,7 +303,7 @@ public final class AutoBackup extends Bean {
 				log.error(e.getMessage(), e);
 				GLog.applog.error("autpbackup", "backup", e.getMessage(), e);
 			} finally {
-				this.next(V.create().append("state", 0));
+				this.next(V.create().append(X.STATE, 0));
 				door.unlock();
 			}
 		}

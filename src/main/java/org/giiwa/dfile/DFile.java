@@ -40,22 +40,22 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.S;
 import org.giiwa.bean.Temp;
+import org.giiwa.crypto.Base32;
 import org.giiwa.dao.Comment;
-import org.giiwa.dao.Counter;
 import org.giiwa.dao.X;
-import org.giiwa.misc.Base32;
+import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Consumer;
 import org.giiwa.task.Function;
 import org.giiwa.task.Task;
 
 /**
- * DFile bean
+ * 文件仓库文件类
  * 
  * @author joe
  * 
  */
-
+@Comment(text = "文件实体类")
 public abstract class DFile implements Serializable {
 
 	/**
@@ -81,10 +81,12 @@ public abstract class DFile implements Serializable {
 
 	protected String filename;
 
+	@Comment(text = "全路径名")
 	public String getFilename() {
 		return filename;
 	}
 
+	@Comment(text = "是否存在")
 	public abstract boolean exists() throws IOException;
 
 	public abstract void refresh();
@@ -133,14 +135,29 @@ public abstract class DFile implements Serializable {
 		return true;
 	}
 
-	public boolean is(String root) {
+	@Comment(text = "是这个根下面的文件吗")
+	public boolean in(String root) {
 		return this.getFilename().startsWith("/" + root + "/");
 	}
 
+	@Comment(text = "是ext文件吗")
+	public boolean is(@Comment(text = "ext") String... ext) {
+		int i = this.filename.lastIndexOf(".");
+		String s = this.filename.substring(i + 1);
+		return X.isIn(s, ext);
+	}
+
+	@Comment(text = "删除文件")
 	public boolean delete() {
 		return delete(-1);
 	}
 
+	/**
+	 * 删除最后修改时间老于age的所有文件
+	 * 
+	 * @param age - 毫秒
+	 * @return
+	 */
 	public boolean delete(long age) {
 
 		boolean done = false;
@@ -167,6 +184,7 @@ public abstract class DFile implements Serializable {
 		return done;
 	}
 
+	@Comment(text = "对象ID，全局唯一")
 	public String getId() {
 		// shortname or fullname
 		return Base32.encode(this.getFilename().getBytes());
@@ -174,12 +192,20 @@ public abstract class DFile implements Serializable {
 
 	protected abstract boolean delete0(long age);
 
+	@Comment(text = "获取文件输入流")
 	public abstract InputStream getInputStream() throws IOException;
 
+	@Comment(text = "获取文件输出流")
 	public OutputStream getOutputStream() throws IOException {
 		return this.getOutputStream(0);
 	}
 
+	/**
+	 * 获取输出流
+	 * 
+	 * @return 输出流
+	 * @throws IOException
+	 */
 	public OutputStream getOut() throws IOException {
 		return this.getOutputStream(0);
 	}
@@ -190,10 +216,13 @@ public abstract class DFile implements Serializable {
 
 	public abstract DFile getParentFile();
 
+	@Comment(text = "是目录？")
 	public abstract boolean isDirectory();
 
+	@Comment(text = "是文件？")
 	public abstract boolean isFile();
 
+	@Comment(text = "获取文件名")
 	public String getName() {
 		String[] ss = X.split(getFilename(), "[/]");
 		if (ss != null && ss.length > 0) {
@@ -204,47 +233,23 @@ public abstract class DFile implements Serializable {
 
 	transient DFile[] ff;
 
+	@Comment(text = "获取文件下面所有文件， 本磁盘项目， 如果所有")
 	public DFile[] listFiles() throws IOException {
 		if (ff == null) {
 			Map<String, DFile> m = new TreeMap<String, DFile>();
-			if (this.isDirectory()) {
-				DFile[] ff = list();
-				if (ff != null) {
-					for (DFile f1 : ff) {
-						if (f1.getDisk_obj().isOk(f1.getFilename())) {
-							m.put(f1.filename, f1);
-							if (m.size() >= DFile.LIMIT_SIZE) {
-								break;
-							}
+			DFile[] ff = list();
+			if (ff != null) {
+				for (DFile f1 : ff) {
+					if (f1.getDisk_obj().isOk(f1.getFilename())) {
+						m.put(f1.filename, f1);
+						if (m.size() >= DFile.LIMIT_SIZE) {
+							break;
 						}
 					}
 				}
 			}
 
-			if (linked != null) {
-				for (DFile f1 : linked) {
-					if (f1.isDirectory()) {
-						DFile[] ff = f1.list();
-						if (ff != null) {
-							for (DFile f2 : ff) {
-								DFile f3 = m.get(f2.filename);
-								if (f3 != null) {
-									f3.merge(f3);
-								} else {
-									m.put(f2.filename, f2);
-									if (m.size() >= DFile.LIMIT_SIZE) {
-										break;
-									}
-								}
-							}
-							if (m.size() >= DFile.LIMIT_SIZE) {
-								break;
-							}
-						}
-					}
-				}
-			}
-			ff = m.values().toArray(new DFile[m.size()]);
+			this.ff = m.values().toArray(new DFile[m.size()]);
 		}
 		return ff;
 	}
@@ -255,13 +260,17 @@ public abstract class DFile implements Serializable {
 
 	public abstract long lastModified();
 
+	@Comment(text = "length")
 	public abstract long length();
 
-	public abstract boolean move(DFile file);
+	@Comment(text = "move")
+	public abstract boolean move(@Comment(text = "DFile") DFile file);
 
-	public abstract boolean move(String filename) throws IOException;
+	@Comment(text = "move")
+	public abstract boolean move(@Comment(text = "filename") String filename) throws IOException;
 
-	public abstract boolean rename(String name) throws IOException;// {
+	@Comment(text = "rename")
+	public abstract boolean rename(@Comment(text = X.NAME) String name) throws IOException;// {
 
 //	public DFile rename(String name) throws IOException {
 //
@@ -289,7 +298,8 @@ public abstract class DFile implements Serializable {
 	 * @return the actually length
 	 * @throws IOException
 	 */
-	public long upload(File f) throws IOException {
+	@Comment(text = "upload")
+	public long upload(@Comment(text = "file") File f) throws IOException {
 		if (f.isDirectory()) {
 //			Zip.zip(this, f);
 			X.IO.copyDir(f, this);
@@ -299,7 +309,8 @@ public abstract class DFile implements Serializable {
 		}
 	}
 
-	public long upload(InputStream in) throws IOException {
+	@Comment(text = "upload")
+	public long upload(@Comment(text = "in") InputStream in) throws IOException {
 		if (in instanceof ZipInputStream) {
 			return upload(0, in, false);
 		} else {
@@ -307,12 +318,20 @@ public abstract class DFile implements Serializable {
 		}
 	}
 
-	public long upload(InputStream in, boolean close) throws IOException {
+	@Comment(text = "upload")
+	public long upload(@Comment(text = "in") InputStream in, @Comment(text = "close") boolean close)
+			throws IOException {
 		return upload(0, in, close);
 	}
 
-	public int upload(byte[] bb) throws IOException {
+	@Comment(text = "upload")
+	public int upload(@Comment(text = "bytes") byte[] bb) throws IOException {
 		return upload(0, bb);
+	}
+
+	@Comment(text = "print")
+	public int print(@Comment(text = "string") String bb) throws IOException {
+		return upload(0, bb.getBytes());
 	}
 
 	/**
@@ -394,6 +413,7 @@ public abstract class DFile implements Serializable {
 	 * 
 	 * @return
 	 */
+	@Comment(text = "size")
 	public long size() {
 		long size = this.length();
 		if (this.isDirectory()) {
@@ -417,8 +437,9 @@ public abstract class DFile implements Serializable {
 	 * @param func
 	 * @throws IOException
 	 */
-	public void scan(Function<DFile, Boolean> func) throws IOException {
-		this.scan(func, -1);
+	@Comment(text = "遍历文件", demo = ".scan(function(e){return true;})")
+	public boolean scan(@Comment(text = "callback") Function<DFile, Boolean> func) throws IOException {
+		return this.scan(func, -1);
 	}
 
 	/**
@@ -428,16 +449,41 @@ public abstract class DFile implements Serializable {
 	 * @param deep -1 for all
 	 * @throws IOException
 	 */
-	public void scan(Function<DFile, Boolean> func, int deep) throws IOException {
+	@Comment(text = "遍历文件", demo = ".scan(function(e){return true;}, 1)")
+	public boolean scan(@Comment(text = "callback") Function<DFile, Boolean> func, @Comment(text = "deep") int deep)
+			throws IOException {
 
 		Collection<DFile> ff = Disk.list(filename);
-		if (ff != null && !ff.isEmpty() && func != null) {
+		if (ff != null && func != null) {
+			for (DFile f1 : ff) {
+
+				boolean b = func.apply(f1);
+				if (!b) {
+					return false;
+				}
+
+				if (b && f1.isDirectory() && (deep != 0)) {
+					if (!f1.scan(func, deep - 1)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+
+	}
+
+	@Deprecated
+	public void scan2(Function<DFile, Boolean> func) throws IOException {
+
+		Collection<DFile> ff = Disk.list(filename);
+		if (ff != null && func != null) {
 			for (DFile f1 : ff) {
 
 				boolean b = func.apply(f1);
 
-				if (b && f1.isDirectory() && (deep != 0)) {
-					f1.scan(func, deep - 1);
+				if (b && f1.isDirectory()) {
+					f1.scan2(func);
 				}
 			}
 		}
@@ -481,16 +527,16 @@ public abstract class DFile implements Serializable {
 		return this.getFilename();
 	}
 
-	protected static Counter read = new Counter("read");
-	protected static Counter write = new Counter("write");
+//	protected static Counter read = new Counter("read");
+//	protected static Counter write = new Counter("write");
 
-	public static Counter.Stat statRead() {
-		return read.get();
-	}
-
-	public static Counter.Stat statWrite() {
-		return write.get();
-	}
+//	public static Counter.Stat statRead() {
+//		return read.get();
+//	}
+//
+//	public static Counter.Stat statWrite() {
+//		return write.get();
+//	}
 
 	// add file/directory monitor
 	public void addListener(IMonitor monitor) throws Exception {
@@ -623,12 +669,13 @@ public abstract class DFile implements Serializable {
 		}
 	}
 
-	@Comment(text = "获取访问链接")
+	@Comment(text = "获取访问短链接")
 	public String url() {
 		String url = "/f/" + this.getId() + "/" + this.getName();
 		return S.create(url);
 	}
 
+	@Comment(text = "zip")
 	public Temp zip() throws Exception {
 
 		Temp t = Temp.create(this.getName() + ".zip");
@@ -653,6 +700,63 @@ public abstract class DFile implements Serializable {
 				}
 			}
 		}
+	}
+
+	@Comment(text = "最后修改时间")
+	public long getDate() {
+		return this.lastModified();
+	}
+
+	@Comment(text = "文件长度")
+	public long getLength() {
+		return this.length();
+	}
+
+	@Comment(text = "文件/目录长度， 注意：大文件目录可能有性能问题")
+	public long getSize() {
+		return this.size();
+	}
+
+	@Comment(text = "转json数据")
+	public JSON json() {
+		JSON j1 = JSON.create();
+		j1.put("dir", this.isDirectory() ? 1 : 0);
+		j1.put("date", this.lastModified());
+		j1.put("length", this.length());
+		j1.put("filename", this.getFilename());
+//		j1.put("size", this.size());
+		j1.put(X.NAME, this.getName());
+		return j1;
+	}
+
+	@Comment(text = "获取扩展名")
+	public String getExt() {
+		int i = filename.lastIndexOf(".");
+		if (i > 0) {
+			return filename.substring(i + 1);
+		}
+		return null;
+	}
+
+	/**
+	 * 在文件结尾添加字符串， 注意， 非线程安全， 在分布式环境，需要另外施加全局锁
+	 * 
+	 * @param str - 字符串
+	 */
+	public DFile append(String str) {
+		OutputStream out = null;
+		try {
+			this.refresh();
+			out = this.getOutputStream(this.length());
+			out.write(str.getBytes());
+
+			this.refresh();
+		} catch (Exception err) {
+			log.error(err.getMessage(), err);
+		} finally {
+			X.close(out);
+		}
+		return this;
 	}
 
 }

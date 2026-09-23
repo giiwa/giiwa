@@ -21,7 +21,7 @@ import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
 
 /**
- * The Class BackupTask.
+ * 数据库备份任务
  */
 public class BackupTask extends Task {
 
@@ -49,6 +49,15 @@ public class BackupTask extends Task {
 		return "gi.backup";
 	}
 
+	@Override
+	public boolean isEnabled() {
+		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1));
+		if (a != null) {
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -57,8 +66,7 @@ public class BackupTask extends Task {
 	@Override
 	public void onExecute() {
 
-		AutoBackup a = AutoBackup.dao
-				.load(W.create().and("enabled", 1).and("nextime", Global.now(), W.OP.lte));
+		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1).and("nextime", Global.now(), W.OP.lte));
 		if (a != null) {
 			a.backup();
 		}
@@ -74,17 +82,10 @@ public class BackupTask extends Task {
 	public void onFinish() {
 		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1));
 		if (a != null) {
+			/**
+			 * 全局
+			 */
 			this.schedule(X.AMINUTE, true);
-		}
-	}
-
-	/**
-	 * Inits the task.
-	 */
-	public static void init() {
-		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1));
-		if (a != null) {
-			inst.schedule(X.AMINUTE, true);
 		}
 	}
 

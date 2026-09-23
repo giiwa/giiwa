@@ -56,11 +56,12 @@ public class app extends Controller {
 					V v = V.create();
 					v.append("appid", appid);
 					v.append("secret", secret);
-//					v.append("name", this.get("name"));
+//					v.append(X.NAME, this.get(X.NAME));
 					v.append("allowip", this.get("allowip"));
 					v.append("contact", this.get("contact"));
 					v.append("phone", this.get("phone"));
 					v.append("email", this.get("email"));
+					v.append("rid", this.getLong("rid"));
 					String expired = this.getString("expired");
 					if (!X.isEmpty(expired)) {
 						v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
@@ -91,7 +92,7 @@ public class app extends Controller {
 	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
@@ -100,13 +101,14 @@ public class app extends Controller {
 			if (!X.isEmpty(expired)) {
 				v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
 			}
-//			v.append("name", this.get("name"));
+//			v.append(X.NAME, this.get(X.NAME));
 			v.append("contact", this.get("contact"));
 			v.append("phone", this.get("phone"));
 			v.append("email", this.get("email"));
 			v.append("memo", this.getString("memo"));
 			v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
 			v.append("allowip", this.get("allowip"));
+			v.append("rid", this.getLong("rid"));
 
 			String secret = this.get("secret");
 			if (!X.isEmpty(secret)) {
@@ -129,12 +131,12 @@ public class app extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
 		JSON jo = new JSON();
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		App.dao.delete(id);
 		jo.put(X.STATE, 200);
 
@@ -142,12 +144,12 @@ public class app extends Controller {
 
 	}
 
-	@Path(path = "reset", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "reset", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void reset() {
 
 		JSON jo = new JSON();
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		App.update(id, V.create("secret", UID.random(32)));
 		jo.put(X.STATE, 200);
 
@@ -157,10 +159,10 @@ public class app extends Controller {
 
 	@Path(path = "detail", login = true, access = "access.config.admin")
 	public void detail() {
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		App d = App.dao.load(id);
 		this.set("b", d);
-		this.set("id", id);
+		this.set(X.ID, id);
 		this.show("/admin/bean.detail.html");
 	}
 
@@ -173,15 +175,15 @@ public class app extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
 			q.and("appid", name, W.OP.like);
-			this.put("name", name);
+			this.put(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
 		App.dao.optimize(q);
 		

@@ -44,7 +44,7 @@ public final class UserConfig extends Bean {
 
 	public static final BeanDAO<String, UserConfig> dao = BeanDAO.create(UserConfig.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	private String id;
 
 	@Column(memo = "用户ID")
@@ -67,12 +67,12 @@ public final class UserConfig extends Bean {
 			// update
 			dao.update(id, v);
 		} else {
-			dao.insert(v.force(X.ID, id).append("uid", uid).append("sid", sid).append("name", name));
+			dao.insert(v.force(X.ID, id).append("uid", uid).append("sid", sid).append(X.NAME, name));
 		}
 	}
 
 	public static String get(long uid, String sid, String name) {
-		UserConfig c = dao.load(W.create().and("uid", uid).and("sid", sid).and("name", name));
+		UserConfig c = dao.load(W.create().and("uid", uid).and("sid", sid).and(X.NAME, name));
 		if (c != null) {
 			return c.data;
 		}
@@ -80,7 +80,7 @@ public final class UserConfig extends Bean {
 	}
 
 	public static void delete(long uid, String name) {
-		dao.delete(W.create().and("uid", uid).and("name", name));
+		dao.delete(W.create().and("uid", uid).and(X.NAME, name));
 	}
 
 }

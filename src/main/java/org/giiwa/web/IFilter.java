@@ -19,7 +19,7 @@ package org.giiwa.web;
  * the filter is configured in module.xml
  * 
  * <pre>
-&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;?xml version="1.0" encoding=X.UTF8?&gt;
 &lt;module version="1.0"&gt;
   ...
  &lt;filter&gt;

@@ -43,7 +43,7 @@ public class _DB extends Bean {
 
 	public static BeanDAO<String, _DB> dao = BeanDAO.create(_DB.class);
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size=64)
 	String id;
 
 	@Column(memo = "节点", size=50)
@@ -77,7 +77,7 @@ public class _DB extends Bean {
 			String name = jo.name;
 
 			V v = jo.toV();
-			v.append("node", node);
+			v.append(X.NODE, node);
 			v.remove("_id");
 
 			String id = UID.id(node, name);
@@ -97,10 +97,10 @@ public class _DB extends Bean {
 	public synchronized static void snapshot(String node, JSON jo) {
 		// insert or update
 		try {
-			String name = jo.getString("name");
+			String name = jo.getString(X.NAME);
 
 			V v = V.fromJSON(jo);
-			v.append("node", node);
+			v.append(X.NODE, node);
 
 			String id = UID.id(node, name);
 			if (dao.exists2(id)) {
@@ -112,7 +112,7 @@ public class _DB extends Bean {
 			long time = Stat.tomin(Global.now());
 
 			Record e = Record.dao
-					.load(W.create().and("node", node).and("name", name).and("time", time, W.OP.lt).sort("time", -1));
+					.load(W.create().and(X.NODE, node).and(X.NAME, name).and("time", time, W.OP.lt).sort("time", -1));
 			if (e != null) {
 				// reads, writes, netio, netout
 				v.append("_reads", X.toLong(v.value("reads")) - e.getLong("reads"));
@@ -144,7 +144,7 @@ public class _DB extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}
@@ -161,7 +161,7 @@ public class _DB extends Bean {
 
 		JSON j1 = Helper.primary.status();
 		if (j1 != null) {
-			_DB.snapshot(Global.id(), j1.append("name", "status"));
+			_DB.snapshot(Global.id(), j1.append(X.NAME, "status"));
 		}
 
 	}

@@ -16,6 +16,8 @@ package org.giiwa.web;
 
 import java.util.*;
 
+import org.giiwa.dao.X;
+
 /**
  * 
  * @author yjiang
@@ -46,7 +48,7 @@ public class Paging {
 		list.add(new PageLink(curr, Integer.toString(curr)));
 
 		if (curr > 1) {
-			list.add(new PageLink(-2, "&lt;", url.set("s", ((curr - 2) * numofPage)).toString()));
+			list.add(new PageLink(-2, "&lt;", url.set(X.S, ((curr - 2) * numofPage)).toString()));
 		}
 
 		int pages = (total / numofPage);
@@ -54,7 +56,7 @@ public class Paging {
 			pages++;
 
 		if (curr < pages) {
-			list.add(new PageLink(pages + 10, "&gt;", url.set("s", curr * numofPage).toString()));
+			list.add(new PageLink(pages + 10, "&gt;", url.set(X.S, curr * numofPage).toString()));
 		}
 
 		int start = Math.max(1, curr - 5);
@@ -66,23 +68,23 @@ public class Paging {
 		for (int i = start; i <= end; i++) {
 			if (i == curr)
 				continue;
-			list.add(new PageLink(i, Integer.toString(i), url.set("s", (i - 1) * numofPage).toString()));
+			list.add(new PageLink(i, Integer.toString(i), url.set(X.S, (i - 1) * numofPage).toString()));
 		}
 
 		// if (end < pages - 1) {
-		// list.add(new PageLink(pages, ">>[" + pages + "]", url.set("s", (pages
+		// list.add(new PageLink(pages, ">>[" + pages + "]", url.set(X.S, (pages
 		// - 1) * numofPage).toString()));
 		// }
 		//
 		// if (start > 1) {
-		// list.add(new PageLink(1, "<<[1]", url.set("s", 0).toString()));
+		// list.add(new PageLink(1, "<<[1]", url.set(X.S, 0).toString()));
 		// }
 
 		// int delta = 1;
 		// int m = Math.min(5, curr);
 		// for (int i = curr + 1; i < total / numofPage + 2; i += delta) {
 		//
-		// list.add(new PageLink(i, Integer.toString(i), url.set("s", (i - 1) *
+		// list.add(new PageLink(i, Integer.toString(i), url.set(X.S, (i - 1) *
 		// numofPage).toString()));
 		// m++;
 		// if (m > 9) {
@@ -90,7 +92,7 @@ public class Paging {
 		// delta *= 10;
 		//
 		// if (i < (total / numofPage)) {
-		// list.add(new PageLink(total / numofPage + 1, ">>", url.set("s", total
+		// list.add(new PageLink(total / numofPage + 1, ">>", url.set(X.S, total
 		// - numofPage).toString()));
 		// break;
 		// }
@@ -105,7 +107,7 @@ public class Paging {
 		// }
 		//
 		// for (int i = curr - 1; i > 0; i -= delta) {
-		// list.add(new PageLink(i, Integer.toString(i), url.set("s", (i - 1) *
+		// list.add(new PageLink(i, Integer.toString(i), url.set(X.S, (i - 1) *
 		// numofPage).toString()));
 		// m++;
 		// if (m > 9) {
@@ -113,7 +115,7 @@ public class Paging {
 		// delta *= 10;
 		//
 		// if (i > 1) {
-		// list.add(new PageLink(1, "<<", url.set("s", 0).toString()));
+		// list.add(new PageLink(1, "<<", url.set(X.S, 0).toString()));
 		// break;
 		// }
 		// }
@@ -143,17 +145,17 @@ public class Paging {
 
 		list.add(new PageLink(curr, Integer.toString(curr)));
 		if (curr > 1) {
-			list.add(new PageLink(-2, "&lt;", url.set("s", ((curr - 2) * numofPage)).toString()));
+			list.add(new PageLink(-2, "&lt;", url.set(X.S, ((curr - 2) * numofPage)).toString()));
 		}
 		if (curr < (total / numofPage + 1)) {
-			list.add(new PageLink(-1, "&gt;", url.set("s", curr * numofPage).toString()));
+			list.add(new PageLink(-1, "&gt;", url.set(X.S, curr * numofPage).toString()));
 		}
 
 		int delta = 1;
 		int m = Math.min(5, curr);
 		for (int i = curr + 1; i < total / numofPage + 1; i += delta) {
 
-			list.add(new PageLink(i, Integer.toString(i), url.set("s", (i - 1) * numofPage).toString()));
+			list.add(new PageLink(i, Integer.toString(i), url.set(X.S, (i - 1) * numofPage).toString()));
 			m++;
 			if (m > 9) {
 				m = 0;
@@ -173,7 +175,7 @@ public class Paging {
 		}
 
 		for (int i = curr - 1; i > 0; i -= delta) {
-			list.add(new PageLink(i, Integer.toString(i), url.set("s", (i - 1) * numofPage).toString()));
+			list.add(new PageLink(i, Integer.toString(i), url.set(X.S, (i - 1) * numofPage).toString()));
 			m++;
 			if (m > 9) {
 				m = 0;
@@ -186,14 +188,14 @@ public class Paging {
 		}
 
 		// add first page in list
-		PageLink p = new PageLink(1, "1", url.set("s", 0).toString());
+		PageLink p = new PageLink(1, "1", url.set(X.S, 0).toString());
 		if (!list.contains(p)) {
 			list.add(p);
 		}
 
 		// add last page
 		int n = total / numofPage;
-		p = new PageLink(n + 1, Integer.toString(n + 1), url.set("s", n * numofPage).toString());
+		p = new PageLink(n + 1, Integer.toString(n + 1), url.set(X.S, n * numofPage).toString());
 		if (!list.contains(p)) {
 			list.add(p);
 		}

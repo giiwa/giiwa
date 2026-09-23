@@ -22,14 +22,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
-import org.giiwa.dao.TimeStamp;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.X;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Url;
@@ -73,12 +73,12 @@ public class NfsDFile extends DFile {
 
 	public boolean exists() throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			getInfo();
 			return info != null && info.exists;
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 
 	}
@@ -88,13 +88,14 @@ public class NfsDFile extends DFile {
 		try {
 
 			Nfs3File f = get();
-			if (f != null && f.exists()) {
+			if (f != null && f.exists() && (f.lastModified() < System.currentTimeMillis() - age)) {
 				delete(f);
 			}
 
 			return true;
 		} catch (Exception e) {
 			log.error(url + ":" + disk_obj.path + ":" + filename, e);
+			GLog.applog.error("dfile", "delete", url + ":" + disk_obj.path + ":" + filename, e);
 		}
 
 		return false;
@@ -117,11 +118,11 @@ public class NfsDFile extends DFile {
 
 	}
 
-	private static Map<Long, Nfs3> cached = new HashMap<Long, Nfs3>();
+	private static Map<Long, Nfs3> cached = new ConcurrentHashMap<>();
 
 	transient Nfs3File file;
 
-	private Nfs3File get() throws IOException {
+	private synchronized Nfs3File get() throws IOException {
 
 		if (file == null) {
 			file = get(filename);
@@ -134,24 +135,27 @@ public class NfsDFile extends DFile {
 	private Nfs3File get(String filename) throws IOException {
 
 		Disk d1 = disk_obj;
-		synchronized (cached) {
-			Nfs3 fs = cached.get(d1.id);
+		Nfs3 fs = cached.get(d1.id);
+		if (fs == null) {
+			synchronized (cached) {
+				fs = cached.get(d1.id);
+				if (fs == null) {
+					Url u1 = Url.create(d1.url);
+					fs = new Nfs3(u1.getHost(), d1.path, new CredentialUnix(0, 0, null), 3);
 
-			if (fs == null) {
-				Url u1 = Url.create(d1.url);
-				fs = new Nfs3(u1.getHost(), d1.path, new CredentialUnix(0, 0, null), 3);
-
-				cached.put(d1.id, fs);
+					if (d1.id > 0) {
+						cached.put(d1.id, fs);
+					}
+				}
 			}
-
-			return new Nfs3File(fs, this.rewrite(filename));
 		}
+		return new Nfs3File(fs, this.rewrite(filename));
 
 	}
 
 	public InputStream getInputStream() throws IOException {
 		Nfs3File f = get();
-		return DFileInputStream.create(this, new NfsFileInputStream(f));
+		return DFileInputStream.create(disk_obj, this, new NfsFileInputStream(f));
 	}
 
 	public OutputStream getOutputStream() throws IOException {
@@ -299,7 +303,7 @@ public class NfsDFile extends DFile {
 
 	protected DFile[] list() throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			Nfs3File f = get();
 
@@ -325,7 +329,7 @@ public class NfsDFile extends DFile {
 				return l2;
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return null;
 	}
@@ -372,18 +376,18 @@ public class NfsDFile extends DFile {
 
 	public boolean move(DFile file) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 
 			X.IO.copy(this, file);
 
-			this.delete();
+			return this.delete();
 
 		} catch (Exception e) {
 			log.error(url, e);
 
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 		return false;
 	}
@@ -407,7 +411,7 @@ public class NfsDFile extends DFile {
 
 	public long count(Consumer<String> moni) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		long n = 0;
 		try {
 			if (this.isDirectory()) {
@@ -429,7 +433,7 @@ public class NfsDFile extends DFile {
 				moni.accept(this.getFilename());
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return n;
 
@@ -473,7 +477,7 @@ public class NfsDFile extends DFile {
 
 	public long save(InputStream in, long pos) throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			if (pos == 0) {
 				if (exists()) {
@@ -483,7 +487,7 @@ public class NfsDFile extends DFile {
 
 			return IOUtil.copy(in, getOutputStream(pos));
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 	}
 
@@ -492,27 +496,27 @@ public class NfsDFile extends DFile {
 		info = null;
 	}
 
-	public static void main(String[] args) {
-
-		try {
-
-			Disk d = new Disk();
-			d.id = 1;
-			d.url = "nfs://g30";
-			d.path = "/home/disk2";
-
-			DFile f1 = NfsDFile.create(d, "/temp/a/b/a");
-			System.out.println("f1=" + f1.filename);
-//			f1.getParentFile().mkdirs();
-			OutputStream out = f1.getOutputStream();
-			out.write("abc".getBytes());
-			out.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
+//	public static void main(String[] args) {
+//
+//		try {
+//
+//			Disk d = new Disk();
+//			d.id = 1;
+//			d.url = "nfs://g30";
+//			d.path = "/home/disk2";
+//
+//			DFile f1 = NfsDFile.create(d, "/temp/a/b/a");
+//			System.out.println("f1=" + f1.filename);
+////			f1.getParentFile().mkdirs();
+//			OutputStream out = f1.getOutputStream();
+//			out.write("abc".getBytes());
+//			out.close();
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//
+//	}
 
 	@Override
 	public long getFreeSpace() {

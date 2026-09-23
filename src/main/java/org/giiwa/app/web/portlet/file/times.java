@@ -37,8 +37,8 @@ public class times extends portlet {
 	@Override
 	public void get() {
 
-		W q = W.create().and("node", Local.id()).and("name", "get")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, Local.id()).and(X.NAME, "get")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1);
 		_File.Record.dao.optimize(q);
 		
 		Beans<_File.Record> bs = _File.Record.dao.load(q, 0, 60);
@@ -47,8 +47,8 @@ public class times extends portlet {
 
 			this.set("list1", bs);
 
-			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create().and("node", Local.id()).and("name", "down")
-					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "down")
+					.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
 
@@ -59,14 +59,14 @@ public class times extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create().and("node", Local.id()).and("name", "get")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "get")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			List<JSON> data = JSON.createList();
 			JSON p = JSON.create();
-			p.append("name", lang.get("file.get.times")).append("color", "#0a5ea0");
+			p.append(X.NAME, lang.get("file.get.times")).append("color", "#0a5ea0");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -74,12 +74,12 @@ public class times extends portlet {
 			p.append("data", l1);
 			data.add(p);
 
-			bs = _File.Record.dao.load(W.create().and("node", Local.id()).and("name", "down")
-					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+			bs = _File.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "down")
+					.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
 				p = JSON.create();
-				p.append("name", lang.get("file.down.times")).append("color", "#0dad76");
+				p.append(X.NAME, lang.get("file.down.times")).append("color", "#0dad76");
 				List<JSON> l2 = JSON.createList();
 				bs.forEach(e -> {
 					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -102,7 +102,7 @@ public class times extends portlet {
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create().and("node", Local.id()).and("name", "get").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, Local.id()).and(X.NAME, "get").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -110,7 +110,7 @@ public class times extends portlet {
 		}
 
 		Beans<_File.Record> list2 = _File.Record.dao.load(
-				W.create().and("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, Local.id()).and(X.NAME, "down").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (list2 != null && !list2.isEmpty()) {
 			Collections.reverse(list2);

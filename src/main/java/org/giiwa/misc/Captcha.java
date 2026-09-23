@@ -67,6 +67,7 @@ public class Captcha {
 	 */
 	public static boolean create(String sid, long expired, int w, int h, OutputStream output, int len)
 			throws IOException {
+		
 		try {
 			String code = UID.random(len, VERIFY_CODES).toLowerCase();
 			outputImage(w, h, output, code.toUpperCase());

@@ -38,7 +38,7 @@ public class diskio extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -50,11 +50,11 @@ public class diskio extends portlet {
 			this.set("name1", id);
 		}
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
-		W q = W.create().and("node", id).and("path", name)
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and("path", name).and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte)
+				.sort(X.CREATED, -1);
 		_DiskIO.Record.dao.optimize(q);
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
@@ -62,7 +62,7 @@ public class diskio extends portlet {
 			Collections.reverse(bs);
 
 			this.set("path", bs.get(0).get("inet"));
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 
 		this.show("/portlet/diskio.html");
@@ -72,26 +72,26 @@ public class diskio extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
-		W q = W.create().and("node", id).and("path", name)
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and("path", name).and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte)
+				.sort(X.CREATED, -1);
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			JSON p1 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("disk.reads"))
+			JSON p1 = JSON.create().append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("disk.reads"))
 					.append("color", "#0dad76");
-			JSON p2 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("disk.writes"))
+			JSON p2 = JSON.create().append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("disk.writes"))
 					.append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
@@ -116,7 +116,7 @@ public class diskio extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -128,17 +128,17 @@ public class diskio extends portlet {
 			this.set("name1", id);
 		}
 
-		String name = this.getString("name");
-		this.set("name", name);
+		String name = this.getString(X.NAME);
+		this.set(X.NAME, name);
 
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(
-				W.create().and("node", id).and("path", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create().and(X.NODE, id).and("path", name).and(X.CREATED, time, W.OP.gte).sort(X.CREATED, 1), 0,
 				7 * 24 * 60);
 
 		if (bs != null && !bs.isEmpty()) {
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/diskio.more.html");
 

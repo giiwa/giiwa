@@ -19,6 +19,13 @@ import java.io.InputStream;
 import org.giiwa.dao.X;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * 
+ * yaml配置文件助手
+ * 
+ * @author joe
+ *
+ */
 public class YamlHelper {
 
 	public static <T> T load(InputStream in) {

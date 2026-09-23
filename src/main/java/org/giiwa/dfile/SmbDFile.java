@@ -22,12 +22,14 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
-import org.giiwa.dao.TimeStamp;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.X;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Consumer;
@@ -71,12 +73,12 @@ public class SmbDFile extends DFile {
 
 	public boolean exists() throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			getInfo();
 			return info != null && info.exists;
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 
 	}
@@ -86,13 +88,14 @@ public class SmbDFile extends DFile {
 		try {
 
 			SmbFile f = get();
-			if (f != null && f.exists()) {
+			if (f != null && f.exists() && (f.lastModified() < System.currentTimeMillis() - age)) {
 				delete(f);
 			}
 
 			return true;
 		} catch (Exception e) {
 			log.error(url + ":" + disk_obj.path + ":" + filename, e);
+			GLog.applog.error("dfile", "delete", url + ":" + disk_obj.path + ":" + filename, e);
 		}
 
 		return false;
@@ -110,11 +113,11 @@ public class SmbDFile extends DFile {
 		f.delete();
 	}
 
-	private static BaseContext ctx;
-	transient SmbFile file;
-	transient NtlmPasswordAuthenticator auth;
+	private static Map<Long, _M> cached = new ConcurrentHashMap<>();
 
-	private SmbFile get() throws IOException {
+	transient SmbFile file;
+
+	private synchronized SmbFile get() throws IOException {
 
 		if (file == null) {
 			file = this.get(filename);
@@ -128,14 +131,20 @@ public class SmbDFile extends DFile {
 
 		String remoteurl = url + X.getCanonicalPath(disk_obj.path + "/" + this.rewrite(filename));
 
-		if (auth == null) {
-			auth = new NtlmPasswordAuthenticator(disk_obj.domain, disk_obj.username, disk_obj.password);
-		}
-		if (ctx == null) {
-			ctx = new BaseContext(new PropertyConfiguration(new Properties()));
+		_M ss = cached.get(disk_obj.id);
+		if (ss == null) {
+			synchronized (cached) {
+				ss = cached.get(disk_obj.id);
+				if (ss == null) {
+					ss = new _M();
+					ss.auth = new NtlmPasswordAuthenticator(disk_obj.domain, disk_obj.username, disk_obj.password);
+					ss.ctx = new BaseContext(new PropertyConfiguration(new Properties()));
+					cached.put(disk_obj.id, ss);
+				}
+			}
 		}
 
-		SmbFile e = new SmbFile(remoteurl, ctx.withCredentials(auth));
+		SmbFile e = new SmbFile(remoteurl, ss.ctx.withCredentials(ss.auth));
 
 		return e;
 	}
@@ -144,7 +153,7 @@ public class SmbDFile extends DFile {
 
 		try {
 			SmbFile f = get();
-			return DFileInputStream.create(this, f.getInputStream());
+			return DFileInputStream.create(disk_obj, this, f.getInputStream());
 		} catch (IOException e) {
 			log.error(filename, e);
 			throw e;
@@ -157,46 +166,51 @@ public class SmbDFile extends DFile {
 
 	public OutputStream getOutputStream(long offset) throws IOException {
 
-		SmbFile f = get();
+		try {
+			SmbFile f = get();
 
-		if (!f.exists()) {
-			try {
-				DFile f1 = this.getParentFile();
-				if (!f1.exists()) {
-					f1.mkdirs();
+			if (!f.exists()) {
+				try {
+					DFile f1 = this.getParentFile();
+					if (!f1.exists()) {
+						f1.mkdirs();
+					}
+					f.createNewFile();
+				} catch (Exception e) {
+					log.error("paht=" + disk_obj.path + ", filename=" + filename + ", file=" + f.getCanonicalPath(), e);
+				}
+			} else if (offset == 0) {
+				if (f.length() > 0) {
+					f.delete();
 				}
 				f.createNewFile();
-			} catch (Exception e) {
-				log.error("paht=" + disk_obj.path + ", filename=" + filename + ", file=" + f.getCanonicalPath(), e);
 			}
-		} else if (offset == 0) {
-			if (f.length() > 0) {
-				f.delete();
-			}
-			f.createNewFile();
+
+			long[] size = new long[] { offset };
+
+			SmbFileOutputStream a = new SmbFileOutputStream(f, offset > 0);
+
+			return DFileOutputStream.create(this.getDisk_obj(), a, filename, offset, (o1, bb, len) -> {
+
+				if (log.isDebugEnabled()) {
+					log.debug("nfs flush, file=" + filename + ", offset=" + o1 + ", len=" + bb.length);
+				}
+
+				if (bb != null && o1 == size[0]) {
+
+					a.write(bb, 0, len);
+					size[0] += len;
+					a.flush();
+
+				}
+
+				return size[0];
+
+			});
+		} catch (Exception err) {
+			log.error("disk=" + this.disk_obj + ", filename=" + this.filename, err);
+			throw err;
 		}
-
-		long[] size = new long[] { offset };
-
-		SmbFileOutputStream a = new SmbFileOutputStream(f, offset > 0);
-
-		return DFileOutputStream.create(this.getDisk_obj(), a, filename, offset, (o1, bb, len) -> {
-
-			if (log.isDebugEnabled()) {
-				log.debug("nfs flush, file=" + filename + ", offset=" + o1 + ", len=" + bb.length);
-			}
-
-			if (bb != null && o1 == size[0]) {
-
-				a.write(bb, 0, len);
-				size[0] += len;
-				a.flush();
-
-			}
-
-			return size[0];
-
-		});
 
 	}
 
@@ -228,19 +242,20 @@ public class SmbDFile extends DFile {
 
 	private FileInfo getInfo() throws IOException {
 		if (info == null) {
-//			try {
+			try {
 
-			SmbFile f = get();
+				SmbFile f = get();
 
-			info = new FileInfo();
-			info.exists = (f != null && f.exists()) ? true : false;
-			info.isfile = (info.exists && f.isFile()) ? true : false;
-			info.length = info.exists ? f.length() : 0;
-			info.lastmodified = info.exists ? f.lastModified() : 0;
+				info = new FileInfo();
+				info.exists = (f != null && f.exists()) ? true : false;
+				info.isfile = (info.exists && f.isFile()) ? true : false;
+				info.length = info.exists ? f.length() : 0;
+				info.lastmodified = info.exists ? f.lastModified() : 0;
 
-//			} catch (Throwable e) {
-//				log.error(url, e);
-//			}
+			} catch (Throwable e) {
+				log.error(url, e);
+				throw new IOException(e);
+			}
 
 		}
 		return info;
@@ -276,7 +291,7 @@ public class SmbDFile extends DFile {
 
 	protected DFile[] list() throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			if (!filename.endsWith("/")) {
 				filename = filename + "/";
@@ -325,7 +340,7 @@ public class SmbDFile extends DFile {
 				return l2;
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return null;
 	}
@@ -372,18 +387,18 @@ public class SmbDFile extends DFile {
 
 	public boolean move(DFile file) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 
 			X.IO.copy(this, file);
 
-			this.delete();
+			return this.delete();
 
 		} catch (Exception e) {
 			log.error(url + ":" + disk_obj.path + ":" + filename, e);
 
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 		return false;
 	}
@@ -407,7 +422,7 @@ public class SmbDFile extends DFile {
 
 	public long count(Consumer<String> moni) {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		long n = 0;
 		try {
 			if (this.isDirectory()) {
@@ -429,7 +444,7 @@ public class SmbDFile extends DFile {
 				moni.accept(this.getFilename());
 			}
 		} finally {
-			read.add(t.pastms(), "filename=%s", filename);
+//			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return n;
 
@@ -473,7 +488,7 @@ public class SmbDFile extends DFile {
 
 	public long save(InputStream in, long pos) throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		try {
 			if (pos == 0) {
 				if (exists()) {
@@ -483,7 +498,7 @@ public class SmbDFile extends DFile {
 
 			return IOUtil.copy(in, getOutputStream(pos));
 		} finally {
-			write.add(t.pastms(), "filename=%s", filename);
+//			write.add(t.pastms(), "filename=%s", filename);
 		}
 	}
 
@@ -530,26 +545,8 @@ public class SmbDFile extends DFile {
 		long free = this.getFreeSpace();
 		SmbFile f1 = null;
 		try {
-			String share = disk_obj.path;
-			if (share.startsWith("/")) {
-				share = share.substring(1);
-			}
-			int i = share.indexOf("/");
-			if (i > 0) {
-				share = share.substring(0, i);
-			}
-			// url + /{share}
 
-			String remoteurl = url + "/" + share;
-
-			if (auth == null) {
-				auth = new NtlmPasswordAuthenticator(disk_obj.domain, disk_obj.username, disk_obj.password);
-			}
-			if (ctx == null) {
-				ctx = new BaseContext(new PropertyConfiguration(new Properties()));
-			}
-
-			f1 = new SmbFile(remoteurl, ctx.withCredentials(auth));
+			f1 = get("/");
 			long n = f1.length();
 			if (n < free) {
 				return free;
@@ -589,6 +586,11 @@ public class SmbDFile extends DFile {
 
 		return true;
 
+	}
+
+	static class _M {
+		BaseContext ctx;
+		NtlmPasswordAuthenticator auth;
 	}
 
 }

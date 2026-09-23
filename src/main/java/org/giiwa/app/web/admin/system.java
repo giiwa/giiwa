@@ -48,15 +48,15 @@ public class system extends Controller {
 	/**
 	 * Restart.
 	 */
-	@Path(path = "restart", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "restart", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void restart() {
 
 		JSON jo = new JSON();
-		User me = User.dao.load(login.getId());
+		User me = User.load(login.getId());
 		String pwd = this.getString("pwd");
 
 		if (me.validate(pwd)) {
-			jo.put("state", "ok");
+			jo.put(X.STATE, "ok");
 
 			log.warn("restarted by [" + this.ipPath() + "]");
 
@@ -65,7 +65,7 @@ public class system extends Controller {
 			}, 1000);
 
 		} else {
-			jo.put("state", "fail");
+			jo.put(X.STATE, "fail");
 			jo.put("message", lang.get("invalid.password"));
 		}
 

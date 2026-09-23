@@ -105,7 +105,7 @@ public final class Role extends Bean {
 			while (dao.exists(id)) {
 				id = UID.next("role.id");
 			}
-			if (dao.insert(v.force(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
+			if (dao.insert(v.force(X.ID, id).set(X.ID, id).set(X.NAME, name).set("memo", memo).set(X.UPDATED,
 					Global.now())) > 0) {
 				return id;
 			}
@@ -125,7 +125,7 @@ public final class Role extends Bean {
 	 */
 	public List<?> getAccesses() {
 		if (accesses == null) {
-			accesses = RoleAccess.dao.distinct("name", W.create().and("rid", this.getId()));
+			accesses = RoleAccess.dao.distinct(X.NAME, W.create().and("rid", this.getId()));
 		}
 
 		return accesses;
@@ -140,8 +140,8 @@ public final class Role extends Bean {
 	public static void setAccess(long rid, String name) {
 
 		try {
-			if (!RoleAccess.dao.exists(W.create().and("rid", rid).and("name", name))) {
-				RoleAccess.dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
+			if (!RoleAccess.dao.exists(W.create().and("rid", rid).and(X.NAME, name))) {
+				RoleAccess.dao.insert(V.create("rid", rid).set(X.NAME, name).set(X.ID, UID.id(rid, name)));
 
 				dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, Global.now()));
 			}
@@ -158,7 +158,7 @@ public final class Role extends Bean {
 	 * @param name the name
 	 */
 	public static void removeAccess(long rid, String name) {
-		dao.delete(W.create().and("rid", rid).and("name", name));
+		dao.delete(W.create().and("rid", rid).and(X.NAME, name));
 
 		dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, Global.now()));
 
@@ -171,7 +171,7 @@ public final class Role extends Bean {
 	 * @return the role
 	 */
 	public static Role loadByName(String name) {
-		return dao.load(W.create().and("name", name));
+		return dao.load(W.create().and(X.NAME, name));
 	}
 
 	public long getId() {
@@ -190,7 +190,7 @@ public final class Role extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Role> load(int offset, int limit) {
-		return dao.load(W.create().sort("name", 1), offset, limit);
+		return dao.load(W.create().sort(X.NAME, 1), offset, limit);
 	}
 
 	public void setAccess(String[] accesses) {
@@ -198,7 +198,7 @@ public final class Role extends Bean {
 			RoleAccess.dao.delete(W.create().and("rid", this.getId()));
 
 			for (String a : accesses) {
-				RoleAccess.dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
+				RoleAccess.dao.insert(V.create("rid", this.getId()).set(X.NAME, a).set(X.ID, UID.id(this.getId(), a)));
 			}
 		}
 	}
@@ -233,7 +233,7 @@ public final class Role extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Role> loadByAccess(String access, int s, int n) {
-		Beans<RoleAccess> bs = RoleAccess.dao.load(W.create().and("name", access).sort("rid", 1), 0, 1000);
+		Beans<RoleAccess> bs = RoleAccess.dao.load(W.create().and(X.NAME, access).sort("rid", 1), 0, 1000);
 
 		W q = W.create();
 		if (bs == null || bs.isEmpty()) {
@@ -250,7 +250,7 @@ public final class Role extends Bean {
 			q.and(X.ID, bs.get(0).getLong("rid"));
 		}
 
-		return dao.load(q.sort("name", 1), s, n);
+		return dao.load(q.sort(X.NAME, 1), s, n);
 	}
 
 	public static void to(JSON j) {

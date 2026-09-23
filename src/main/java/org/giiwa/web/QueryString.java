@@ -278,7 +278,7 @@ public class QueryString implements Cloneable {
 			for (String s1 : ss) {
 				int j = s1.indexOf("=");
 				if (j > 0) {
-					this.append(s1.substring(0, j), s1.substring(j + 1));
+					this.append(s1.substring(0, j), Url.decode(s1.substring(j + 1)));
 				}
 			}
 		}

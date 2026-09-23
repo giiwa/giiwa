@@ -59,6 +59,10 @@ table.tablesorter tbody tr.deleted td {
 	text-decoration: line-through;
 }
 
+table.tablesorter tbody tr.online td {
+	color: #148114;
+}
+
 table.tablesorter tbody tr.deleted a.delete {
 	display: none;
 }

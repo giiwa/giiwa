@@ -86,6 +86,25 @@ public class StringFinder {
 		return this;
 	}
 
+	@SuppressWarnings("rawtypes")
+	@Comment(text = "在剩下的字符串中查询是否全包含", demo = "sf.contains(['a', 'b'])")
+	public boolean contains(@Comment(text = "obj") Object obj) {
+
+		if (s == null) {
+			return false;
+		}
+
+		String str = s.toLowerCase();
+		List l1 = X.asList(obj, s -> s);
+		for (Object sub : l1) {
+			int s2 = str.indexOf(sub.toString().toLowerCase(), pos);
+			if (s2 < 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * find a substring.
 	 *
@@ -93,8 +112,18 @@ public class StringFinder {
 	 * @return int the position
 	 */
 	@Comment(text = "从当前位置开始查找子串，找到后移动到新位置并返回，否则-1")
-	public int find(@Comment(text = "substring") String sub) {
-		int s1 = s != null ? s.toLowerCase().indexOf(sub.toLowerCase(), pos) : -1;
+	public int find(@Comment(text = "substring") String... sublist) {
+		if (s == null) {
+			return -1;
+		}
+		int s1 = -1;
+		String str = s.toLowerCase();
+		for (String sub : sublist) {
+			int s2 = str.indexOf(sub.toLowerCase(), pos);
+			if (s2 > -1 && (s1 == -1 || s2 < s1)) {
+				s1 = s2;
+			}
+		}
 		if (s1 > -1) {
 			pos = s1;
 		}
@@ -645,6 +674,17 @@ public class StringFinder {
 	@Comment(text = "替换start到end之间的子串为replacestring")
 	public StringFinder replace(@Comment(text = "start") int start, @Comment(text = "end") int end,
 			@Comment(text = "replacestring") String r1) {
+		this.s = this.s.substring(0, start) + r1 + this.s.substring(end);
+		this.s1 = this.s.toLowerCase();
+		this.pos = start + r1.length();
+		this.len = this.s.length();
+		return this;
+	}
+
+	@Comment(text = "替换mark到当前位置之间的子串")
+	public StringFinder replace(@Comment(text = "replacestring") String r1) {
+		int start = _mark.pop();
+		int end = pos;
 		this.s = this.s.substring(0, start) + r1 + this.s.substring(end);
 		this.s1 = this.s.toLowerCase();
 		this.pos = start + r1.length();

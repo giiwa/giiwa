@@ -14,9 +14,6 @@
 */
 package org.giiwa.bean;
 
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
@@ -24,13 +21,9 @@ import org.giiwa.conf.Local;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.Host;
+import org.giiwa.misc.SysLog;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
-import org.giiwa.web.Language;
-import org.graylog2.syslog4j.Syslog;
-import org.graylog2.syslog4j.SyslogConstants;
-import org.graylog2.syslog4j.SyslogIF;
 
 /**
  * Operation Log bean. <br>
@@ -59,7 +52,7 @@ public final class GLog extends Bean {
 	public static final int LEVEL_WARN = 2;
 	public static final int LEVEL_INFO = 3;
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "消息HASH", size = 50)
@@ -183,7 +176,7 @@ public final class GLog extends Bean {
 	 * @return string og ip
 	 */
 	public String getIp() {
-		return this.getString("ip");
+		return this.getString(X.IP);
 	}
 
 	private transient User user_obj;
@@ -196,7 +189,7 @@ public final class GLog extends Bean {
 	public User getUser_obj() {
 		long uid = this.getUid();
 		if (user_obj == null && uid > -1) {
-			user_obj = User.dao.load(uid);
+			user_obj = User.load(uid);
 		}
 		return user_obj;
 	}
@@ -413,8 +406,6 @@ public final class GLog extends Bean {
 		protected abstract void info(String node, String model, String op, String message, String trace, User u,
 				String ip);
 
-		private SyslogIF syslog = null;
-
 		protected String _log(int type, int level, String node, String model, String op, String message, String trace,
 				User u, String ip) {
 
@@ -437,8 +428,8 @@ public final class GLog extends Bean {
 				}
 
 				String id = UID.uuid();
-				V v = V.create("id", id).set("node", node).set("model", model).set("op", op)
-						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("_type", type).append("level", level);
+				V v = V.create(X.ID, id).set(X.NODE, node).set("model", model).set("op", op)
+						.set("uid", u == null ? -1 : u.getId()).set(X.IP, ip).set("_type", type).append("level", level);
 				v.set("message", message);
 
 				String threadname = Thread.currentThread().getName();
@@ -450,40 +441,12 @@ public final class GLog extends Bean {
 				v.append("logger", logger);
 				dao.insert(v);
 
-				if (Global.getInt("glog.rsyslog", 0) == 1) {
-					// enabled rsyslog
-					String message1 = message;
+				SysLog.log(level, "giiwa", v);
 
-					Task.schedule(t -> {
-
-						if (syslog == null) {
-							syslog = Syslog.getInstance(SyslogConstants.UDP);
-							syslog.getConfig().setHost(Global.getString("glog.rsyslog.host", "127.0.0.1"));
-							syslog.getConfig().setPort(X.toInt(Global.getLong("glog.rsyslog.port", 32376)));
-						}
-
-						// <165>1 2003-08-24T05:14:15.000003-07:00 192.0.2.1 myproc 8710 - - %% It's
-						// time to make the do-nuts.
-						StringBuilder sb = new StringBuilder();
-						sb.append("<" + seq.incrementAndGet() + ">");
-						sb.append(level);
-						Language lang = Language.getLanguage();
-						sb.append(" " + lang.format(Global.now(), "yyyy-MM-dd") + "T"
-								+ lang.format(Global.now(), "HH:mm:ss.S"));
-						sb.append(" " + Host.getLocalip());
-						sb.append(" giiwa ").append(Host.getPid());
-						sb.append(" - -");
-						sb.append(" BOM" + message1);
-
-						syslog.log(level, sb.toString(), new Date());
-					});
-				}
 				return id;
 			}
 			return null;
 		}
-
-		private static AtomicLong seq = new AtomicLong(0);
 
 		private String _logger() {
 

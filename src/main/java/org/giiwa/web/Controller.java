@@ -40,9 +40,11 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Url;
+import org.giiwa.task.BiConsumer;
 import org.giiwa.task.Task;
 import org.giiwa.web.view.View;
 
+import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -77,37 +79,45 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 	protected static Log log = LogFactory.getLog(Controller.class);
 
+	/**
+	 * 缺省欢迎页面
+	 */
 	protected static List<String> welcomes = Arrays.asList("index", "index.html", "index.htm", "index.jsp");
 
 	/**
-	 * uptime of the app
+	 * 系统启动时间
 	 */
 	public final static long UPTIME = Global.now();
 
 	private static AtomicInteger _seq = new AtomicInteger(0);
 
+	/**
+	 * 请求内部ID
+	 */
 	int id = _seq.incrementAndGet();
+
+	/**
+	 * 控制器创建时间
+	 */
 	long created = Global.now();
 
 	/**
-	 * the request
+	 * 请求对象
 	 */
-//	public HttpServletRequest req;
-
 	public transient RequestHelper req;
 
 	/**
-	 * the response
+	 * 响应对象
 	 */
 	public transient HttpServletResponse resp;
 
 	/**
-	 * language utility
+	 * 国际化语言工具
 	 */
 	public Language lang = Language.getLanguage();
 
 	/**
-	 * the request method(POST, GET, ...)
+	 * 请求方法 (POST, GET, ...)
 	 */
 	public HttpMethod method = HttpMethod.GET;
 
@@ -117,24 +127,27 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	private Map<String, Object> data;
 
 	/**
-	 * the home of the giiwa
+	 * the home of the giiwa, /home/giiwa
 	 */
 	public static String GIIWA_HOME;
 
+	/**
+	 * 缺省Cookie名称，可以被第三方集成修改，以便与第三方Cookie一致
+	 */
 	public static String COOKIE_NAME = "sid";
 
 	/**
-	 * session id
+	 * 会话ID
 	 */
 	private String sid;
 
 	/**
 	 * locale of user
 	 */
-	private static String locale;
+	private String locale;
 
 	/**
-	 * the uri of request
+	 * 请求的URI
 	 */
 	protected String uri;
 
@@ -150,7 +163,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	private String _contentType = null;
 
 	/**
-	 * associated login user
+	 * 关联用户对象
 	 */
 	protected User login = null;
 
@@ -190,8 +203,16 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @return String
 	 */
 	public final String locale() {
+
 		if (locale == null) {
-			locale = Global.getString("language", "en_us");
+			String lang = this.get("__lang");
+			if (X.isIn(lang, "en", "en_us")) {
+				locale = "en_us";
+			} else if (X.isIn(lang, "cn", "zh_cn")) {
+				locale = "zh_cn";
+			} else {
+				locale = Global.getString("language", "en_us");
+			}
 		}
 
 		return locale;
@@ -235,9 +256,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		this.head("X-XSS-Protection", "1");
 		this.head("X-Content-Type-Options", "nosniff");
 
-		if (pathmapping != null)
-
-		{
+		if (pathmapping != null) {
 
 			String path = this.path;
 			if (X.isEmpty(this.path)) {
@@ -266,6 +285,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 				PathMapping oo = methods.get(path);
 				if (oo == null) {
+
 					for (String s : methods.keySet()) {
 						if (X.isEmpty(s)) {
 							continue;
@@ -553,6 +573,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 			this.req = req;
 			this.resp = resp;
 			this.method = HttpMethod.create(method);
+			this.lang = Language.getLanguage(locale());
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -934,10 +955,10 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 */
 	public void pages(Beans<? extends Bean> bs, int s, int n) {
 
-		this.set("s", s).set("n", n);
+		this.set(X.S, s).set(X.N, n);
 
 		if (bs != null) {
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 			int total = (int) bs.getTotal();
 			if (total > 0) {
 				this.set("total", total);
@@ -1018,7 +1039,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @return the int
 	 */
 	@Comment(text = "get int")
-	public final int getInt(@Comment(text = "name") String name) {
+	public final int getInt(@Comment(text = X.NAME) String name) {
 		return getInt(name, 0);
 	}
 
@@ -1055,7 +1076,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @return long
 	 */
 	@Comment(text = "get long")
-	public final long getLong(@Comment(text = "name") String name) {
+	public final long getLong(@Comment(text = X.NAME) String name) {
 		return getLong(name, 0);
 	}
 
@@ -1113,7 +1134,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		sb.append(key).append("=").append(value);
 
 		if (expireseconds <= 0) {
-			sb.append("; Max-Age=").append(-1).append("; Expires=" + new Date(Global.now() + expireseconds * 1000));
+//			sb.append("; Max-Age=-1");
 		} else if (expireseconds > 0) {
 			sb.append("; Max-Age=").append(expireseconds)
 					.append("; Expires=" + new Date(Global.now() + expireseconds * 1000));
@@ -1179,6 +1200,12 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		return req.json();
 	}
 
+	@Deprecated
+	@Comment(text = "wrap requst as jsons")
+	public final List<JSON> jsons() {
+		return req.jsons();
+	}
+
 	/**
 	 * Gets the value of request string parameter. it auto handle multiple-part, and
 	 * convert "&lt;" or "&gt;" to html char and normal request
@@ -1213,10 +1240,15 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @return String of value
 	 */
 	@Comment(text = "get original string")
-	public final String getHtml(@Comment(text = "name") String name) {
+	public final String getHtml(@Comment(text = X.NAME) String name) {
 
 		return req.getHtml(name);
 
+	}
+
+	@Comment(text = "get body")
+	public final String body() {
+		return req.body();
 	}
 
 	/**
@@ -1344,8 +1376,8 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 				Task.schedule(t -> {
 					try {
 
-						User.dao.update(login.id, v);
-						login = User.dao.load(login.id);
+						User.update(login.id, v);
+						login = User.load(login.id);
 						if (login == null || login.isLocked() || login.isDeleted()) {
 							s1.remove("user");
 						} else {
@@ -1367,12 +1399,16 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 				s = session(false);
 			}
 
-			if (!X.isSame(this.ip(), s.get("ip"))) {
+			if (!X.isSame(this.ip(), s.get(X.IP))) {
 				// 地址被更换
-				GLog.securitylog.warn(this.getClass(), "access", "loginip=" + s.get("ip") + ", accessip=" + this.ip());
+				GLog.securitylog.warn(this.getClass(), "access", "loginip=" + s.get(X.IP) + ", accessip=" + this.ip());
 				return null;
 			}
 
+		}
+
+		if (login != null) {
+			login.touch();
 		}
 
 		return login;
@@ -1418,19 +1454,19 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 				if (Global.now() - u.getLong("lastlogined") > X.AMINUTE) {
 					u.set("lastlogined", Global.now());
-					u.set("ip", this.ip());
+					u.set(X.IP, this.ip());
 
 					V v = V.create();
 					String type = (String) u.get("logintype");
 					if (X.isSame(type, "web")) {
 						v.append("weblogined", Global.now());
-						v.append("ip", this.ip());
+						v.append(X.IP, this.ip());
 					} else if (X.isSame(type, "ajax")) {
 						v.append("ajaxlogined", Global.now());
-						v.append("ip", this.ip());
+						v.append(X.IP, this.ip());
 					}
 					if (!v.isEmpty()) {
-						User.dao.update(u.getId(), v);
+						User.update(u.getId(), v);
 					}
 				}
 
@@ -1462,8 +1498,8 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param name the parameter name
 	 * @return file of value, null if not presented
 	 */
-	@Comment(text = "get file")
-	public final FileItem<?> file(@Comment(text = "name") String name) {
+	@Comment(text = "获取上传文件对象")
+	public final FileItem<?> file(@Comment(text = X.NAME) String name) {
 		return req.file(name);
 	}
 
@@ -1473,8 +1509,10 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param name
 	 * @return
 	 */
-	public final List<FileItem<?>> files(String name) {
-		return files(name);
+	@SuppressWarnings("rawtypes")
+	@Comment(text = "获取上传文件对象列表")
+	public final List<FileItem> files(@Comment(text = X.NAME) String name) {
+		return req.files(name);
 	}
 
 	/**
@@ -1489,10 +1527,16 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param contentType the content type in response
 	 */
 	public void setContentType(String contentType) {
+		if (async) {
+			return;
+		}
+
 		this.contentType = contentType;
 		this._contentType = contentType;
 		resp.setContentType(contentType);
 	}
+
+	boolean async = false;
 
 	/**
 	 * output the json as "application/json" to end-user
@@ -1501,30 +1545,45 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 */
 	final public void send(JSON jo) {
 
+		if (async) {
+			return;
+		}
+
+		if (jo == null) {
+			return;
+		}
+
 		if (outputed > 0) {
 			Exception e = new Exception("response twice!");
 			GLog.applog.error(this, path, e.getMessage(), e);
 			log.error(jo.toString(), e);
-
 			error(e);
-
 			return;
 		}
 
 		if (jo != null && ((pp != null && pp.oplog()) || err != null)) {
 
-			int state = jo.getInt("state");
+			int state = jo.getInt(X.STATE);
 			if (state == 0 || state == 200 || state == 206) {
-				// info
-				GLog.oplog.info(this, path, "message=" + jo.get(X.MESSAGE) + ", params=" + this.json());
+				if (X.isIn(pp.loglevel(), "warn", "error")) {
+					GLog.oplog.warn(this, path, "message=" + jo.get(X.MESSAGE) + ", params="
+							+ this.json().mix("pwd", "pwd1", "passwd", "passwd1", "password", "password1"));
+				} else {
+					// info
+					GLog.oplog.info(this, path, "message=" + jo.get(X.MESSAGE) + ", params="
+							+ this.json().mix("pwd", "pwd1", "passwd", "passwd1", "password", "password1"));
+				}
 			} else if (state == 403) {
 				// warn
-				GLog.securitylog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json());
+				GLog.securitylog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params="
+						+ this.json().mix("pwd", "pwd1", "passwd", "passwd1", "password", "password1"));
 			} else if (err == null) {
 				// warn
-				GLog.oplog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json());
+				GLog.oplog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params="
+						+ this.json().mix("pwd", "pwd1", "passwd", "passwd1", "password", "password1"));
 			} else {
-				GLog.oplog.error(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json(), err);
+				GLog.oplog.error(this, path, "error=" + jo.get(X.ERROR) + ", params="
+						+ this.json().mix("pwd", "pwd1", "passwd", "passwd1", "password", "password1"), err);
 			}
 
 		}
@@ -1533,9 +1592,9 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 			jo = policy.mix(jo);
 		}
 
-		if (jo == null) {
-			_send_json("{}");
-		} else {
+		if (jo != null) {
+//			_send_json("{}");
+//		} else {
 			_send_json(jo.toString());
 		}
 
@@ -1562,6 +1621,10 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param jsonstr the jsonstr string
 	 */
 	private void _send_json(String jsonstr) {
+
+		if (async) {
+			return;
+		}
 
 		this.setContentType(Controller.MIME_JSON);
 
@@ -2004,7 +2067,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		return method.name;
 	}
 
-	private static String ENCODING = "UTF-8";
+	private static String ENCODING = X.UTF8;
 
 	/**
 	 * MIME TYPE of JSON
@@ -2044,14 +2107,20 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 */
 	public final void print(Object o) {
 		printText(o);
-
 	}
 
 	public final void printText(Object o) {
+
+		if (async) {
+			return;
+		}
+
 		try {
+
 			if (X.isEmpty(this._contentType)) {
 				this.setContentType("text/plain;charset=UTF-8");
 			}
+
 			PrintWriter writer = resp.getWriter();
 			writer.write(X.toString(o));
 			writer.flush();
@@ -2063,6 +2132,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 	public final void printHtml(Object o) {
 		try {
+
 			if (X.isEmpty(this._contentType)) {
 				this.setContentType("text/html;charset=UTF-8");
 			}
@@ -2369,7 +2439,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param uri    the uri
 	 * @return the model
 	 */
-	public static Controller getModel(String method, String uri, String original) {
+	public static Controller getModel(String method, final String uri, final String original) {
 		return Module.home.getModel(method, uri, original);
 	}
 
@@ -2382,13 +2452,16 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param method the method
 	 * @throws Exception
 	 */
-	public static Controller process(String uri, RequestHelper req, HttpServletResponse resp, String method,
+	public static Controller process(final String uri, RequestHelper req, HttpServletResponse resp, String method,
 			TimeStamp t) throws Exception {
 
 		// log.debug("uri=" + uri);
 
 		String node = req.getString("__node");
 		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
+			/**
+			 * 节点ID不空，并且不是本节点， 则导向分布式别的节点
+			 */
 			Node n = Node.dao.load(node);
 			if (n != null) {
 				log.info("forward to [" + n.label + "/" + n.id + "] uri=" + uri);
@@ -2400,35 +2473,36 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 			}
 		}
 
+		String forbidden = Global.getString("forbidden.http.method", null);
+		if (!X.isEmpty(forbidden) && forbidden.contains(method.toUpperCase())) {
+			log.warn("forbidden method [" + method + "]");
+			resp.getWriter().println("forbidden");
+			return null;
+		}
+
 		/**
-		 * test and load from cache first
+		 * 从缓存中获取Controller， 不需要递归
 		 */
-		Controller mo = Module.home.loadModelFromCache(method, uri);
+		Controller mo = Module.loadModelFromCache(method, uri);
 		if (mo != null) {
-//			mo.put("__node", node);
-
-			if (log.isDebugEnabled()) {
-				log.debug("cost=" + t.past() + ", find model, uri=" + uri + ", model=" + mo);
-			}
-
 			mo.dispatch(uri, req, resp, method);
-
 			return mo;
 		}
 
-//		if (log.isDebugEnabled())
-//			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
-
+		/**
+		 * 新建Controller, 从最大的module，递归到giiwa。
+		 */
 		mo = getModel(method, uri, uri);
 		if (mo != null) {
-
 			mo.dispatch(uri, req, resp, method);
 			return mo;
 		}
 
 		// parallel
 		try {
-			// directly file
+			/**
+			 * 直接映射文件
+			 */
 			String filename = uri;
 			if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
 				filename = Url.decode(uri);
@@ -2518,6 +2592,9 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 //			log.debug("uri=" + uri);
 
+			/**
+			 * 尝试 welcome文件
+			 */
 			Controller[] m = new Controller[1];
 
 			for (String s : welcomes) {
@@ -2535,21 +2612,26 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 //			}
 
 			if (m[0] != null) {
-
 				m[0].dispatch(uri, req, resp, method);
 				return m[0];
 			}
 		}
 
+//		boolean debug = X.isSame(uri, "/dput/dmeta/list");
+
 		/**
-		 * get back of the uri, and set the path to the model if found, and the path
-		 * instead
+		 * 逐层替换 uri，直到找到 Controller
 		 */
 		int i = uri.lastIndexOf("/");
 		while (i > 0) {
 			String path = uri.substring(i + 1);
 			String u = uri.substring(0, i);
 			mo = getModel(method, u, uri);
+
+//			if(debug) {
+//				log.info(uri + ", " + u + ", mo=" + mo);
+//			}
+
 			if (mo != null) {
 
 				if (log.isDebugEnabled())
@@ -2560,7 +2642,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 				mo.path = path;
 
 //					Path p = 
-				mo.dispatch(u, req, resp, method);
+				mo.dispatch(uri, req, resp, method);
 
 				if (log.isInfoEnabled())
 					log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip());
@@ -2598,7 +2680,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 //				V v = V.create("method", method.toString()).set("cost", t.past()).set(COOKIE_NAME, mo.sid());
 //				User u1 = mo.getUser();
 //				if (u1 != null) {
-//					v.set("uid", u1.getId()).set("username", u1.get("name"));
+//					v.set("uid", u1.getId()).set("username", u1.get(X.NAME));
 //				}
 //
 //				AccessLog.create(mo.getRemoteHost(), uri,
@@ -2631,6 +2713,100 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		}
 
 		return policy.mix(data);
+	}
+
+	/**
+	 * 开启SSE异步流式长连接，用于服务端实时推送数据至客户端
+	 * 
+	 * @param func 异步执行回调，入参(异步上下文, 当前控制器实例)
+	 */
+	@Comment(text = "异步SSE流式返回", demo = ".async(function(context, req){...}")
+	public final void async(@Comment(text = "(AsyncContext, Controller)") BiConsumer<AsyncContext, Controller> func)
+			throws IOException {
+
+		// 标准SSE响应头配置
+		resp.setContentType("text/event-stream");
+		resp.setCharacterEncoding(X.UTF8);
+		resp.setHeader("Cache-Control", "no-cache");
+		resp.setHeader("Connection", "keep-alive");
+		resp.setHeader("Access-Control-Allow-Origin", "*");
+
+		// 保活处理并立即刷出响应头
+		keepalive();
+		flush();
+
+		// 开启Servlet异步上下文，关闭超时限制
+		AsyncContext context = this.req.req.startAsync();
+		context.setTimeout(0);
+
+		// 初始化输出打印流
+		writer = this.resp.getWriter();
+
+		// 异步调度执行业务回调
+		Task.schedule(t -> func.accept(context, this));
+
+		// 标记当前连接为异步SSE模式
+		async = true;
+
+	}
+
+	/**
+	 * 获取SSE输出打印流
+	 * 
+	 * @return PrintWriter 输出流
+	 * @throws IOException IO异常
+	 */
+	public final PrintWriter getWriter() throws IOException {
+		if (writer != null) {
+			return writer;
+		}
+		return this.resp.getWriter();
+	}
+
+	// SSE输出流，transient不参与序列化
+	transient PrintWriter writer;
+
+	/**
+	 * SSE标准推送接口，向客户端发送事件数据
+	 * 
+	 * @param event 事件标识
+	 * @param data  推送业务数据
+	 */
+	@Comment(text = "SSE推送消息至客户端", demo = ".send('data', '推送内容')")
+	public final void send(String event, String data) {
+		if (writer != null) {
+			// 换行统一替换为空格，避免破坏SSE协议格式
+			String[] lines = data.split("\n", -1);
+			writer.printf("event: %s%n", event);
+			for (String line : lines) {
+				// 每一行都输出 data: + 当前行 + 单个换行
+				writer.write("data:" + line + "\n");
+			}
+			// 全部data行输出完毕后，输出额外一个\n，构成最终 \n\n 结束这条SSE消息
+			writer.write("\n");
+			writer.flush();
+		}
+	}
+
+	/**
+	 * 原始输出单行文本
+	 * 
+	 * @param line 待输出文本
+	 */
+	public final void println(String line) {
+		if (writer != null) {
+			writer.println(line);
+		}
+	}
+
+	/**
+	 * 关闭输出流并释放资源
+	 */
+	public void close() {
+		if (writer != null) {
+			writer.close();
+			writer = null;
+		}
 	}
 
 }

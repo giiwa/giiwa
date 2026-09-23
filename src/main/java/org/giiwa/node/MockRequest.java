@@ -16,6 +16,7 @@ package org.giiwa.node;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
@@ -159,7 +160,7 @@ public class MockRequest implements HttpServletRequest {
 
 	@Override
 	public BufferedReader getReader() throws IOException {
-		return null;
+		return new BufferedReader(new StringReader(body.toString()));
 	}
 
 	@Override

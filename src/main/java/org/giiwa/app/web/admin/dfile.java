@@ -14,7 +14,6 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
@@ -37,7 +36,6 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
-import org.giiwa.dfile.LocalDFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Monitor;
@@ -52,7 +50,7 @@ public class dfile extends Controller {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Path(path = "file/delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "file/delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void file_delete() {
 
 		String f = this.getString("f");
@@ -141,8 +139,8 @@ public class dfile extends Controller {
 
 						X.close(out);
 
-						DFile f3 = Disk.seek("/temp/" + lang.format(Global.now(), "yyyy/MM/dd/")
-								+ Global.now() + "/" + f1.getName() + ".zip");
+						DFile f3 = Disk.seek("/temp/" + lang.format(Global.now(), "yyyy/MM/dd/") + Global.now() + "/"
+								+ f1.getName() + ".zip");
 
 						f3.upload(t.getInputStream());
 
@@ -175,26 +173,16 @@ public class dfile extends Controller {
 	@Path(path = "disk", login = true, access = "access.config.admin")
 	public void disk() {
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
 		W q = W.create().sort("mount", 1).sort("priority", -1).sort("url");
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		if (!X.isEmpty(name)) {
-
-			W q1 = W.create();
-			List<String> l1 = X.asList(Node.dao.distinct("id", W.create()
-					.and("updated", Global.now() - Node.LOST, W.OP.gte).and("ip", name, W.OP.like)),
-					e -> e.toString());
-			if (l1 == null || l1.isEmpty()) {
-				q1.or("node", X.EMPTY);
-			} else {
-				q1.or("node", l1);
-			}
-			q1.or("path", name);
-			q.and(q1);
-
-			this.set("name", name);
+			q.or("url", name, W.OP.like);
+			q.or("path", name, W.OP.like);
+			q.or("mount", name, W.OP.like);
+			this.set(X.NAME, name);
 		}
 
 		Beans<Disk> bs = Disk.dao.load(q, s, n);
@@ -203,6 +191,15 @@ public class dfile extends Controller {
 		}
 
 		this.pages(bs, s, n);
+
+		List<Stat> l1 = Stat.load("disk.stat", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", -1).and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", -1), 0,
+				60 * 24 * 7);
+		if (l1 != null && !l1.isEmpty()) {
+			Collections.reverse(l1);
+		}
+
+		this.set("stat", l1);
 
 		this.show("/admin/dfile.disk.html");
 
@@ -216,15 +213,13 @@ public class dfile extends Controller {
 			V v = V.create();
 
 			try {
-				String s = this.getString("s");
-				if (X.isEmpty(s)) {
-					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
-					return;
-				}
+				String s = this.getString(X.S);
+//				if (X.isEmpty(s)) {
+//					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
+//					return;
+//				}
 
-				File f = new File(s);
-
-				v.append("path", f.getCanonicalPath());
+				v.append("path", s);
 				v.append("url", this.getString("url"));
 				String mount = this.get("mount");
 				if (mount == null) {
@@ -243,7 +238,7 @@ public class dfile extends Controller {
 				v.append("priority", this.getInt("priority"));
 				v.append("quota", this.getLong("quota"));
 				v.append("enabled", X.isSame("on", this.get("enabled")) ? 1 : 0);
-				v.append("state", 0);
+				v.append(X.STATE, 0);
 
 				Disk.create(v);
 				Disk.reset();
@@ -257,8 +252,7 @@ public class dfile extends Controller {
 			return;
 		}
 
-		this.set("nodes",
-				Node.dao.load(W.create().and("updated", Global.now() - Node.LOST, W.OP.gte), 0, 10000));
+		this.set("nodes", Node.dao.load(W.create().and("updated", Global.now() - Node.LOST, W.OP.gte), 0, 10000));
 
 		this.show("/admin/dfile.disk.add.html");
 
@@ -347,22 +341,20 @@ public class dfile extends Controller {
 	@Path(path = "disk/edit", login = true, access = "access.config.admin", oplog = true)
 	public void disk_edit() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
 			try {
 				V v = V.create();
 
-				String s = this.getString("s");
-				if (X.isEmpty(s)) {
-					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
-					return;
-				}
+				String s = this.getString(X.S);
+//				if (X.isEmpty(s)) {
+//					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
+//					return;
+//				}
 
-				File f = new File(s);
-
-				v.append("path", f.getCanonicalPath());
+				v.append("path", s);
 				v.append("url", this.getString("url"));
 				String mount = this.get("mount");
 				if (mount == null) {
@@ -389,7 +381,7 @@ public class dfile extends Controller {
 				int enabled = X.isSame("on", this.get("enabled")) ? 1 : 0;
 				v.append("enabled", enabled);
 				if (enabled == 0) {
-					v.append("state", 0);
+					v.append(X.STATE, 0);
 				}
 
 				Disk.dao.update(id, v);
@@ -405,7 +397,7 @@ public class dfile extends Controller {
 		}
 
 		Disk s = Disk.dao.load(id);
-		this.set("s", s);
+		this.set(X.S, s);
 		this.show("/admin/dfile.disk.edit.html");
 
 	}
@@ -413,16 +405,17 @@ public class dfile extends Controller {
 	@Path(path = "disk/stat", login = true, access = "access.config.admin")
 	public void disk_stat() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		Disk d = Disk.dao.load(id);
 		this.set("d", d);
 
-		List<Stat> l1 = Stat.load("disk.stat", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", -1), 0, 60 * 24 * 7);
+		List<Stat> l1 = Stat.load("disk.stat", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", -1), 0,
+				60 * 24 * 7);
 		if (l1 != null && !l1.isEmpty()) {
 			Collections.reverse(l1);
 		}
-		this.set("list", l1);
+		this.set(X.LIST, l1);
 		this.show("/admin/dfile.disk.stat.html");
 
 	}
@@ -472,7 +465,7 @@ public class dfile extends Controller {
 				}
 			}
 
-			this.set("list", list);
+			this.set(X.LIST, list);
 
 			this.show("/admin/dfile.folder.html");
 		} catch (Exception e) {
@@ -480,11 +473,11 @@ public class dfile extends Controller {
 		}
 	}
 
-	@Path(path = "disk/delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "disk/delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void disk_delete() {
 
-		final long id = this.getLong("id");
-		int f = this.getInt("f");
+		final long id = this.getLong(X.ID);
+//		int f = this.getInt("f");
 
 		final Disk d = Disk.dao.load(id);
 
@@ -496,27 +489,50 @@ public class dfile extends Controller {
 				 */
 				private static final long serialVersionUID = 1L;
 
-				@Override
-				public boolean interruptable() {
-					return Boolean.FALSE;
-				}
-
+				@SuppressWarnings("deprecation")
 				@Override
 				public void onExecute() {
 
 					try {
-						Disk.dao.delete(id);
-						Disk.reset();
 
-						if (f == 0) {
-							DFile f = LocalDFile.create(d, "/");
+						if (d.state == 1) {
+							Disk.dao.update(id, V.create().append("enabled", 2).append("priority", 0));
+							Disk.reset();
+
+							// 安全卸载
+							// TODO
+							DFile f = d.create(d.mount);
+							if (f != null) {
+								f.scan2(f1 -> {
+									try {
+										if (f1.isFile()) {
+											DFile f2 = Disk.seek(f1.getFilename());
+											X.IO.copy(f1, f2);
+											f1.delete();
+										} else {
+											DFile[] ff = f1.listFiles();
+											if (ff == null || ff.length == 0) {
+												f1.delete();
+											}
+										}
+									} catch (Exception err) {
+										log.error(err.getMessage(), err);
+									}
+									return true;
+								});
+							}
 							DFile[] ff = f.listFiles();
 							if (ff != null) {
 								for (DFile f1 : ff) {
 									copy(d.getPath(), f1);
 								}
 							}
+						} else {
+							// 强制卸载
+							Disk.dao.delete(id);
+							Disk.reset();
 						}
+
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}

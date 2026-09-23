@@ -94,4 +94,10 @@ public @interface Column {
 	 */
 	String value() default X.EMPTY;
 
+	/**
+	 * is password
+	 * 
+	 * @return
+	 */
+	boolean password() default false;
 }

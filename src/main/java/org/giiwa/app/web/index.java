@@ -25,6 +25,12 @@ import org.giiwa.dao.X;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
+/**
+ * 后台主页分发接口
+ * 
+ * @author joe
+ *
+ */
 public class index extends Controller {
 
 	/**
@@ -34,6 +40,13 @@ public class index extends Controller {
 
 	@Path()
 	public void onGet() {
+
+		// 从反向代理获取是否有站群配置项
+		String h1 = this.head("x-forward");
+		if (!X.isEmpty(h1)) {
+			this.redirect(h1);
+			return;
+		}
 
 		User u = this.user();
 		if (u != null) {
@@ -60,19 +73,28 @@ public class index extends Controller {
 			}
 		}
 
-		String h1 = Local.getString("home.uri.1", null);
 		if (X.isEmpty(h1)) {
+			// 节点本地导向
+			h1 = Local.getString("home.uri.1", null);
+			if (!X.isEmpty(h1)) {
+				if (Global.getInt("web.debug", 0) == 1) {
+					this.head("due", X.NODE);
+				}
+			}
+		}
+
+		if (X.isEmpty(h1)) {
+			// 全局导向
 			h1 = Global.getString("home.uri", X.EMPTY);
 			if (!X.isEmpty(h1)) {
 				if (Global.getInt("web.debug", 0) == 1) {
 					this.head("due", "global");
 				}
 			}
-		} else {
-			this.head("due", "node");
 		}
 
 		if (X.isEmpty(h1)) {
+			// 默认
 			h1 = "/index.html";
 		}
 

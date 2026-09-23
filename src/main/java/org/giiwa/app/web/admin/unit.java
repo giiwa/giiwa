@@ -46,14 +46,14 @@ public class unit extends Controller {
 
 			try {
 
-				V v = V.create("name", this.get("name"));
+				V v = V.create(X.NAME, this.get(X.NAME));
 				v.append("no", this.get("no"));
 				v.append("memo", this.get("memo"));
 				v.append("parent", this.getLong("parent"));
 
 				long id = Unit.create(v);
 
-				this.send(JSON.create().append("id", id).append(X.STATE, 200).append(X.MESSAGE,
+				this.send(JSON.create().append(X.ID, id).append(X.STATE, 200).append(X.MESSAGE,
 						lang.get("save.success")));
 				return;
 			} catch (Exception e) {
@@ -75,10 +75,10 @@ public class unit extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		Unit e = Unit.dao.load(id);
 		if (e == null) {
 			this.set(X.ERROR, "miss parameter [id]").send(201);
@@ -86,12 +86,12 @@ public class unit extends Controller {
 		}
 
 		try {
-			if (User.dao.exists(W.create().and("unitid", id))) {
+			if (User.exists(W.create().and("unitid", id))) {
 				this.set(X.ERROR, "exists user under the unit[" + e.name + "]").send(201);
 				return;
 			}
 
-			if (User.dao.exists(W.create().and("parent", id))) {
+			if (User.exists(W.create().and("parent", id))) {
 				this.set(X.ERROR, "exists unit under the unit[" + e.name + "]").send(201);
 				return;
 			}
@@ -112,13 +112,13 @@ public class unit extends Controller {
 	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
 			try {
 
-				V v = V.create("name", this.get("name"));
+				V v = V.create(X.NAME, this.get(X.NAME));
 				v.append("no", this.get("no"));
 				v.append("memo", this.get("memo"));
 				v.append("parent", this.getLong("parent"));
@@ -142,7 +142,7 @@ public class unit extends Controller {
 				Beans<Unit> l1 = Unit.dao.load(W.create().sort("no"), 0, 1024);
 				this.set("units", l1);
 
-				this.set("id", id);
+				this.set(X.ID, id);
 				this.show("/admin/unit.edit.html");
 				return;
 			}
@@ -162,23 +162,23 @@ public class unit extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
 			W list = W.create();
 
 			list.or("no", name, W.OP.like);
-			list.or("name", name, W.OP.like);
+			list.or(X.NAME, name, W.OP.like);
 			if (X.isNumber(name)) {
-				list.or("id", X.toLong(name));
+				list.or(X.ID, X.toLong(name));
 			}
 			q.and(list);
 
-			this.set("name", name);
+			this.set(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
 		q.and(X.ID, 0, W.OP.gt).sort("no", 1);
 

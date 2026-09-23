@@ -21,13 +21,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.jms.JMSException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
+import org.giiwa.task.Task;
 
+/**
+ * 模拟的本地MQ
+ * 
+ * @author joe
+ *
+ */
 class LocalMQ extends MQ {
 
 	private static Log log = LogFactory.getLog(LocalMQ.class);
@@ -75,7 +80,7 @@ class LocalMQ extends MQ {
 			}
 		}
 
-		private R(String name, IStub cb, Mode m) throws JMSException {
+		private R(String name, IStub cb, Mode m) throws Exception {
 			this.name = name;
 			this.cb = cb;
 
@@ -139,7 +144,13 @@ class LocalMQ extends MQ {
 			throw new Exception("MQ not ready yet");
 		}
 
-		p.send(r);
+		Task.schedule(t -> {
+			try {
+				p.send(r);
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+		});
 
 		return r.seq;
 	}
@@ -154,7 +165,13 @@ class LocalMQ extends MQ {
 		if (p == null) {
 			throw new Exception("MQ not ready yet");
 		}
-		p.send(r);
+		Task.schedule(t -> {
+			try {
+				p.send(r);
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+		});
 
 		return r.seq;
 
@@ -182,7 +199,7 @@ class LocalMQ extends MQ {
 		long last = Global.now();
 		String name;
 
-		public void send(Request r) throws JMSException {
+		public void send(Request r) throws Exception {
 			if (log.isDebugEnabled())
 				log.debug("sending, r=" + r);
 

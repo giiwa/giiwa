@@ -217,10 +217,10 @@ public class Host {
 			}
 			try {
 				// ProcExe p = sigar.getProcExe(pid);
-				// jo.append("name", p.getName()).append("cwd", p.getCwd());
+				// jo.append(X.NAME, p.getName()).append("cwd", p.getCwd());
 
 				String name = ProcUtil.getDescription(sigar, pid);
-				jo.put("name", name);
+				jo.put(X.NAME, name);
 			} catch (Exception e) {
 				// ignore
 			}
@@ -295,10 +295,10 @@ public class Host {
 				}
 				try {
 					// ProcExe p = sigar.getProcExe(pid);
-					// jo.append("name", p.getName()).append("cwd", p.getCwd());
+					// jo.append(X.NAME, p.getName()).append("cwd", p.getCwd());
 
 					String name = ProcUtil.getDescription(sigar, pid);
-					jo.put("name", name);
+					jo.put(X.NAME, name);
 				} catch (Exception e) {
 					// ignore
 				}
@@ -509,7 +509,7 @@ public class Host {
 			V e = V.create();
 
 			e.append("address", address);
-			e.append("name", name);
+			e.append(X.NAME, name);
 			e.append("inet", inet);
 			e.append("inet6", inet6);
 			e.append("rxbytes", rxbytes);
@@ -521,7 +521,7 @@ public class Host {
 			e.append("txdrop", txdrop);
 			e.append("txerr", txerr);
 			e.append("txpackets", txpackets);
-			e.append("created", created);
+			e.append(X.CREATED, created);
 
 			return e;
 
@@ -547,7 +547,7 @@ public class Host {
 			JSON jo = JSON.create().append("remoteaddress", n.getRemoteAddress())
 					.append("remoteport", n.getRemotePort()).append("localaddress", n.getLocalAddress())
 					.append("localport", n.getLocalPort()).append("recvqueue", n.getReceiveQueue())
-					.append("sendqueue", n.getSendQueue()).append("state", n.getState()).append("type", n.getType())
+					.append("sendqueue", n.getSendQueue()).append(X.STATE, n.getState()).append("type", n.getType())
 					.append("typename", n.getTypeString());
 			if (n.getType() != NetFlags.CONN_UDP) {
 				jo.append("statename", n.getStateString());

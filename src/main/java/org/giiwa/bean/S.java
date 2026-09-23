@@ -36,7 +36,7 @@ public final class S extends Bean {
 		return W.create().and("updated", Global.now() - X.AWEEK, W.OP.lt);
 	});
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	public String id;
 
 	@Column(memo = "连接", size = 1023)
@@ -47,7 +47,7 @@ public final class S extends Bean {
 		if (dao.exists2(id)) {
 			dao.update(id, V.create().append("updated", Global.now()));
 		} else {
-			dao.insert(V.create().append("id", id).append("url", url).append("expired", Global.now()));
+			dao.insert(V.create().append(X.ID, id).append("url", url).append("expired", Global.now()));
 		}
 		return "/s/" + id;
 	}

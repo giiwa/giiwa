@@ -37,7 +37,7 @@ public class read extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -49,19 +49,19 @@ public class read extends portlet {
 			this.set("name1", id);
 		}
 
-		W q = W.create().and("node", id).and("name", "read")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.NAME, "read")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1);
 		_MQ.Record.dao.optimize(q);
 		
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 
 		long max = X.toLong(1.1 * X.toLong(_MQ.Record.dao.max("max",
-				W.create().and("name", "read").and("created", Global.now() - X.AHOUR, W.OP.gte))));
+				W.create().and(X.NAME, "read").and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte))));
 		this.set("max", max);
 
 		this.show("/portlet/mq/read.html");
@@ -70,7 +70,7 @@ public class read extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -82,17 +82,17 @@ public class read extends portlet {
 			this.set("name1", id);
 		}
 
-		Beans<_MQ.Record> bs = _MQ.Record.dao.load(W.create().and("node", id).and("name", "read")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_MQ.Record> bs = _MQ.Record.dao.load(W.create().and(X.NODE, id).and(X.NAME, "read")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 
 			List<JSON> data = JSON.createList();
 			for (String[] s : new String[][] { { "max", "#860606" }, { "avg", "#0dad76" }, { "min", "#0a5ea0" } }) {
 				JSON p = JSON.create();
-				p.append("name", lang.get("mq.read." + s[0])).append("color", s[1]);
+				p.append(X.NAME, lang.get("mq.read." + s[0])).append("color", s[1]);
 				List<JSON> l1 = JSON.createList();
 				bs.forEach(e -> {
 					l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get(s[0])));
@@ -112,7 +112,7 @@ public class read extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
@@ -127,11 +127,11 @@ public class read extends portlet {
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(
-				W.create().and("node", id).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, id).and(X.NAME, "read").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/mq/read.more.html");
 

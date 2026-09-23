@@ -20,6 +20,7 @@ import org.giiwa.bean.Node;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
+import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.misc.Host;
 import org.giiwa.web.Controller;
@@ -38,7 +39,7 @@ public class sysinfo extends portlet {
 		this.set("uptime", lang.format(Controller.UPTIME, "yy-MM-dd HH:mm:ss"));
 		this.set("now", lang.format(Global.now(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Controller.UPTIME));
-		this.set("node", Local.id());
+		this.set(X.NODE, Local.id());
 		this.set("gnode", Global.id());
 		this.set("release", Module.load("default").getVersion());
 		this.set("build", Module.load("default").getBuild());
@@ -52,7 +53,7 @@ public class sysinfo extends portlet {
 //		this.set("dfile", JSON.create().append("free", Disk.getFreeSpace()).append("used",
 //				Disk.getTotalSpace() - Disk.getFreeSpace()));
 
-		this.set("ip", this.ipPath());
+		this.set(X.IP, this.ipPath());
 
 		Properties props = System.getProperties();
 		this.set("jdkversion", props.getProperty("java.version"));

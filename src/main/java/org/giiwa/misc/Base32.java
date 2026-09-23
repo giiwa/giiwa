@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * The Class Base32.
  */
+@Deprecated
 public class Base32 {
 
 	private static Log log = LogFactory.getLog(Base32.class);

@@ -37,6 +37,9 @@ import org.giiwa.task.BiConsumer;
 import org.giiwa.task.BiFunction;
 import org.giiwa.task.Consumer;
 
+/**
+ * 数据备份
+ */
 public final class Backup {
 
 	private static Log log = LogFactory.getLog(Backup.class);
@@ -58,6 +61,7 @@ public final class Backup {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	public static long backup(String table, W q, ZipOutputStream out, BiFunction<String, Data, JSON> func)
 			throws IOException, SQLException {
 

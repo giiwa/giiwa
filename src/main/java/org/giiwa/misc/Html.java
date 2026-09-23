@@ -21,10 +21,12 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.task.Consumer;
+import org.giiwa.task.Function;
+import org.giiwa.web.Language;
 import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 import org.jsoup.select.Elements;
 import org.giiwa.dao.Comment;
 
@@ -134,13 +136,20 @@ public final class Html {
 	 */
 	@Comment(text = "title")
 	public String title() {
-		if (d != null) {
-			return d.title();
+		if (X.isEmpty(title) && d != null) {
+			title = d.title();
+		}
+		if (X.isEmpty(title)) {
+			Elements l1 = this.select("title");
+			if (l1 != null && !l1.isEmpty()) {
+				title = l1.get(0).text();
+			}
 		}
 
-		return null;
+		return title;
 	}
 
+	transient String title;
 	transient String body;
 
 	/**
@@ -196,15 +205,60 @@ public final class Html {
 		return text;
 	}
 
+	@Comment(text = "带段落的纯文本")
+	public String text2() {
+		if (html == null || html.trim().isEmpty()) {
+			return "";
+		}
+
+		// 1. 解析 HTML 字符串
+		Document doc = Jsoup.parse(html);
+
+		// 2. 使用 StringBuilder 拼接文本，以保留段落结构
+		StringBuilder sb = new StringBuilder();
+
+		// 3. 获取 body 内的所有元素并遍历
+		if (doc.body() != null) {
+			for (Element element : doc.body().getAllElements()) {
+				// 判断是否为块级元素（如 p, div, h1-h6, li 等）
+				if (element.isBlock()) {
+					String txt = element.ownText(); // 获取当前元素自身的文本
+					if (!txt.isEmpty()) {
+						sb.append(txt).append("\n"); // 每个块级元素后追加换行
+					}
+				}
+			}
+		}
+
+		return sb.toString().trim();
+	}
+
 	/**
 	 * 带基本样式的纯文本
 	 * 
 	 * @return
 	 */
-	@Comment(text = "text2")
-	public String text2() {
+	@Comment(text = "p, 保留p/br/b/i/strong/em/video/img")
+	public String p() {
+		return p("p", "br", "b", "i", "strong", "em", "video", "img");
+	}
+
+	/**
+	 * 带基本样式的纯文本
+	 * 
+	 * @return
+	 */
+	@Comment(text = "p", demo = ".p('p', 'img', 'video')")
+	public String p(@Comment(text = "tags") String... tags) {
 		if (text == null && d != null) {
-			text = Jsoup.clean(html, Whitelist.basicWithImages());
+			Safelist safelist = new Safelist()
+					// 允许 img 标签以及常用的基础文本排版标签（如 p, br, b 等）
+					.addTags(tags)
+					// 仅允许 img 的 src 和 alt 属性，防止恶意属性注入
+					.addAttributes("img", "src", "alt").addAttributes("video", "src", "alt");
+			// 【关键】限制协议，仅允许 http 和 https，拦截 javascript: 等危险协议
+//					.addProtocols("img", "src", "http", "https");
+			text = Jsoup.clean(body(), safelist);
 		}
 
 		return text;
@@ -273,26 +327,27 @@ public final class Html {
 	 *                 e.g: find("div") <br>
 	 * @return the list of Elements
 	 */
+	@Deprecated
 	public List<Element> find(String selector) {
 		return select(selector);
 	}
 
 	@Comment(text = "select")
-	public Elements select(@Comment(text = "selector") String selector) {
+	public _Elements select(@Comment(text = "selector") String selector) {
 		if (d == null)
 			return null;
 
-		return d.select(selector);
+		return new _Elements(d.select(selector));
 	}
 
 	/**
 	 * find the elements in the node.
 	 * 
-	 * @Deprecated
 	 * @param e        the element node
 	 * @param selector the selector string
 	 * @return the list of element or null if nothing found
 	 */
+	@Deprecated
 	public static List<Element> find(Element e, String selector) {
 		return e.select(selector);
 	}
@@ -300,11 +355,11 @@ public final class Html {
 	/**
 	 * find the elements in the elements by the selector.
 	 *
-	 * @Deprecated
 	 * @param list     the original elements
 	 * @param selector the string of selector, .id, .class, tag
 	 * @return the list of element or null nothing found
 	 */
+	@Deprecated
 	public static List<Element> find(List<Element> list, String selector) {
 		if (list == null || list.size() == 0) {
 			return null;
@@ -589,6 +644,102 @@ public final class Html {
 			return url.substring(0, i);
 		}
 		return url;
+	}
+
+	@Comment(text = "_Elements")
+	public static class _Elements extends Elements {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public _Elements(Elements e) {
+			super(e);
+		}
+
+		@Comment(text = "select")
+		public _Elements select(String selector) {
+			Elements e = super.select(selector);
+			return new _Elements(e);
+		}
+
+		@Comment(text = "html")
+		public String html() {
+			if (this.size() > 0) {
+				return this.get(0).html();
+			}
+			return null;
+		}
+
+		@Comment(text = "text")
+		public String text() {
+			if (this.size() > 0) {
+				return this.get(0).text();
+			}
+			return null;
+		}
+
+		@Comment(text = "p")
+		public String p() {
+			return Html.create(html()).p();
+		}
+
+		@Comment(text = "带段落的纯文本")
+		public String text2() {
+			return Html.create(html()).text2();
+		}
+
+		@Comment(text = "attr")
+		public String attr(String name) {
+			if (this.size() > 0) {
+				return this.get(0).attr(name);
+			}
+			return null;
+		}
+	}
+
+	@Comment(text = "select")
+	public <T> T select(@Comment(text = "selector") String selector,
+			@Comment(text = "func(_Elements)") Function<_Elements, T> func) {
+		_Elements l1 = this.select(selector);
+		if (l1 != null && l1.size() > 0) {
+			return func.apply(l1);
+		}
+		return null;
+	}
+
+	@Comment(text = "foreach")
+	public void foreach(@Comment(text = "selector") String selector,
+			@Comment(text = "func(Element)") Consumer<Element> func) {
+		_Elements l1 = this.select(selector);
+		if (l1 != null && l1.size() > 0) {
+			for (Element e : l1) {
+				func.accept(e);
+			}
+		}
+	}
+
+	@Comment(text = "text")
+	public String text(@Comment(text = "selector") String selector) {
+		return this.select(selector).text();
+	}
+
+	@Comment(text = "html")
+	public Html html(@Comment(text = "selector") String selector) {
+		return Html.create(this.select(selector).html());
+	}
+
+	@Comment(text = "date")
+	public String date(@Comment(text = "selector") String selector, @Comment(text = "src_format") String src,
+			@Comment(text = "to_format") String to) {
+		String date = text(selector);
+		if (X.isEmpty(date)) {
+			return null;
+		}
+		Language lang = Language.getLanguage();
+		long t = lang.parse(date, src);
+		return lang.format(t, to);
 	}
 
 }

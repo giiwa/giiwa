@@ -44,6 +44,7 @@ import jakarta.servlet.ServletContextListener;
  * @author yjiang
  * 
  */
+@Deprecated
 public class GiiwaContextListener implements ServletContextListener {
 
 	static Log log = LogFactory.getLog(GiiwaContextListener.class);
@@ -77,6 +78,11 @@ public class GiiwaContextListener implements ServletContextListener {
 
 	public static boolean INITED = false;
 
+	/**
+	 * Tomcat 入口
+	 * 
+	 * @param servletContext
+	 */
 	public final synchronized static void init(ServletContext servletContext) {
 
 		log.warn("context init, event=" + servletContext);

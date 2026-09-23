@@ -306,8 +306,8 @@ public class Language implements Serializable {
 		data = new HashMap<String, String[]>();
 		if (Module.home != null) {
 			Module.home.loadLang(data, locale);
-		} else {
-			log.error("load language error, Module.home=null", new Exception("home=null"));
+//		} else {
+//			log.error("load language error, Module.home=null", new Exception("home=null"));
 		}
 
 		if (data.isEmpty()) {
@@ -327,6 +327,15 @@ public class Language implements Serializable {
 			return _format((String) t, format);
 		} else if (t instanceof Number) {
 			return _format(X.toLong(t), format);
+		}
+		return X.EMPTY;
+	}
+
+	public String format(String format, Object... params) {
+		try {
+			return String.format(format, params);
+		} catch (Exception err) {
+			log.error("format=" + format + ", params=" + Arrays.toString(params), err);
 		}
 		return X.EMPTY;
 	}
@@ -670,17 +679,8 @@ public class Language implements Serializable {
 		}
 
 		t /= 24;
-		if (t < 30) {
-			return t + get("past.d");
-		}
+		return t + get("past.d");
 
-		int t1 = t / 30;
-		if (t < 365) {
-			return t1 + get("past.M");
-		}
-
-		t1 = t / 365;
-		return t1 + get("past.y");
 	}
 
 	public long time(long time, String m) {
@@ -691,7 +691,7 @@ public class Language implements Serializable {
 		time += timeoffset * X.AHOUR;
 		if ("ms".equals(m)) {
 			return time;
-		} else if ("s".equals(m)) {
+		} else if (X.S.equals(m)) {
 			return time / 1000 * 1000;
 		} else if ("m".equals(m)) {
 			return time / X.AMINUTE * X.AMINUTE;
@@ -839,12 +839,12 @@ public class Language implements Serializable {
 			theme.append(name, JSON.create());
 		}
 		JSON j = (JSON) theme.get(name);
-		if (Global.now() - j.getLong("created") > min * X.AMINUTE) {
+		if (Global.now() - j.getLong(X.CREATED) > min * X.AMINUTE) {
 			File f = Module.home.getFile("/images/theme/");
 			if (f != null) {
 				String[] ss = f.list();
 				if (ss != null && ss.length > 0) {
-					j.append("created", Global.now()).append("image",
+					j.append(X.CREATED, Global.now()).append("image",
 							"/images/theme/" + ss[(int) (ss.length * Math.random())]);
 				}
 			}

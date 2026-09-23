@@ -18,8 +18,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jms.JMSException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -33,6 +31,12 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 
+/**
+ * Pending
+ * 
+ * @author joe
+ *
+ */
 class MQTT extends MQ {
 
 	private static Log log = LogFactory.getLog(MQTT.class);
@@ -169,7 +173,7 @@ class MQTT extends MQ {
 	@Override
 	protected void _bind(String name, IStub stub, Mode mode) throws Exception {
 		if (conn == null) {
-			throw new JMSException("MQ not init yet");
+			throw new Exception("MQ not init yet");
 		}
 
 		conn.subscribe(name, 1);

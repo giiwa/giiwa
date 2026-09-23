@@ -45,7 +45,7 @@ public final class Code extends Bean {
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	private String id;
 
 	@Column(memo = "名称1")

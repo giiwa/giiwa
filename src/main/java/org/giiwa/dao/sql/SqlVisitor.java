@@ -11,30 +11,6 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by {@link SqlParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStat(SqlParser.StatContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#show}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitShow(SqlParser.ShowContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#showoptions}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitShowoptions(SqlParser.ShowoptionsContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#desc}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDesc(SqlParser.DescContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link SqlParser#select}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -47,11 +23,11 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitColumns(SqlParser.ColumnsContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SqlParser#func}.
+	 * Visit a parse tree produced by {@link SqlParser#columnItem}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunc(SqlParser.FuncContext ctx);
+	T visitColumnItem(SqlParser.ColumnItemContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SqlParser#tablename}.
 	 * @param ctx the parse tree
@@ -59,11 +35,66 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTablename(SqlParser.TablenameContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SqlParser#expr}.
+	 * Visit a parse tree produced by the {@code exprParen}
+	 * labeled alternative in {@link SqlParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExpr(SqlParser.ExprContext ctx);
+	T visitExprParen(SqlParser.ExprParenContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprOr}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprOr(SqlParser.ExprOrContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprIn}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprIn(SqlParser.ExprInContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprNot}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprNot(SqlParser.ExprNotContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprAnd}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprAnd(SqlParser.ExprAndContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprCompare}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprCompare(SqlParser.ExprCompareContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprBetween}
+	 * labeled alternative in {@link SqlParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprBetween(SqlParser.ExprBetweenContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SqlParser#valOrList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitValOrList(SqlParser.ValOrListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SqlParser#inValueList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInValueList(SqlParser.InValueListContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SqlParser#val}.
 	 * @param ctx the parse tree
@@ -71,17 +102,17 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVal(SqlParser.ValContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SqlParser#null}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNull(SqlParser.NullContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link SqlParser#todate}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitTodate(SqlParser.TodateContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SqlParser#format}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormat(SqlParser.FormatContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SqlParser#time}.
 	 * @param ctx the parse tree
@@ -107,6 +138,18 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTostring(SqlParser.TostringContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SqlParser#todouble}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTodouble(SqlParser.TodoubleContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link SqlParser#tofloat}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTofloat(SqlParser.TofloatContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SqlParser#tolong}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -124,36 +167,6 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitObjectid(SqlParser.ObjectidContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#sum}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSum(SqlParser.SumContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#avg}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAvg(SqlParser.AvgContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#count}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCount(SqlParser.CountContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#max}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMax(SqlParser.MaxContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#min}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMin(SqlParser.MinContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SqlParser#group}.
 	 * @param ctx the parse tree
@@ -178,34 +191,4 @@ public interface SqlVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitLimit(SqlParser.LimitContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#set}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSet(SqlParser.SetContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#insert}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInsert(SqlParser.InsertContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#value}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitValue(SqlParser.ValueContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#update}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitUpdate(SqlParser.UpdateContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SqlParser#setvalue}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSetvalue(SqlParser.SetvalueContext ctx);
 }

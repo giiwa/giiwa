@@ -344,10 +344,10 @@ public final class SQL2 {
 							if (!X.isEmpty(value)) {
 								q.and(name, value, W.OP.like);
 							}
-						} else if (X.isIn(op, "not like", "!like")) {
-							if (!X.isEmpty(value)) {
-								q.and(W.create().and(name, value, W.OP.like), W.NOT);
-							}
+//						} else if (X.isIn(op, "not like", "!like")) {
+//							if (!X.isEmpty(value)) {
+//								q.and(W.create().and(name, value, W.OP.like), W.NOT);
+//							}
 						} else if (X.isSame(op, "like_")) {
 							if (!X.isEmpty(value)) {
 								q.and(name, value, W.OP.like_);
@@ -376,10 +376,10 @@ public final class SQL2 {
 							if (!X.isEmpty(value)) {
 								q.or(name, value, W.OP.like);
 							}
-						} else if (X.isIn(op, "not like", "!like")) {
-							if (!X.isEmpty(value)) {
-								q.and(W.create().and(name, value, W.OP.like), W.NOT);
-							}
+//						} else if (X.isIn(op, "not like", "!like")) {
+//							if (!X.isEmpty(value)) {
+//								q.and(W.create().and(name, value, W.OP.like), W.NOT);
+//							}
 						} else if (X.isSame(op, "like_")) {
 							if (!X.isEmpty(value)) {
 								q.or(name, value, W.OP.like_);
@@ -496,8 +496,8 @@ public final class SQL2 {
 						q.and(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.and(name, value, W.OP.like);
-					} else if (X.isIn(op, "not like", "!like")) {
-						q.and(W.create().and(name, value, W.OP.like), W.NOT);
+//					} else if (X.isIn(op, "not like", "!like")) {
+//						q.and(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
 						q.and(name, value, W.OP.like_);
 					} else if (X.isSame(op, "like_$")) {
@@ -520,8 +520,8 @@ public final class SQL2 {
 						q.or(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.or(name, value, W.OP.like);
-					} else if (X.isIn(op, "not like", "!like")) {
-						q.or(W.create().and(name, value, W.OP.like), W.NOT);
+//					} else if (X.isIn(op, "not like", "!like")) {
+//						q.or(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
 						q.or(name, value, W.OP.like_);
 					} else if (X.isSame(op, "like_$")) {

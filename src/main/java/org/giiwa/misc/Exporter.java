@@ -70,7 +70,7 @@ public class Exporter<V> implements Closeable {
 		}
 
 		Exporter<V> s = new Exporter<V>();
-		s.out = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+		s.out = new BufferedWriter(new OutputStreamWriter(out, X.UTF8));
 		s.format = format;
 
 		return s;

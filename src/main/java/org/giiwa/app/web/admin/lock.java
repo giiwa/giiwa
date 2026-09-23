@@ -20,13 +20,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.giiwa.bean.GLog;
-import org.giiwa.bean.Node;
 import org.giiwa.cache.GlobalLock;
-import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
-import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
@@ -53,18 +49,11 @@ public class lock extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-		q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
-
 		List<GlobalLock._Lock> lock = new ArrayList<GlobalLock._Lock>();
-		List<String> has = new ArrayList<String>();
 
 		try {
 
-			long n = q.count();
-			MQ.callTopic(Task.MQNAME, "list_lock", "", 5000, req -> {
-
-				String from = req.from;
+			Task.call("list_lock", "", req -> {
 
 				try {
 
@@ -75,20 +64,13 @@ public class lock extends Controller {
 					}
 
 				} catch (Exception e) {
-					GLog.applog.error("sys", "task", "from=" + from + ", error=" + e.getMessage(), e);
+					GLog.applog.error("sys", "task", "from=" + req.from + ", error=" + e.getMessage(), e);
 				}
+				return true;
 
-				has.add(from);
-				if (has.size() >= n) {
-					// 结束
-					return true;
-				} else {
-					return false;
-				}
 			});
 		} catch (Exception e) {
-			log.error("got " + has.toString(), e);
-			GLog.applog.error("task", "checking", "got " + has.toString(), e);
+			log.error(e.getMessage(), e);
 		}
 
 		Collections.sort(lock, new Comparator<GlobalLock._Lock>() {
@@ -100,15 +82,15 @@ public class lock extends Controller {
 
 		});
 
-		this.set("list", lock);
+		this.set(X.LIST, lock);
 
 		this.show("/admin/lock.index.html");
 
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void kill() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		GlobalLock.kill(name);
 
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "killed"));
@@ -117,7 +99,7 @@ public class lock extends Controller {
 
 	@Path(path = "trace", login = true, access = "access.config.admin", oplog = true)
 	public void trace() {
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 
 		GlobalLock._Lock e = GlobalLock.getLock(name);
 		if (e != null) {

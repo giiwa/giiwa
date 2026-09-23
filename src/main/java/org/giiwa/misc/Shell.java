@@ -400,7 +400,7 @@ public class Shell {
 
 					if (found) {
 						JSON j1 = JSON.create();
-						j1.append("name", ss[0]);
+						j1.append(X.NAME, ss[0]);
 
 						j1.append("cpu", cpu);
 						j1.append("mem", mem);
@@ -455,7 +455,7 @@ public class Shell {
 				String[] ss1 = X.split(s1.trim(), "[ ]");
 				if (ss1 != null && ss1.length == 12 && X.isNumber(ss1[0])) {
 					l1.add(JSON.create().append("pid", ss1[0]).append("cpu", X.toFloat(ss1[8]))
-							.append("mem", X.toFloat(ss1[9])).append("name", ss1[11]));
+							.append("mem", X.toFloat(ss1[9])).append(X.NAME, ss1[11]));
 				}
 			}
 		}

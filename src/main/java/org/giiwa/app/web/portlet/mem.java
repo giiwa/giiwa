@@ -38,19 +38,19 @@ public class mem extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
 		if (n != null) {
-			this.set("name", n.label);
+			this.set(X.NAME, n.label);
 		} else {
-			this.set("name", id);
+			this.set(X.NAME, id);
 		}
 
-		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created",
+		W q = W.create().and(X.NODE, id).and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED,
 				-1);
 		_Mem.Record.dao.optimize(q);
 
@@ -59,7 +59,7 @@ public class mem extends portlet {
 			Collections.reverse(bs);
 
 			this.set("total", bs.get(0).getLong("total"));
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/mem.html");
 
@@ -68,17 +68,17 @@ public class mem extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.get("id");
+		String id = this.get(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 
-		int hours = this.getInt("n", 1);
+		int hours = this.getInt(X.N, 1);
 
 		Node n = Node.dao.load(id);
 
-		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR * hours, W.OP.gte).sort("created",
+		W q = W.create().and(X.NODE, id).and(X.CREATED, Global.now() - X.AHOUR * hours, W.OP.gte).sort(X.CREATED,
 				-1);
 
 		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60 * hours);
@@ -90,8 +90,8 @@ public class mem extends portlet {
 			// {name: "$lang.get('mem.free')", color:'.0dad76', data: [.foreach($c in $list)
 			// {x:$this.time($c), y:$c.free, hint:"$lang.size($c.free)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("mem.usage")).append("color", "#0a5ea0");
-//			JSON p2 = JSON.create().append("name", lang.get("mem.free")).append("color", "#0dad76");
+			JSON p1 = JSON.create().append(X.NAME, lang.get("mem.usage")).append("color", "#0a5ea0");
+//			JSON p2 = JSON.create().append(X.NAME, lang.get("mem.free")).append("color", "#0dad76");
 
 			List<JSON> l1 = JSON.createList();
 //			List<JSON> l2 = JSON.createList();
@@ -102,7 +102,7 @@ public class mem extends portlet {
 			});
 			p1.append("data", l1);
 //			p2.append("data", l2);
-			this.send(JSON.create().append(X.STATE, 200).append("name", (n != null ? n.label : "") + " - " + lang.get("mem.usage")).append("data", Arrays.asList(p1)));
+			this.send(JSON.create().append(X.STATE, 200).append(X.NAME, (n != null ? n.label : "") + " - " + lang.get("mem.usage")).append("data", Arrays.asList(p1)));
 
 			return;
 
@@ -113,29 +113,29 @@ public class mem extends portlet {
 
 	@Path(path = "more", login = true)
 	public void more() {
-//		long id = this.getLong("id");
-//		this.set("id", id);
+//		long id = this.getLong(X.ID);
+//		this.set(X.ID, id);
 
-		String id = this.get("id");
+		String id = this.get(X.ID);
 		if (X.isEmpty(id)) {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
 		if (n != null) {
-			this.set("name", n.label);
+			this.set(X.NAME, n.label);
 		}
 
 		long time = Global.now() - X.AWEEK;
 
-		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, id).and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1);
 
 		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60 * 24 * 2);
 
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 			this.set("total", bs.get(0).getLong("total"));
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/mem.more.html");
 	}

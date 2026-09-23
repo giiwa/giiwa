@@ -41,8 +41,13 @@ public class index extends Controller {
 	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Override
-	@Path(login = true, method = "GET")
+	@Path(method = "GET")
 	public void onGet() {
+		String h1 = this.head("x-forward");
+		if (!X.isEmpty(h1)) {
+			this.redirect(h1);
+			return;
+		}
 		/**
 		 * let's post method to handle it
 		 */
@@ -56,6 +61,11 @@ public class index extends Controller {
 	 */
 	@Path(login = true, method = "POST")
 	public void onPost() {
+
+		if (this.user() == null) {
+			this.redirect("/user/");
+			return;
+		}
 
 		String ip = Global.getString("admin.ip", ".*");
 		if (!X.isEmpty(ip) && !X.isIn(ip, "\\*", ".*") && !this.ipPath().matches(ip)) {
@@ -75,7 +85,7 @@ public class index extends Controller {
 			long n = Node.dao.count(W.create());
 			if (n > 0) {
 				// 多节点， 不能出现local磁盘
-				Beans<Disk> bs = Disk.dao.load(W.create(), 0, 128);
+				Beans<Disk> bs = Disk.dao.load(W.create(), 0, Disk.MAX_DISKS);
 				if (bs != null) {
 					for (Disk e : bs) {
 						if (e.enabled == 1) {

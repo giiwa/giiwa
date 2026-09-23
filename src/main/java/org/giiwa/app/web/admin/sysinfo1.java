@@ -69,7 +69,7 @@ public class sysinfo1 extends Controller {
 	public void process() {
 
 		try {
-			this.set("list", Host.getProcess());
+			this.set(X.LIST, Host.getProcess());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -81,7 +81,7 @@ public class sysinfo1 extends Controller {
 	public void net() {
 
 		try {
-			this.set("list", Host.getIfaces());
+			this.set(X.LIST, Host.getIfaces());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -97,7 +97,7 @@ public class sysinfo1 extends Controller {
 			JSON stat = Helper.primary.stats(null);
 			this.set("stat", stat);
 
-			this.set("list", Helper.primary.listOp());
+			this.set(X.LIST, Helper.primary.listOp());
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -109,7 +109,7 @@ public class sysinfo1 extends Controller {
 	@Path(path = "db/kill", login = true, access = "access.config.admin")
 	public void db_kill() {
 
-		String id = this.get("id");
+		String id = this.get(X.ID);
 		Helper.killOp(id);
 		this.set(X.MESSAGE, "killed").send(200);
 
@@ -131,7 +131,7 @@ public class sysinfo1 extends Controller {
 	public void route() {
 
 		try {
-			this.set("list", Host.getRoutes());
+			this.set(X.LIST, Host.getRoutes());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -143,7 +143,7 @@ public class sysinfo1 extends Controller {
 	public void disk() {
 
 		try {
-			this.set("list", Host.getDisks());
+			this.set(X.LIST, Host.getDisks());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

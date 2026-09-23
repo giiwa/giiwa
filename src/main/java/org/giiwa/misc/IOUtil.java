@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -35,6 +36,12 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +54,7 @@ import org.giiwa.task.BiConsumer;
 import org.giiwa.web.Language;
 
 /**
- * IO utility
+ * IO工具类
  * 
  * @author wujun
  *
@@ -59,27 +66,33 @@ public class IOUtil {
 	public static int BUFFER_SIZE = 1024 * 1024 * 4;
 
 	/**
-	 * the utility api of copying all data in "inputstream" to "outputstream".
-	 * please refers copy(in, out, boolean)
+	 * 复制输入流到输出流，并关闭输入输出流
 	 *
-	 * @param in  the inputstream
-	 * @param out the outputstream
-	 * @return int the size of copied
+	 * @param in  - 输入流
+	 * @param out - 输出流
+	 * @return 复制总字节数
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static long copy(InputStream in, OutputStream out) throws IOException {
 		return copy(in, out, true);
 	}
 
+	/**
+	 * 删除本地文件
+	 * 
+	 * @param f - 本地文件
+	 * @return 删除文件总个数
+	 * @throws IOException
+	 */
 	public static int delete(File f) throws IOException {
 		return delete(f, -1, null);
 	}
 
 	/**
-	 * delete the file or the path.
+	 * 删除本地文件
 	 *
-	 * @param f the file or the path
-	 * @return the number deleted
+	 * @param f - 本地文件/文件夹
+	 * @return 删除总个数
 	 * @throws IOException throw exception when delete the file or directory error
 	 */
 	public static int delete(File f, long age, Consumer<String> func) throws IOException {
@@ -154,6 +167,14 @@ public class IOUtil {
 		return count;
 	}
 
+	/**
+	 * 删除文件，老于age的
+	 * 
+	 * @param f   - 文件仓库文件
+	 * @param age - 毫秒，最后修改时间早于age的文件
+	 * @return 删除文件个数
+	 * @throws Exception
+	 */
 	public static int delete(DFile f, long age) throws Exception {
 
 		int count = 0;
@@ -195,6 +216,13 @@ public class IOUtil {
 		return count;
 	}
 
+	/**
+	 * 删除文件仓库文件/文件夹
+	 * 
+	 * @param f - 文件仓库文件/文件夹
+	 * @return 删除文件总个数
+	 * @throws IOException
+	 */
 	public static int delete(DFile f) throws IOException {
 
 		int count = 0;
@@ -236,28 +264,53 @@ public class IOUtil {
 		return !X.isSame(f.getAbsolutePath(), f.getCanonicalPath());
 	}
 
+	/**
+	 * 复制文件夹
+	 * 
+	 * @param src  - 源本地文件夹
+	 * @param dest - 目的文件位置
+	 * @return 复制所有文件总长度
+	 * @throws IOException
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static int copyDir(File src, File dest) throws IOException {
 		return copyDir(src, dest, (BiConsumer) null);
 	}
 
+	/**
+	 * 复制本地文件夹到文件仓库
+	 * 
+	 * @param src  - 本地源文件夹
+	 * @param dest - 文件仓库目的位置
+	 * @return 复制所有文件的总长度
+	 * @throws IOException
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static int copyDir(File src, DFile dest) throws IOException {
 		return copyDir(src, dest, (BiConsumer) null);
 	}
 
 	/**
-	 * copy files.
+	 * 复制文件夹
 	 *
-	 * @param src  the source file
-	 * @param dest the destination file
-	 * @return the number copied
+	 * @param src  - 源文件夹
+	 * @param dest - 目的文件位置
+	 * @return 复制所有文件的总长度
 	 * @throws IOException throw exception when copy failed
 	 */
 	public static int copyDir(File src, File dest, BiConsumer<String, Integer> func) throws IOException {
 		return _copyDir(src, dest, 0, func);
 	}
 
+	/**
+	 * 复制文件夹
+	 * 
+	 * @param src  - 源文件仓库文件夹
+	 * @param dest - 目的文件位置
+	 * @param func - 回调函数 《文件名，长度》
+	 * @return 复制所有文件的总长度
+	 * @throws IOException
+	 */
 	public static int copyDir(File src, DFile dest, BiConsumer<String, Integer> func) throws IOException {
 		return _copyDir(src, dest, 0, func);
 	}
@@ -315,10 +368,27 @@ public class IOUtil {
 		return count;
 	}
 
+	/**
+	 * 复制文件夹
+	 * 
+	 * @param src  - 源文件仓库文件夹
+	 * @param dest - 目的文件位置
+	 * @return 复制所有文件的总长度
+	 * @throws IOException
+	 */
 	public static int copyDir(DFile src, DFile dest) throws IOException {
 		return copyDir(src, dest, null);
 	}
 
+	/**
+	 * 复制文件夹
+	 * 
+	 * @param src  - 源文件仓库文件/文件夹
+	 * @param dest - 目的文件仓库位置
+	 * @param func - 回调函数 《文件名，长度》
+	 * @return 复制所有文件的总长度
+	 * @throws IOException
+	 */
 	public static int copyDir(DFile src, DFile dest, BiConsumer<String, Integer> func) throws IOException {
 		return _copyDir(src, dest, 0, func);
 	}
@@ -354,11 +424,11 @@ public class IOUtil {
 	}
 
 	/**
-	 * copy all the files except.
+	 * 复制文件夹
 	 *
-	 * @param src    the source dir
-	 * @param dest   the destination dir
-	 * @param except the files
+	 * @param src    - 源文件夹
+	 * @param dest   - 目的文件夹
+	 * @param except - 排除文件名
 	 * @return the number files copied
 	 * @throws IOException throw IOException if error
 	 */
@@ -392,11 +462,11 @@ public class IOUtil {
 	}
 
 	/**
-	 * copy file src to file destination.
+	 * 复制文件/文件夹到目的文件位置
 	 *
-	 * @param src  the source file
-	 * @param dest the destination file
-	 * @return int of copied
+	 * @param src  - 源文件/文件夹
+	 * @param dest - 目的文件问之
+	 * @return 复制所有文件的总长度
 	 * @throws IOException throw exception when copy file failed
 	 */
 	public static long copy(File src, File dest) throws IOException {
@@ -417,6 +487,14 @@ public class IOUtil {
 
 	}
 
+	/**
+	 * 复制文件仓库文文件/文件夹到目的文件仓库
+	 * 
+	 * @param src  - 源文件仓库文件/文件夹
+	 * @param dest - 目的文件仓库位置
+	 * @return 复制的所有文件的总长度
+	 * @throws IOException
+	 */
 	public static long copy(DFile src, DFile dest) throws IOException {
 
 		if (src.equals(dest)) {
@@ -433,14 +511,14 @@ public class IOUtil {
 	}
 
 	/**
-	 * copy the data in "inputstream" to "outputstream", from start to end.
+	 * 复制输入流到输出流
 	 *
-	 * @param in             the inputstream
-	 * @param out            the outputstream
-	 * @param start          the start position of started
-	 * @param end            the end position of ended
-	 * @param closeAfterDone close after done, true: close if done, false: not close
-	 * @return int the size of copied
+	 * @param in             - 输入流
+	 * @param out            - 输出流
+	 * @param start          - 输入流开始位置
+	 * @param end            - 输入流结束位置
+	 * @param closeAfterDone - True， 自动关闭输入输出流
+	 * @return 复制的总长度
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static int copy(InputStream in, OutputStream out, long start, long end, boolean closeAfterDone)
@@ -484,12 +562,12 @@ public class IOUtil {
 	}
 
 	/**
-	 * Copy data in "inputstream" to "outputstream".
+	 * 复制输入流数据到输出流
 	 *
-	 * @param in             the inputstream
-	 * @param out            the outputstream
-	 * @param closeAfterDone close after done, true: close if done, false: not close
-	 * @return int the size of copied
+	 * @param in             - 输入流
+	 * @param out            - 输出流
+	 * @param closeAfterDone - True，自动关闭输入输出流
+	 * @return 复制的总长度
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static long copy(InputStream in, OutputStream out, boolean closeAfterDone) throws IOException {
@@ -517,6 +595,15 @@ public class IOUtil {
 		}
 	}
 
+	/**
+	 * 复制输入流数据到输出流，并关闭输入输出流
+	 * 
+	 * @param in   - 输入流
+	 * @param out  - 输出流
+	 * @param func - 回调函数，通过回调，《总长度，当前长度》
+	 * @return 复制的长度
+	 * @throws IOException
+	 */
 	public static long copy(InputStream in, OutputStream out, BiConsumer<Long, Long> func) throws IOException {
 
 		try {
@@ -528,12 +615,12 @@ public class IOUtil {
 			long total = 0;
 			int len = in.read(bb);
 			while (len > 0) {
-				out.write(bb, 0, len);
-				total += len;
-				len = in.read(bb);
 				if (func != null) {
 					func.accept(total, (long) len);
 				}
+				out.write(bb, 0, len);
+				total += len;
+				len = in.read(bb);
 			}
 			out.flush();
 			return total;
@@ -543,13 +630,20 @@ public class IOUtil {
 		}
 	}
 
+	/**
+	 * 读取文件为字符串
+	 * 
+	 * @param f        - 文件对象
+	 * @param encoding - 编码，缺省UTF-8
+	 * @return 字符串
+	 */
 	public static String read(File f, String encoding) {
 
 		FileInputStream in = null;
 
 		try {
 			if (X.isEmpty(encoding)) {
-				encoding = "UTF-8";
+				encoding = X.UTF8;
 			}
 			in = new FileInputStream(f);
 
@@ -562,13 +656,47 @@ public class IOUtil {
 		return null;
 	}
 
+	/**
+	 * 读取所有内容为XML，并关闭输入流
+	 * 
+	 * @param in      - 输入流
+	 * @param chatset - 编码
+	 * @return XML的字符串
+	 * @throws Exception
+	 */
+	public static String readxml(InputStream in, String chatset) throws Exception {
+
+		try {
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+
+			Source src = new StreamSource(in);
+
+			StringWriter writer = new StringWriter();
+
+			transformer.transform(src, new StreamResult(writer));
+
+			return writer.getBuffer().toString();
+
+		} finally {
+			X.close(in);
+		}
+	}
+
+	/**
+	 * 把字符串写入文件
+	 * 
+	 * @param f        - 文件对象
+	 * @param encoding - 编码，缺省UTF8
+	 * @param str      - 字符串
+	 */
 	public static void write(File f, String encoding, String str) {
 
 		FileOutputStream out = null;
 
 		try {
 			if (X.isEmpty(encoding)) {
-				encoding = "UTF-8";
+				encoding = X.UTF8;
 			}
 			out = new FileOutputStream(f);
 
@@ -580,23 +708,39 @@ public class IOUtil {
 		}
 	}
 
+	/**
+	 * 写入字符串到输出流，并关闭输出流
+	 * 
+	 * @param out      - 输出流
+	 * @param encoding - 编码，缺省UTF8
+	 * @param str      - 字符串
+	 */
 	public static void write(OutputStream out, String encoding, String str) {
 
 		BufferedWriter wri = null;
 
 		try {
 			if (X.isEmpty(encoding)) {
-				encoding = "UTF-8";
+				encoding = X.UTF8;
 			}
 			wri = new BufferedWriter(new OutputStreamWriter(out, encoding));
 			wri.write(str);
 			wri.flush();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			X.close(wri);
 		}
 
 	}
 
+	/**
+	 * 保存对象到输出流，并关闭输出流
+	 * 
+	 * @param obj - 可序列化对象
+	 * @param out - 输出流
+	 * @throws Exception
+	 */
 	public static void saveObjectTo(Object obj, OutputStream out) throws Exception {
 
 		try {
@@ -610,6 +754,13 @@ public class IOUtil {
 
 	}
 
+	/**
+	 * 从输入流读取对象，并关闭输入流
+	 * 
+	 * @param in - 输入流
+	 * @return 可反序列化对象
+	 * @throws Exception
+	 */
 	public static Object readObjectFrom(InputStream in) throws Exception {
 
 		try {
@@ -624,10 +775,10 @@ public class IOUtil {
 	}
 
 	/**
-	 * read the input stream with teh encoding, then close the stream
+	 * 读取所有数据，并关闭输入流
 	 * 
-	 * @param in
-	 * @param encoding
+	 * @param in       - 输入流
+	 * @param encoding - 编码，缺省UTF-8
 	 * @return
 	 */
 	public static String read(InputStream in, String encoding) {
@@ -638,7 +789,7 @@ public class IOUtil {
 
 		try {
 			if (X.isEmpty(encoding)) {
-				encoding = "UTF-8";
+				encoding = X.UTF8;
 			}
 			read = new BufferedReader(new InputStreamReader(in, encoding));
 			String line = null;
@@ -655,15 +806,22 @@ public class IOUtil {
 	}
 
 	/**
-	 * read the input stream , then close the stream
+	 * 读取所有数据，并关闭输入流
 	 * 
-	 * @param in
-	 * @return
+	 * @param in - 输入流
+	 * @return 字节流
 	 */
 	public static byte[] read(InputStream in) {
 		return read(in, true);
 	}
 
+	/**
+	 * 读取所有数据
+	 * 
+	 * @param in    - 输入流
+	 * @param close - True 自动关闭输入流
+	 * @return 字节流
+	 */
 	public static byte[] read(InputStream in, boolean close) {
 
 		ByteArrayOutputStream out = null;
@@ -691,6 +849,13 @@ public class IOUtil {
 
 	}
 
+	/**
+	 * 读取所有数据，并关闭输入流
+	 * 
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
 	public static String read(Reader in) throws IOException {
 
 		if (in == null) {
@@ -818,16 +983,22 @@ public class IOUtil {
 	}
 
 	/**
+	 * 按照CSV格式，读取一行 <br>
+	 * 注意， 需要外层调用关闭输入流
+	 * 
 	 * @Deprecated replace by readcsv
 	 * @param re
 	 * @return
 	 * @throws IOException
 	 */
+	@Deprecated
 	public static String readcvs(BufferedReader re) throws IOException {
 		return readcsv(re);
 	}
 
 	/**
+	 * 按照CSV格式，读取一行<br>
+	 * 注意， 需要外层调用关闭输入流
 	 * 
 	 * @param re
 	 * @return
@@ -889,7 +1060,12 @@ public class IOUtil {
 			return true;
 		}
 
-		boolean b = f.mkdirs();
+		File parent = f.getParentFile();
+		if (!parent.exists()) {
+			mkdirs(parent);
+		}
+
+		boolean b = f.mkdir();
 
 		try {
 			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();

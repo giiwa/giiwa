@@ -28,7 +28,6 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.UID;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.noti.Email;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
 import org.giiwa.web.view.View;
@@ -56,25 +55,27 @@ public class user extends Controller {
 		if (method.isPost()) {
 
 			JSON jo = this.json();
-			final String name = this.getString("name").trim().toLowerCase();
+			final String name = this.getString(X.NAME).trim().toLowerCase();
 			try {
 
 				int number = this.getInt("number", 1);
 				if (number > 1) {
 
 					Task.schedule(t -> {
-						int n = 0;
+						int n = 1;
 						try {
-							for (int i = 0; n < number; i++) {
+							while (n <= number) {
 
-								String name1 = name + "_" + i;
+								String name1 = name + n;
 
 								/**
 								 * create the user
 								 */
-								if (!User.dao.exists(W.create("name", name1))) {
+								if (!User.exists(W.create(X.NAME, name1))) {
 
-									V v = V.create("name", name1).copy(jo).append("locked", 0);
+									V v = V.create(X.NAME, name1);
+									v.append("nickname", this.getString("nickname") + n);
+									v.copy(jo).append("locked", 0);
 									v.remove("role");
 									v.append("createdip", this.ip()).append("createdua", this.browser())
 											.force("createdby", login.getId());
@@ -82,8 +83,9 @@ public class user extends Controller {
 									v.append("company", this.get("company"));
 									v.append("phone", this.get("phone"));
 									v.append("email", this.get("email"));
-									v.force("unitid", this.getLong("unitid"));
 									v.append("password", this.getHtml("password"));
+									v.append("passwordtime", Global.now());
+									v.force("unitid", this.getLong("unitid"));
 									v.force("limitip", this.getInt("limitip"));
 									v.force("disklimitsize", this.getLong("disklimitsize"));
 
@@ -99,7 +101,7 @@ public class user extends Controller {
 										log.debug("roles=" + Helper.toString(roles));
 
 									if (roles != null) {
-										User u = User.dao.load(id);
+										User u = User.load(id);
 										List<Long> list = new ArrayList<Long>();
 										for (String s : roles) {
 											list.add(X.toLong(s));
@@ -122,7 +124,7 @@ public class user extends Controller {
 					/**
 					 * create the user
 					 */
-					if (User.dao.exists(W.create("name", name))) {
+					if (User.exists(W.create(X.NAME, name))) {
 						/**
 						 * exists, create failded
 						 */
@@ -131,7 +133,7 @@ public class user extends Controller {
 
 					} else {
 
-						V v = V.create("name", name).copy(jo).append("locked", 0);
+						V v = V.create(X.NAME, name).copy(jo).append("locked", 0);
 						v.remove("role");
 						v.append("createdip", this.ip()).append("createdua", this.browser()).append("createdby",
 								login.getId());
@@ -154,7 +156,7 @@ public class user extends Controller {
 							log.debug("roles=" + Helper.toString(roles));
 
 						if (roles != null) {
-							User u = User.dao.load(id);
+							User u = User.load(id);
 							List<Long> list = new ArrayList<Long>();
 							for (String s : roles) {
 								list.add(X.toLong(s));
@@ -191,13 +193,13 @@ public class user extends Controller {
 											View v1 = View.getVelocity();
 											String body = v1.parse(f, j1);
 											if (body != null) {
-												try {
-													Email.send(lang.get("mail.creation.noti"), body, email);
-												} catch (Exception e) {
-													log.error(e.getMessage(), e);
-													GLog.applog.error(user.class, "create", e.getMessage(), e, login,
-															this.ip());
-												}
+//												try {
+//													Email.send(lang.get("mail.creation.noti"), body, email);
+//												} catch (Exception e) {
+//													log.error(e.getMessage(), e);
+//													GLog.applog.error(user.class, "create", e.getMessage(), e, login,
+//															this.ip());
+//												}
 											}
 										}
 
@@ -235,12 +237,12 @@ public class user extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void delete() {
 
 		JSON jo = new JSON();
 
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 		if (id > 0) {
 			User.delete(id);
 			AuthToken.delete(id);
@@ -255,20 +257,20 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true, loglevel = "warn")
 	public void deleteall() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		W list = W.create();
 
-		list.or("name", name, W.OP.like);
+		list.or(X.NAME, name, W.OP.like);
 		list.or("nickname", name, W.OP.like);
 		if (X.isNumber(name)) {
-			list.or("id", X.toLong(name));
+			list.or(X.ID, X.toLong(name));
 		}
 		q.and(list);
-		User.dao.delete(q);
+//		User.delete(q);
 
 		GLog.securitylog.warn(user.class, "deleteall", this.json().toString(), login, this.ip());
 		this.set(X.MESSAGE, lang.get("delete.success")).send(200);
@@ -280,7 +282,7 @@ public class user extends Controller {
 	 */
 	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		if (method.isPost()) {
 
@@ -288,7 +290,7 @@ public class user extends Controller {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
 
-					User.update(id, V.create("password", password));
+					User.update(id, V.create("password", password).append("passwordtime", Global.now()));
 
 					Session.expired(id);
 
@@ -314,7 +316,7 @@ public class user extends Controller {
 				}
 
 				User.update(id, v);
-				User u = User.dao.load(id);
+				User u = User.load(id);
 
 				String[] roles = this.getStrings("role");
 				if (roles != null) {
@@ -341,7 +343,7 @@ public class user extends Controller {
 
 		} else {
 
-			User u = User.dao.load(id);
+			User u = User.load(id);
 			if (u != null) {
 				this.copy(u.json());
 				this.set("u", u);
@@ -352,7 +354,7 @@ public class user extends Controller {
 				Beans<Unit> l1 = Unit.dao.load(W.create().sort("no"), 0, 1024);
 				this.set("units", l1);
 
-				this.set("id", id);
+				this.set(X.ID, id);
 				this.show("/admin/user.edit.html");
 				return;
 			}
@@ -365,7 +367,7 @@ public class user extends Controller {
 
 	@Path(path = "unlock", login = true, access = "access.config.admin", oplog = true)
 	public void unlock() {
-		long id = this.getLong("id");
+		long id = this.getLong(X.ID);
 
 		try {
 
@@ -375,7 +377,7 @@ public class user extends Controller {
 			v.force("locked", 0);
 
 			User.update(id, v);
-			User u = User.dao.load(id);
+			User u = User.load(id);
 
 			GLog.securitylog.warn(user.class, "edit", id + "/" + u.name + "/" + u.nickname, login, this.ip());
 
@@ -394,10 +396,10 @@ public class user extends Controller {
 	 */
 	@Path(path = "detail", login = true, access = "access.config.admin", oplog = true)
 	public void detail() {
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		if (id != null) {
 			long i = X.toLong(id, -1);
-			User u = User.dao.load(i);
+			User u = User.load(i);
 			this.set("u", u);
 
 			Beans<Role> bs = Role.load(0, 100);
@@ -414,8 +416,8 @@ public class user extends Controller {
 //	@Path(path = "oplog", login = true, access = "access.config.admin")
 //	public void oplog() {
 //
-//		int s = this.getInt("s");
-//		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+//		int s = this.getInt(X.S);
+//		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 //
 //		W q = getW(this.json());
 //		Beans<GLog> bs = GLog.dao.load(q, s, n);
@@ -429,9 +431,9 @@ public class user extends Controller {
 //		long uid = this.getLong("uid");
 //		this.set("uid", uid);
 //
-//		W q = W.create("uid", uid).sort("created", -1);
-//		int s = this.getInt("s");
-//		int n = this.getInt("n", 10);
+//		W q = W.create("uid", uid).sort(X.CREATED, -1);
+//		int s = this.getInt(X.S);
+//		int n = this.getInt(X.N, 10);
 //
 //		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 //
@@ -449,27 +451,25 @@ public class user extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
 			W list = W.create();
 
-			list.or("name", name, W.OP.like);
+			list.or(X.NAME, name, W.OP.like);
 			list.or("nickname", name, W.OP.like);
 			if (X.isNumber(name)) {
-				list.or("id", X.toLong(name));
+				list.or(X.ID, X.toLong(name));
 			}
 			q.and(list);
 
-			this.set("name", name);
+			this.set(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, X.ITEMS_PER_PAGE);
 
-		q.and(X.ID, 0, W.OP.gt).sort("name", 1);
-
-		User.dao.optimize(q);
+		q.and(X.ID, 0, W.OP.gt).sort(X.NAME, 1);
 
 		Beans<User> bs = User.load(q, s, n);
 		if (bs != null) {
@@ -487,8 +487,8 @@ public class user extends Controller {
 //		if (!X.isEmpty(jo.get("op"))) {
 //			q.and("op", jo.get("op"));
 //		}
-//		if (!X.isEmpty(jo.get("ip"))) {
-//			q.and("ip", jo.getString("ip"), W.OP.like);
+//		if (!X.isEmpty(jo.get(X.IP))) {
+//			q.and(X.IP, jo.getString(X.IP), W.OP.like);
 //		}
 //		q.and("uid", jo.getLong("uid"));
 //		if (!X.isEmpty(jo.get("type"))) {
@@ -499,8 +499,8 @@ public class user extends Controller {
 //			q.and("model", jo.getString("model"));
 //		}
 //
-//		if (!X.isEmpty(jo.getString("node"))) {
-//			q.and("node", jo.getString("node"));
+//		if (!X.isEmpty(jo.getString(X.NODE))) {
+//			q.and(X.NODE, jo.getString(X.NODE));
 //		}
 //
 //		if (!X.isEmpty(jo.getString("starttime"))) {

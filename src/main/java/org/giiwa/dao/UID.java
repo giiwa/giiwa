@@ -25,9 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
+import org.giiwa.crypto.H32;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.*;
 
 /**
  * The {@code UID} Class used to create unique id, or sequence, random string
@@ -54,7 +54,7 @@ public final class UID {
 //		try {
 		door.lock();
 		try {
-			return _next(key);
+			return _next(key, 0);
 //				} catch (Exception e) {
 //					log.error(e.getMessage(), e);
 		} finally {
@@ -71,7 +71,11 @@ public final class UID {
 	private static final long LONG52 = 0x0FFFFFFFFFFFFFL;
 	private static final long MAX = 10000000000000L;
 
-	private static long _next(String key) throws Exception {
+	private static long _next(String key, int times) throws Exception {
+
+		if (times > 50) {
+			throw new Exception("[" + key + "], times=" + times);
+		}
 
 		long prefix = Global.getLong("cluster.code", 0) * MAX;
 
@@ -98,7 +102,7 @@ public final class UID {
 //				log.error("occur error when create unique id, name=" + key);
 				throw new Exception("get uid error! key=" + key);
 			} else if (!X.isSame(f.getString("linkid"), linkid)) {
-				return _next(key);
+				return _next(key, times + 1);
 			}
 
 		} else {
@@ -110,7 +114,7 @@ public final class UID {
 			long v1 = Math.max(f.getLong("l"), Global.getLong("uid.next.s1", 1));
 
 			if (Global.dao.update(W.create().and(X.ID, key).and("l", f.getLong("l")), V.create("l", v1 + 1L)) <= 0) {
-				return _next(key);
+				return _next(key, times + 1);
 			}
 			v = v1 + 1;
 		}
@@ -119,7 +123,7 @@ public final class UID {
 		if (v > LONG52) {
 			// reback
 			Global.dao.delete(key);
-			return _next(key);
+			return _next(key, times + 1);
 		}
 
 		return v;
@@ -193,7 +197,7 @@ public final class UID {
 
 	/**
 	 * generate the unique id by the parameter <br>
-	 * if the parameter are same, the id will be same, the "id" is H32 of
+	 * if the parameter are same, the id will be same, the X.ID is H32 of
 	 * hash(64bit) of parameters.
 	 *
 	 * @param ss the parameters

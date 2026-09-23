@@ -26,15 +26,16 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.task.AutodeployTask;
 import org.giiwa.app.task.BackupTask;
 import org.giiwa.app.task.CleanupTask;
-import org.giiwa.app.task.NtpTask;
+import org.giiwa.app.task.MonitorTask;
 import org.giiwa.app.task.RecycleTask;
-import org.giiwa.app.task.SecurityTask;
-import org.giiwa.app.task.PerfMoniterTask;
+import org.giiwa.app.task.PerfMonitorTask;
 import org.giiwa.app.web.admin.autodeploy;
 import org.giiwa.app.web.admin.dashboard;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.profile;
 import org.giiwa.app.web.admin.setting;
+import org.giiwa.auth.EmailCaptcha;
+import org.giiwa.auth.SmsCaptcha;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.License;
@@ -45,12 +46,12 @@ import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.crypto.AES;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.AES;
 import org.giiwa.misc.Host;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Shell;
@@ -126,6 +127,9 @@ public class DefaultListener implements IListener {
 				}
 			});
 
+			/**
+			 * 延时启动
+			 */
 			new SysTask() {
 
 				/**
@@ -139,15 +143,28 @@ public class DefaultListener implements IListener {
 						log.debug("initing mq");
 					}
 
+					/**
+					 * 初始化消息服务器
+					 */
 					MQ.init();
+
+					/**
+					 * 初始化本地节点状态监测
+					 */
 					Local.init();
 
 				}
 
 			}.schedule(0);
 
+			/**
+			 * 修复文件仓库的磁盘
+			 */
 			Disk.repair();
 
+			/**
+			 * 开启磁盘状态监测
+			 */
 			Disk.check0();
 
 			/**
@@ -161,20 +178,29 @@ public class DefaultListener implements IListener {
 			dashboard.desk("/admin/dashboard");
 			dashboard.desk("/admin/home.html");
 
+			/**
+			 * 系统设置页面，注册缺省设置页卡
+			 */
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);
 			setting.register(2, "snmp", setting.snmp.class);
 			setting.register(4, "autodeploy", autodeploy.class);
-			setting.register(10, "smtp", setting.smtp.class);
+//			setting.register(10, "smtp", setting.smtp.class);
 
+			/**
+			 * 个人信息页面， 注册个人信息编辑页卡
+			 */
 			// setting.register(11, "counter", setting.counter.class);
 			profile.register(0, "my", profile.my.class);
 
 			/**
-			 * check and initialize
+			 * 检测和初始化用户信息
 			 */
 			User.checkAndInit();
 
+			/**
+			 * 修复用户
+			 */
 			User.repair();
 
 			/**
@@ -191,6 +217,9 @@ public class DefaultListener implements IListener {
 			IOUtil.cleanup(f);
 
 			AES.init();
+
+			SmsCaptcha.init();
+			EmailCaptcha.init();
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -220,11 +249,15 @@ public class DefaultListener implements IListener {
 		Task.schedule(t -> {
 
 			CleanupTask.init(Config.getConf());
-			NtpTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
-			RecycleTask.owner.schedule(X.toLong(X.AMINUTE * Math.random()));
-			SecurityTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
-			PerfMoniterTask.owner.schedule(X.toLong(X.AMINUTE * Math.random()));
-			BackupTask.init();
+
+			MonitorTask.add(RecycleTask.inst);
+//			MonitorTask.add(SecurityTask.inst);
+			MonitorTask.add(PerfMonitorTask.inst);
+			MonitorTask.add(BackupTask.inst);
+			MonitorTask.add(AutodeployTask.inst);
+			MonitorTask.add(CleanupTask.inst);
+
+			MonitorTask.init();
 
 			Schema.add("org.giiwa");
 
@@ -232,7 +265,7 @@ public class DefaultListener implements IListener {
 
 			SampleAgent.start();
 
-			AutodeployTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
+			License.init();
 
 		});
 
@@ -280,7 +313,7 @@ public class DefaultListener implements IListener {
 						log.debug("initialize [" + f.getCanonicalPath() + "]");
 					}
 
-					reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+					reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), X.UTF8));
 					StringBuilder sb = new StringBuilder();
 					String line = reader.readLine();
 					while (line != null) {

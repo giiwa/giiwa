@@ -20,6 +20,7 @@ package org.giiwa.misc;
  * @author joe
  *
  */
+@Deprecated
 public class H64 {
 
     /**

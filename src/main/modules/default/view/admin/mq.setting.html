@@ -4,19 +4,21 @@
 	<div><label><h3>$lang.get('mq.type'):</h3>
 		<select name="mq.type" onchange="_ontype();">
 			<option value=''></option>
-			<option value='rocketmq' #if($global.getString('mq.type', '')=='rocketmq') selected="selected" #end>$lang.get('mq.type_rocketmq')</option>
-			<option value='activemq' #if($global.getString('mq.type', '')=='activemq') selected="selected" #end>$lang.get('mq.type_activemq')</option>
+            <option value='redismq' #if($global.getString('mq.type', '')=='redismq') selected="selected" #end>$lang.get('mq.type_redismq')</option>
+			<option value='rabbitmq' #if($global.getString('mq.type', '')=='rabbitmq') selected="selected" #end>$lang.get('mq.type_rabbitmq')</option>
 		</select>
-	<g>$lang.get('mq.type_activemq.hint')</g></label></div>
-	
-	<div class="activemq mq_more" style="display: none">
-		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.url'):</h3><input type='text' style='width:40%' name='activemq.url' value="$!global.getString('activemq.url', 'failover:(tcp://[host]:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true')"/><p><g>$lang.get('activemq.url.hint')</g></p></label></div>
-		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.user'):</h3><input type='text' name='activemq.user' value="$!global.getString('activemq.user', '')"/><g>$lang.get('activemq.user.hint')</g></label></div>
-		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.passwd'):</h3><input type='password' autocomplete="new-password" name='activemq.passwd' value="$!global.getString('activemq.passwd', '')"/><g>$lang.get('activemq.passwd.hint')</g></label></div>
-	</div>
+	</label></div>
 
-	<div class="rocketmq mq_more" style="display: none">
-		<div style="padding-left:20px;"><label><h3>$lang.get('rocketmq.url'):</h3><input type='text' style='width:40%' name='rocketmq.url' value="$!global.getString('rocketmq.url', 'localhost:9876')"/><p><g>$lang.get('rocketmq.url.hint')</g></p></label></div>
+    <div class="redismq mq_more" style="display: none">
+        <div style="padding-left:20px;"><label><h3>$lang.get('redismq.url'):</h3><input type='text' style='width:20%' name='redismq.url' value="$!global.getString('redismq.url', '[host]:6379')"/><p><g>$lang.get('redismq.url.hint')</g></p></label></div>
+        <div style="padding-left:20px;"><label><h3>$lang.get('redismq.user'):</h3><input type='text' name='redismq.user' value="$!global.getString('redismq.user', '')"/></label></div>
+        <div style="padding-left:20px;"><label><h3>$lang.get('redismq.passwd'):</h3><input type='password' autocomplete="new-password" name='redismq.passwd' value="$!global.getString('redismq.passwd', '')"/></label></div>
+    </div>
+	
+	<div class="rabbitmq mq_more" style="display: none">
+		<div style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.url'):</h3><input type='text' style='width:40%' name='rabbitmq.url' value="$!global.getString('rabbitmq.url', 'amqp://[host]:5672?virtualhost=/')"/><p><g>$lang.get('rabbitmq.url.hint')</g></p></label></div>
+		<div style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.user'):</h3><input type='text' name='rabbitmq.user' value="$!global.getString('rabbitmq.user', '')"/></label></div>
+		<div style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.passwd'):</h3><input type='password' autocomplete="new-password" name='rabbitmq.passwd' value="$!global.getString('rabbitmq.passwd', '')"/></label></div>
 	</div>
 		
 <script>

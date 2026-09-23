@@ -37,16 +37,16 @@ public class tcpclosewait extends portlet {
 	@Override
 	public void get() {
 
-		String id = this.getString("id");
-		this.set("id", id);
+		String id = this.getString(X.ID);
+		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
-		this.set("n", n);
+		this.set(X.N, n);
 
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
 				.and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 
 		}
 		
@@ -60,7 +60,7 @@ public class tcpclosewait extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
 				.and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
@@ -69,7 +69,7 @@ public class tcpclosewait extends portlet {
 					W.create().and("time", Global.now() - X.AHOUR, W.OP.gte));
 
 			JSON p = JSON.create();
-			p.append("name", lang.get("tcp.closewait")).append("color", "#25840a");
+			p.append(X.NAME, lang.get("tcp.closewait")).append("color", "#25840a");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getLong("time"), "m")).append("y", e.getLong("n14")));
@@ -84,9 +84,9 @@ public class tcpclosewait extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		Node n = Node.dao.load(id);
-		this.set("n", n);
+		this.set(X.N, n);
 
 		long time = Global.now() - X.AMONTH;
 
@@ -94,7 +94,7 @@ public class tcpclosewait extends portlet {
 				W.create().and("dataid", id).and("time", time, W.OP.gte).sort("time", -1), 0, 30 * 24 * 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/node/tcpclosewait.more.html");
 

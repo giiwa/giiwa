@@ -36,15 +36,15 @@ public class down extends portlet {
 	@Override
 	public void get() {
 
-		W q = W.create().and("node", Local.id()).and("name", "down")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
+		W q = W.create().and(X.NODE, Local.id()).and(X.NAME, "down")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1);
 		_File.Record.dao.optimize(q);
 		
 		Beans<_File.Record> bs = _File.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 			this.show("/portlet/file/down.html");
 		}
 	}
@@ -52,17 +52,17 @@ public class down extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create().and("node", Local.id()).and("name", "down")
-				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create().and(X.NODE, Local.id()).and(X.NAME, "down")
+				.and(X.CREATED, Global.now() - X.AHOUR, W.OP.gte).sort(X.CREATED, -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 
 			List<JSON> data = JSON.createList();
 			for (String[] s : new String[][] { { "max", "#860606" }, { "avg", "#0dad76" }, { "min", "#0a5ea0" } }) {
 				JSON p = JSON.create();
-				p.append("name", lang.get("file.down." + s[0])).append("color", s[1]);
+				p.append(X.NAME, lang.get("file.down." + s[0])).append("color", s[1]);
 				List<JSON> l1 = JSON.createList();
 				bs.forEach(e -> {
 					l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get(s[0])));
@@ -85,11 +85,11 @@ public class down extends portlet {
 		long time = Global.now() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create().and("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and(X.NODE, Local.id()).and(X.NAME, "down").and(X.CREATED, time, W.OP.gte).sort(X.CREATED, -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
-			this.set("list", bs);
+			this.set(X.LIST, bs);
 		}
 		this.show("/portlet/file/down.more.html");
 

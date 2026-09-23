@@ -15,6 +15,7 @@
 package org.giiwa.bean;
 
 import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,22 +23,25 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Stat.SIZE;
-import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -65,6 +69,8 @@ import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.node.MockRequest;
 import org.giiwa.node.MockResponse;
 import org.giiwa.task.BiConsumer;
+import org.giiwa.task.Function;
+import org.giiwa.task.Runner;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
@@ -72,7 +78,8 @@ import org.giiwa.web.Controller.NameValue;
 import org.giiwa.web.GiiwaServlet;
 import org.giiwa.web.Module;
 import org.giiwa.web.RequestHelper;
-import org.hyperic.sigar.CpuPerc;
+
+import com.sun.management.OperatingSystemMXBean;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -93,15 +100,16 @@ public final class Node extends Bean {
 
 	private static Log log = LogFactory.getLog(Node.class);
 
-	public static String NAME = "node." + Local.id();;
+	public static String NAME = "node." + Local.id();
 
 	public static final BeanDAO<String, Node> dao = BeanDAO.create(Node.class);
 
 	public static final long LOST = 20 * 1000;
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	public String id;
 
+	@Column(memo = "进程号", size = 50)
 	public String pid;
 
 	@Column(memo = "IP地址", size = 50)
@@ -110,8 +118,11 @@ public final class Node extends Bean {
 	@Column(memo = "标签", size = 100)
 	public String label;
 
-	@Column(memo = "节点URL")
+	@Column(memo = "节点URL", size = 100)
 	public String url;
+
+	@Column(memo = "标签", size = 10)
+	public String tag;
 
 	@Column(memo = "线程数")
 	public int localthreads;
@@ -140,7 +151,7 @@ public final class Node extends Bean {
 	@Column(memo = "开机时间")
 	public long uptime;
 
-	@Column(memo = "本地时间戳", value = "yyyy-MM-dd HH:mm:ss", size = 50)
+	@Column(memo = "本地时间戳", value = "HH:mm:ss yyyy-MM-dd", size = 50)
 	public String timestamp;
 
 	@Column(memo = "内核数")
@@ -152,8 +163,11 @@ public final class Node extends Bean {
 	@Column(memo = "CPU主频")
 	public double ghz;
 
-	@Column(name = "_usage")
+	@Column(name = "_usage", memo = "CPU使用率")
 	public int usage; // cpu usage
+
+	@Column(memo = "内存使用率")
+	public int mem_usage;
 
 	@Column(memo = "链接数量")
 	public int tcp_established; // sockets count
@@ -176,6 +190,9 @@ public final class Node extends Bean {
 	@Column(memo = "文件系统读写次数")
 	public long dfiletimes;
 
+	@Column(memo = "磁盘使用率, >90红", value = "/ - 60%<br>/data - 60%", size = 100)
+	public String disk;
+
 	@Column(memo = "平均耗时")
 	public long dfileavgcost;
 
@@ -187,11 +204,35 @@ public final class Node extends Bean {
 
 	public List<String> mac;
 
+	@Column(memo = "颜色", size = 10)
 	public String color = "green";
+
+	@Column(memo = "缓存系统", size = 20)
+	public String cache = "local";
+
+	@Column(memo = "缓存系统错误", value = "1:yes")
+	public int cache_error;
+
+	@Column(memo = "MQ系统", size = 20)
+	public String mq = "local";
+
+	@Column(memo = "MQ错误", value = "1:yes")
+	public int mq_error;
 
 	@Column(memo = "最后检查时间")
 	public long lastcheck;
 
+	/**
+	 * 静态本节点CPU使用率
+	 */
+	private static transient long _lastcheck = 0;
+	public static int cpusage = 0;
+
+	/**
+	 * 获取所有模块名
+	 * 
+	 * @return
+	 */
 	public String getModules() {
 		if (modules != null) {
 			Collections.sort(modules);
@@ -203,6 +244,11 @@ public final class Node extends Bean {
 		this.modules = modules;
 	}
 
+	/**
+	 * 获取节点状态
+	 * 
+	 * @return 0 - 离线， 1 = 在线
+	 */
 	public int getState() {
 
 		if (Global.now() - this.lastcheck > LOST)
@@ -211,10 +257,20 @@ public final class Node extends Bean {
 		return 1;
 	}
 
+	/**
+	 * 是否本地节点
+	 * 
+	 * @return
+	 */
 	public boolean isLocal() {
 		return X.isSame(id, Local.id());
 	}
 
+	/**
+	 * 更新节点状态
+	 * 
+	 * @param force - true: 完全更新
+	 */
 	public static void touch(boolean force) {
 
 		Language lang = Language.getLanguage();
@@ -227,7 +283,7 @@ public final class Node extends Bean {
 			String id = Local.id();
 			Node n = dao.load(id);
 			if (n != null) {
-				// check ip
+				// 检查IP地址
 				List<String> s1 = Arrays.asList(X.split(n.ip, ","));
 				List<String> s2 = Arrays.asList(X.split(Host.getLocalip(), ","));
 
@@ -241,7 +297,7 @@ public final class Node extends Bean {
 
 				if (!found) {
 					// the node id is bad
-					GLog.applog.error("node", "init", "bad node", null);
+					GLog.applog.error(X.NODE, "init", "bad node", null);
 //					id = UID.uuid();
 //
 //					Configuration conf = Config.getConf();
@@ -271,38 +327,41 @@ public final class Node extends Bean {
 //
 			// v.append("lasttime", Global.now());
 
+			v.append("mq_error", MQ.error);
+			v.append("cache_error", Cache.error);
+
+//			v.append("type", Config.getConf().getInt("node.type", 0)); // 默认本地节点
+			v.append("cores", Runner.cores);
+			v.append("computingpower", Runner.computingpower);
+			v.append("ghz", Runner.ghz);
+			v.append("mq", MQ.type());
+			v.append("cache", Cache.type());
+
 			try {
-				CpuPerc[] cc = Host.getCpuPerc();
-				double user = 0;
-				double sys = 0;
-				for (CpuPerc c : cc) {
-					/**
-					 * user += c1.sys; <br/>
-					 * user += c1.user;<br/>
-					 * wait += c1.wait;<br/>
-					 * nice += c1.nice;<br/>
-					 * idle += c1.idle;<br/>
-					 */
-					user += c.getUser();
-					sys += c.getSys();
-				}
-				v.append("_usage", (int) ((user + sys) * 100 / cc.length));
+				/**
+				 * CPU使用率
+				 */
+				cpusage();
+				v.append("_usage", cpusage);
 			} catch (Throwable e) {
 //				ignore
 				// log.error(e.getMessage(), e);
 
 			}
 
-			if (dao.exists(id)) {
+//			_raft(id, v);
+
+			if (_created || dao.exists(id)) {
 				if (force) {
-					getNodeInfo(v);
+					getNodeInfo(v, lang);
 				}
 				dao.update(id, v);
 
 			} else {
 				// create
-				getNodeInfo(v);
+				getNodeInfo(v, lang);
 				dao.insert(v.append(X.ID, id).append("label", Config.getConf().getString("node.name")));
+				_created = true;
 			}
 
 			long time = Stat.tomin();
@@ -338,16 +397,70 @@ public final class Node extends Bean {
 		}
 	}
 
-	private static void getNodeInfo(V v) {
+	private static transient boolean _created = false;
+
+//	/**
+//	 * 基于Raft的角色设置
+//	 * 
+//	 * @param v
+//	 */
+//	transient static boolean _optimized_raft = false;
+
+//	private static void _raft(String id, V v) {
+//		// TODO Auto-generated method stub
+//		/**
+//		 * 1， 检查Leader是否在线？
+//		 */
+//		W q = W.create().and("lastcheck", Global.now() - LOST, W.OP.gte).and("role", "Leader");
+//		if (!_optimized_raft) {
+//			dao.optimize(q);
+//			_optimized_raft = true;
+//		}
+//		Node e = dao.load(q);
+//		if (e != null) {
+//			// 存在
+//			if (!X.isSame(e.id, id)) {
+//				/**
+//				 * 不是本节点
+//				 */
+//				v.append("role", "Follower");
+//			}
+//			return;
+//		}
+//
+//		/**
+//		 * 2, 检查是否存在 Candidate
+//		 */
+//		q = W.create().and("lastcheck", Global.now() - LOST, W.OP.gte).and("role", "Candidate").sort(X.ID);
+//		e = dao.load(q);
+//		if (e != null) {
+//			// 存在
+//			if (X.isSame(e.id, id)) {
+//				v.append("role", "Leader");
+//			} else {
+//				// 推举为Leader
+//				dao.update(e.id, V.create().append("role", "Leader"));
+//				v.append("role", "Follower");
+//			}
+//			return;
+//		}
+//
+//		/**
+//		 * 3, 推举自己为 Candidate
+//		 */
+//		v.append("role", "Candidate");
+//
+//	}
+
+	@SuppressWarnings("deprecation")
+	private static void getNodeInfo(V v, Language lang) {
 
 		try {
 
-//			v.append("type", Config.getConf().getInt("node.type", 0)); // 默认本地节点
-			v.append("cores", Task.cores);
-			v.append("computingpower", Task.computingpower);
-			v.append("ghz", Task.ghz);
 			v.append("giiwa", Module.load("default").getVersion() + "." + Module.load("default").getBuild());
 			v.append("pid", Shell.pid());
+			v.append("tag", "giiwa");
+
 			List<org.giiwa.web.Module> actives = new ArrayList<org.giiwa.web.Module>();
 			org.giiwa.web.Module m = org.giiwa.web.Module.home;
 			while (m != null) {
@@ -364,9 +477,8 @@ public final class Node extends Bean {
 			}));
 
 			v.append("uptime", Controller.UPTIME);
-			v.append("_usage", (int) (_CPU.usage()));
-
-			v.append("ip", Host.getLocalip());
+			v.append("_usage", cpusage());
+			v.append(X.IP, Host.getLocalip());
 
 			String dockerid = Host.getDockerID();
 			if (!X.isEmpty(dockerid)) {
@@ -378,9 +490,33 @@ public final class Node extends Bean {
 			v.append("os", System.getProperty("os.name"));
 
 			// 获取物理内存总量（以字节为单位）
-			OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
+			OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 			long total = ((com.sun.management.OperatingSystemMXBean) osBean).getTotalPhysicalMemorySize();
 			v.append("mem", total);
+
+			// 获取磁盘使用率
+			StringBuilder sb = new StringBuilder();
+			for (String path : new String[] { "/", "/data" }) {
+				File file = new File(path);
+
+				// 总空间、已用、可用（单位Byte）
+				long totalByte = file.getTotalSpace();
+				long usableByte = file.getUsableSpace();
+				long usedByte = totalByte - usableByte;
+
+				// 使用率
+				int usageRate = (int) (totalByte == 0 ? 0 : usedByte * 100 / totalByte);
+				if (!sb.isEmpty()) {
+					sb.append("<br>");
+				}
+				if (usageRate > 90) {
+					sb.append(
+							"<i style='color:red'>" + path + ":" + lang.size(totalByte) + " - " + usageRate + "%</i>");
+				} else {
+					sb.append(path + ":" + lang.size(totalByte) + " - " + usageRate + "%");
+				}
+			}
+			v.append("disk", sb.toString());
 
 //			v.append("url", FileServer.URL.replace("0.0.0.0", Host.getLocalip()));
 
@@ -390,6 +526,17 @@ public final class Node extends Bean {
 		}
 	}
 
+	/**
+	 * 添加新节点
+	 * 
+	 * @param host    - 主机地址
+	 * @param user    - ssh用户名
+	 * @param passwd  - ssh用户密码
+	 * @param modules - 模块名
+	 * @param alias   - 别名
+	 * @param func    - 会调函数
+	 * @return
+	 */
 	public static boolean add(String host, String user, String passwd, String modules, String alias,
 			BiConsumer<Integer, String> func) {
 
@@ -397,6 +544,7 @@ public final class Node extends Bean {
 		SSH ssh = SSH.create();
 		SFTP sf = SFTP.create();
 		try {
+
 			// TODO
 			File jdk = new File("/home/jdk-9.0.4");
 			if (!jdk.exists() || !jdk.isDirectory()) {
@@ -434,13 +582,13 @@ public final class Node extends Bean {
 			// config /etc/profile
 			Temp t1 = sf.get("/etc/profile");
 
-			String prof = IOUtil.read(t1.getInputStream(), "UTF-8");
+			String prof = IOUtil.read(t1.getInputStream(), X.UTF8);
 			if (prof.indexOf("JAVA_HOME") == -1) {
 				prof = prof.replaceAll("\r", X.EMPTY);
 				prof += "\nexport JAVA_HOME=/home/jdk-9.0.4";
 				prof += "\nexport PATH=$JAVA_HOME/bin:$PATH\n";
 
-				IOUtil.write(t1.getOutputStream(), "UTF-8", prof);
+				IOUtil.write(t1.getOutputStream(), X.UTF8, prof);
 				sf.put(new File("/etc/profile"), t1.getInputStream());
 			}
 
@@ -475,7 +623,7 @@ public final class Node extends Bean {
 			func.accept(0, "setup giiwa ...");
 			PropertiesConfiguration prop = new PropertiesConfiguration();
 			{
-				Reader in = new InputStreamReader(new FileInputStream("/home/giiwa/giiwa.properties"), "UTF-8");
+				Reader in = new InputStreamReader(new FileInputStream("/home/giiwa/giiwa.properties"), X.UTF8);
 				try {
 					prop.read(in);
 				} finally {
@@ -502,13 +650,13 @@ public final class Node extends Bean {
 			// etc/hosts
 			{
 				InputStream in = new FileInputStream("/etc/hosts");
-				String s = IOUtil.read(in, "UTF-8");
+				String s = IOUtil.read(in, X.UTF8);
 				X.close(in);
 				int i = s.indexOf("##giiwa");
 				if (i > 0) {
 					s = s.substring(i);
 					t1 = sf.get("/etc/hosts");
-					String s1 = IOUtil.read(t1.getInputStream(), "UTF-8");
+					String s1 = IOUtil.read(t1.getInputStream(), X.UTF8);
 					i = s1.indexOf("##giiwa");
 					if (i > 0) {
 						s = s1.substring(0, i) + s;
@@ -516,7 +664,7 @@ public final class Node extends Bean {
 						s = s1 + "\n\n" + s;
 					}
 				}
-				IOUtil.write(t1.getOutputStream(), "UTF-8", s);
+				IOUtil.write(t1.getOutputStream(), X.UTF8, s);
 				sf.put(t1.getInputStream(), "/etc/hosts");
 			}
 
@@ -544,13 +692,13 @@ public final class Node extends Bean {
 		// tag=diskio, net
 		if (X.isSame(tag, "diskio")) {
 			List<?> l1 = _DiskIO.dao.distinct("path",
-					W.create().and("node", id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("path", 1));
+					W.create().and(X.NODE, id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("path", 1));
 			l1.remove(null);
 			l1.remove(X.EMPTY);
 			return l1;
 		} else if (X.isSame(tag, "net")) {
-			List<?> l1 = _Net.dao.distinct("name",
-					W.create().and("node", id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1));
+			List<?> l1 = _Net.dao.distinct(X.NAME,
+					W.create().and(X.NODE, id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1));
 			l1.remove(null);
 			l1.remove(X.EMPTY);
 			return l1;
@@ -559,9 +707,18 @@ public final class Node extends Bean {
 	}
 
 	public boolean isAlive() {
-		return this.getUpdated() > Global.now() - Node.LOST;
+		return lastcheck > Global.now() - Node.LOST;
 	}
 
+	/**
+	 * Forward请求
+	 * 
+	 * @param uri    - 链接
+	 * @param req    - 请求
+	 * @param resp   - 返回结果
+	 * @param method - 方法
+	 * @throws Exception
+	 */
 	public void forward(String uri, RequestHelper req, HttpServletResponse resp, String method) throws Exception {
 
 		JSON j1 = JSON.create();
@@ -587,10 +744,9 @@ public final class Node extends Bean {
 			log.debug("forwarding: " + j1.toPrettyString());
 		}
 
-		JSON r1 = MQ.callQueue("node." + id, MQ.Request.create().put(j1), X.AMINUTE);
+		JSON r1 = call("node." + id, MQ.Request.create().cmd("forward").put(j1), X.AMINUTE);
 
 //		log.warn("resp=" + r1);
-
 		resp.setStatus(r1.getInt("status"));
 		head = JSON.fromObject(r1.get("head"));
 		if (head != null) {
@@ -608,6 +764,9 @@ public final class Node extends Bean {
 
 	}
 
+	/**
+	 * 初始化
+	 */
 	public static void init() {
 		try {
 			stub.bindAs(MQ.Mode.QUEUE);
@@ -620,7 +779,10 @@ public final class Node extends Bean {
 
 	}
 
-	private static IStub stub = new IStub(NAME) {
+	/**
+	 * 节点Forward服务
+	 */
+	private final static IStub stub = new IStub(NAME) {
 
 		@Override
 		public void onRequest(long seq, Request req) {
@@ -628,18 +790,78 @@ public final class Node extends Bean {
 //			log.warn("got message, ");
 
 			try {
+				String cmd = req.cmd;
+				if (X.isSame(cmd, "poweroff")) {
+					JSON r1 = req.get();
+
+					int power = r1.getInt("power");
+					if (power == 1) {
+						// 重启服务
+						log.warn("restart by admin [" + req.from + "]");
+						Task.schedule(t -> {
+							System.exit(0);
+						}, 1000);
+					} else if (power == 2) {
+						// 重启系统
+						log.warn("poweroff by admin [" + req.from + "]");
+						Task.schedule(t -> {
+							try {
+								Shell.run("halt", X.AMINUTE);
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							}
+						}, 1000);
+					}
+					return;
+				} else if (X.isSame(req.cmd, "reply")) {
+					// rpc 回复
+					Stack<Request> l1 = waiter.get(seq);
+//					log.info("got reply, seq=" + seq + ", node=" + NAME + ", l1=" + l1);
+
+					if (l1 != null) {
+						synchronized (l1) {
+							l1.push(req);
+							l1.notifyAll();
+						}
+					} else {
+						// ignore, may caller return once got one result
+//						log.warn("MQ1, not waiter! seq=" + seq + ", " + waiter.keySet());
+					}
+					return;
+				} else if (X.isSame(req.cmd, "getalltask")) {
+					var l1 = Task.getAll();
+					var r1 = X.asList(l1, d -> {
+						Task t = (Task) d;
+						JSON j = JSON.create();
+						j.put("name", t.getName());
+						j.put("class", t.getClass().getName());
+						j.put("state", t.getState().name());
+						j.put("pool", t.getPool());
+						j.put("remain", t.getRemain());
+						j.put("delay", t.getDelay() > 0 ? t.getDelay() : 0);
+						j.put("cputime", t.getRuntime() > 0 ? t.getRuntime() : 0);
+						j.put("realcputime", t.getCosting() > 0 ? t.getCosting() : 0);
+						j.put("runtimes", t.getRuntimes() > 0 ? t.getRuntimes() : 0);
+						return j;
+					});
+					req.reply(r1);
+					return;
+				}
+
 				JSON r1 = req.get();
 
-//				if (log.isDebugEnabled()) {
-				log.warn("got node.forward: " + r1.toPrettyString());
-//				}
+				if (log.isInfoEnabled()) {
+					log.info("got node.forward: " + r1.toPrettyString());
+				}
 
+				// http 转发
 				String m = r1.getString("m");
 				String uri = r1.getString("uri");
 				JSON head = JSON.fromObject(r1.get("head"));
 				JSON body = JSON.fromObject(r1.get("body"));
-
-//				log.warn("uri=" + uri + ", m=" + m + ", head=" + head + ", body=" + body);
+				if (log.isInfoEnabled()) {
+					log.info("uri=" + uri + ", m=" + m + ", head=" + head + ", body=" + body);
+				}
 
 				TimeStamp t = TimeStamp.create();
 
@@ -652,11 +874,12 @@ public final class Node extends Bean {
 				r2.put("head", resp1.head);
 				r2.put("out", new String(Base64.getEncoder().encode(resp1.out.toByteArray())));
 
-				Request r3 = Request.create().put(r2);
+//				Request r3 = Request.create().put(r2);
+//				if (log.isInfoEnabled()) {
+//					log.info("node.forward, resp=" + r1 + ", size=" + r3.data.length + ", r3=" + r3.get());
+//				}
 
-				log.warn("node.forward, resp=" + r1 + ", size=" + r3.data.length + ", r3=" + r3.get());
-
-				req.reply(r3);
+				req.reply(r2);
 
 			} catch (Throwable e1) {
 				log.error("node.forward", e1);
@@ -666,8 +889,171 @@ public final class Node extends Bean {
 
 	};
 
-	public static Beans<Node> alive() {
-		return dao.load(W.create().and("lastcheck", Global.now() - LOST, W.OP.gte).sort("label"), 0, 1024);
+	/**
+	 * 获取节点的CPU使用率
+	 * 
+	 * @return
+	 */
+	public static int cpusage() {
+		if (System.currentTimeMillis() - _lastcheck > 3000) {
+			// 超过3秒钟，检测了
+			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+			cpusage = X.toInt(os.getCpuLoad() * 100);
+		}
+		return cpusage;
 	}
+
+	/**
+	 * 获取 在线节点， 最大10K个
+	 * 
+	 * @return
+	 */
+	public static Beans<Node> alive() {
+		return dao.load(W.create().and("tag", "giiwa").and("lastcheck", Global.now() - LOST, W.OP.gte).sort("label"), 0,
+				10240);
+	}
+
+	/**
+	 * 关闭/重启节点
+	 * 
+	 * @param power - 1:重启服务，2:关闭节点
+	 * @throws Exception
+	 */
+	public void power(int power) throws Exception {
+		if (this.isReadonly()) {
+			// 只读，禁止节点操作
+			return;
+		}
+		/**
+		 * 发送消息
+		 */
+		MQ.send(mq, org.giiwa.net.mq.MQ.Request.create().cmd("poweroff").put(JSON.create().append("power", power)));
+	}
+
+	public String mq() {
+		return "node." + id;
+	}
+
+	/**
+	 * 消息编号
+	 */
+	private final static AtomicLong seq = new AtomicLong(0);
+
+	/**
+	 * 发送消息，并等待结果
+	 * 
+	 * @param <T>     - 结果类型
+	 * @param name    - queue name
+	 * @param req     - 请求参数
+	 * @param timeout - 超时毫秒
+	 * @return
+	 * @throws Exception
+	 */
+	public static <T> T call(String name, Request req, final long timeout) throws Exception {
+
+		TimeStamp t = TimeStamp.create();
+
+		req.from = NAME;
+		req.seq = seq.incrementAndGet();
+
+		Stack<Request> l1 = new Stack<Request>();
+		waiter.put(req.seq, l1);
+
+		/**
+		 * 发送消息
+		 */
+		MQ.send(name, req);
+
+		try {
+			while (timeout > t.pastms()) {
+				synchronized (l1) {
+					if (l1.isEmpty()) {
+						l1.wait(timeout - t.pastms());
+					}
+				}
+				if (!l1.isEmpty()) {
+					Request r = l1.pop();
+					return r.get();
+				}
+			}
+		} catch (Exception e) {
+			GLog.applog.error("mq", "call", "call failed", e);
+			throw e;
+		} finally {
+			waiter.remove(req.seq);
+		}
+
+		throw new Exception("timeout(" + timeout + "ms)");
+	}
+
+	/**
+	 * 广播消息，异步收集结果
+	 * 
+	 * @param name    - topic name
+	 * @param req     - 请求参数
+	 * @param timeout - 超时毫秒
+	 * @param func    - 异步结果处理函数， 返回true，终止后续结果处理
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean call(String name, Request req, final long timeout, Function<Request, Boolean> func)
+			throws Exception {
+
+		req.from = NAME;
+		req.seq = seq.incrementAndGet();
+
+		Stack<Request> l1 = null;
+		if (func != null) {
+			l1 = new Stack<Request>();
+			waiter.put(req.seq, l1);
+		}
+
+		/**
+		 * 发送广播消息
+		 */
+		MQ.topic(name, req);
+
+		try {
+
+			TimeStamp t = TimeStamp.create();
+
+			if (func != null) {
+				Request e = null;
+
+				while (timeout > t.pastms()) {
+
+					synchronized (l1) {
+						if (l1.isEmpty()) {
+							l1.wait(timeout - t.pastms());
+						}
+						if (!l1.isEmpty()) {
+							e = l1.pop();
+						}
+					}
+
+					if (e != null) {
+						boolean r = func.apply(e);
+						if (r) {
+							// 完成， 结束
+							return true;
+						} // 继续获取下一个
+					}
+				}
+
+				throw new Exception("Timeout: " + t.past() + ", name=" + name + ", seq=" + req.seq + ", from="
+						+ req.from + ", e=" + e);
+
+			} else {
+				return true;
+			}
+		} finally {
+			waiter.remove(req.seq);
+		}
+	}
+
+	/**
+	 * 回调消息
+	 */
+	private final static Map<Long, Stack<Request>> waiter = new HashMap<Long, Stack<Request>>();
 
 }

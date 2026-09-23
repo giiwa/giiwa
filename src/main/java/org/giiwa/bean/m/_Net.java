@@ -43,7 +43,7 @@ public class _Net extends Bean {
 
 	public static BeanDAO<String, _Net> dao = BeanDAO.create(_Net.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "节点", size = 50)
@@ -118,15 +118,15 @@ public class _Net extends Bean {
 				v.remove("_id");
 
 				if (X.isSame("snapshot", type)) {
-					v = V.create("name", name).append("_type", "snapshot").append("snapshot", jo.toString());
+					v = V.create(X.NAME, name).append("_type", "snapshot").append("snapshot", jo.toString());
 					v.append("inet", inet).append("inet6", jo.inet6);
 
-					Record r = Record.dao.load(W.create().and("node", node).and("name", name).and("_type", "snapshot")
-							.sort("created", -1));
+					Record r = Record.dao.load(W.create().and(X.NODE, node).and(X.NAME, name).and("_type", "snapshot")
+							.sort(X.CREATED, -1));
 					if (r != null) {
 						JSON p = JSON.fromObject(r.get("snapshot"));
 						if (p != null) {
-							long time = Global.now() - r.getLong("created");
+							long time = Global.now() - r.getLong(X.CREATED);
 							if (time <= 0) {
 								// skip
 								continue;
@@ -149,13 +149,13 @@ public class _Net extends Bean {
 				String id = UID.id(node, name);
 
 				if (dao.exists2(id)) {
-					dao.update(id, v.copy().force("node", node));
+					dao.update(id, v.copy().force(X.NODE, node));
 				} else {
 					// insert
-					dao.insert(v.copy().force(X.ID, id).force("node", node));
+					dao.insert(v.copy().force(X.ID, id).force(X.NODE, node));
 				}
 
-				Record.dao.insert(v.force(X.ID, UID.id(id, Global.now())).force("node", node));
+				Record.dao.insert(v.force(X.ID, UID.id(id, Global.now())).force(X.NODE, node));
 
 			} catch (Exception e) {
 				log.error(jo, e);
@@ -174,7 +174,7 @@ public class _Net extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}
@@ -186,7 +186,7 @@ public class _Net extends Bean {
 			if (l1 != null && !l1.isEmpty()) {
 //				List<JSON> l2 = new ArrayList<JSON>();
 //				for (JSON j1 : n1) {
-//					l2.add(JSON.create().append("name", j1.get("name")).append("inet", j1.get("address")).copy(j1,
+//					l2.add(JSON.create().append(X.NAME, j1.get(X.NAME)).append("inet", j1.get("address")).copy(j1,
 //							"rxbytes", "rxdrop", "rxerr", "rxpackets", "txbytes", "txdrop", "txerr", "txpackets")
 //							.append("_type", "snapshot"));
 //				}

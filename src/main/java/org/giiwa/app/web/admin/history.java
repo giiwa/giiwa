@@ -40,7 +40,7 @@ public class history extends Controller {
 	/**
 	 * Deleteall.
 	 */
-	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true, loglevel="warn")
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = History.dao.delete(W.create());
@@ -57,8 +57,8 @@ public class history extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
 		W q = W.create();
 		String table = this.getString("table");
@@ -79,7 +79,7 @@ public class history extends Controller {
 			this.set("field", field);
 		}
 
-		Beans<History> bs = History.dao.load(q.sort("created", -1), s, n);
+		Beans<History> bs = History.dao.load(q.sort(X.CREATED, -1), s, n);
 		this.pages(bs, s, n);
 
 		this.show("/admin/footprint.index.html");
@@ -87,26 +87,26 @@ public class history extends Controller {
 
 	@Path(path = "detail", login = true, access = "access.config.admin")
 	public void detail() {
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 
 		if (!X.isEmpty(id)) {
 			GLog d = GLog.dao.load(id);
 			this.set("b", d);
-			this.set("id", id);
+			this.set(X.ID, id);
 		} else {
 			long prev = this.getLong("prev");
 			if (prev > 0) {
-				GLog d = GLog.dao.load(W.create().and("created", prev, W.OP.lt).sort("created", -1));
+				GLog d = GLog.dao.load(W.create().and(X.CREATED, prev, W.OP.lt).sort(X.CREATED, -1));
 				if (d != null) {
 					this.set("b", d);
-					this.set("id", d.get(X.ID));
+					this.set(X.ID, d.get(X.ID));
 				}
 			} else {
 				long next = this.getLong("next");
-				GLog d = GLog.dao.load(W.create().and("created", next, W.OP.gt).sort("created", 1));
+				GLog d = GLog.dao.load(W.create().and(X.CREATED, next, W.OP.gt).sort(X.CREATED, 1));
 				if (d != null) {
 					this.set("b", d);
-					this.set("id", d.get(X.ID));
+					this.set(X.ID, d.get(X.ID));
 				}
 			}
 		}

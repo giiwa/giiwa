@@ -27,7 +27,7 @@
 			<th>$lang.get('user.nickname')</th>
 			<th>$lang.get('user.roles')</th>
 			<th>$lang.get('user.unit')</th>
-			<th style="width:200px">$lang.get('user.disklimitsize')</th>
+			<th style="width:200px">$lang.get('user.phone')</th>
 			<th style="width: 100px;">$lang.get('user.ip')</th>
 			<th style="width: 110px;">$lang.get('user.lastlogintime')</th>
 #if($edit)
@@ -37,7 +37,7 @@
 	</thead>
 	<tbody>
 #foreach($f in $list)
-	<tr #if($f.isLocked()) class='deleted' #end>
+	<tr #if($f.isLocked()) class='deleted' #elseif($f.isOnline()) class='online' #end >
 		<td class='a'>
 			<img src="$!f.photo" style="width:32px;border-radius: 50%;"/>
 			$!f.name
@@ -51,7 +51,7 @@
 			${f.unit_obj.no}/${f.unit_obj.name}
 			#end
 		</td>
-		<td>$!f.disklimitsize</td>
+		<td>$!f.phone</td>
 		<td>$!f.ip</td>
 		<td>
 			#if($f.lastlogintime > 0)
@@ -75,25 +75,10 @@
 <div class='btns'>
 #if($edit)
 	<a class='btn btn-success' href='/admin/user/create?__node=$!__node'>$lang.get('a.create')</a>
-	<a class='btn btn-danger' href='javascript:;' onclick="_deleteall()">$lang.get('a.deleteall')</a>
 #end
 </div>
 
 <script>
-function _deleteall() {
-	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		var name = $('input[name=name]').val();
-		giiwa.processing.show();
-		$.post('/admin/user/deleteall', {name:name}, function(d){
-			giiwa.processing.hide();
-			if(d.state == 200) {
-				giiwa.reload();
-			} else if(d.message){
-				giiwa.error(d.message);
-			}
-		});
-	}
-}
 function _delete(id) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();

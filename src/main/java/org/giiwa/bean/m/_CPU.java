@@ -15,10 +15,10 @@
 package org.giiwa.bean.m;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Node;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
@@ -27,6 +27,9 @@ import org.giiwa.dao.Column;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
+
+import com.sun.management.OperatingSystemMXBean;
+
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 
@@ -42,7 +45,7 @@ public class _CPU extends Bean {
 
 	public static BeanDAO<String, _CPU> dao = BeanDAO.create(_CPU.class);
 
-	@Column(memo = "主键", unique = true, size = 50)
+	@Column(memo = "主键", unique = true, size = 64)
 	String id;
 
 	@Column(memo = "节点", size = 50)
@@ -97,15 +100,15 @@ public class _CPU extends Bean {
 
 			String id = UID.id(node, name);
 			if (dao.exists2(id)) {
-				dao.update(id, v.copy().force("node", node));
+				dao.update(id, v.copy().force(X.NODE, node));
 			} else {
 				// insert
-				dao.insert(v.copy().force(X.ID, id).force("node", node));
+				dao.insert(v.copy().force(X.ID, id).force(X.NODE, node));
 			}
 
 			String id1 = UID.id(node, name, Global.now() / X.AMINUTE);
 			if (!Record.dao.exists(id1)) {
-				Record.dao.insert(v.copy().force(X.ID, id1).force("node", node));
+				Record.dao.insert(v.copy().force(X.ID, id1).force(X.NODE, node));
 			}
 
 		} catch (Exception e) {
@@ -135,20 +138,8 @@ public class _CPU extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and(X.CREATED, Global.now() - X.AWEEK, W.OP.lt));
 		}
-
-	}
-
-	public static synchronized float usage() {
-
-		OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-		
-		if (log.isDebugEnabled()) {
-			log.debug("monitor cpu, got whole");
-		}
-
-		return X.toFloat(os.getSystemLoadAverage());
 
 	}
 
@@ -162,7 +153,7 @@ public class _CPU extends Bean {
 
 		e.user = 0;
 		e.sys = 0;
-		e.usage = usage();
+		e.usage = Node.cpusage();
 //		e.temp = Host.getCpuTemp();
 		e.name = "cpu";
 		e.cores = cores;
@@ -173,17 +164,17 @@ public class _CPU extends Bean {
 
 	public static class _Stat {
 
-		String name;
-		int cores;
-		double user;
-		double sys;
-		double usage;
+		public String name;
+		public int cores;
+		public double user;
+		public double sys;
+		public double usage;
 		String temp;
 
 		public V toV() {
 
 			V e = V.create();
-			e.append("name", name);
+			e.append(X.NAME, name);
 			e.append("cores", cores);
 			e.append("user", user);
 			e.append("sys", sys);
@@ -223,7 +214,7 @@ public class _CPU extends Bean {
 //				jo.append("temp", Host.getCpuTemp());
 //				// log.debug("cpu=" + jo);
 //
-//				jo.append("name", "cpu").append("cores", cc.length);
+//				jo.append(X.NAME, "cpu").append("cores", cc.length);
 //
 //				_CPU.update(Local.id(), jo);
 //			}

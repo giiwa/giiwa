@@ -40,12 +40,12 @@ public class nstate extends Controller {
 	@Path(path = "stat", login = true, access = "access.config.admin")
 	public void stat() {
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
 				.and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
 
-		this.set("list", bs);
+		this.set(X.LIST, bs);
 		this.show("/admin/node.stat.html");
 
 	}
@@ -59,26 +59,26 @@ public class nstate extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = W.create().sort("label", 1).sort("ip", 1);
+		W q = W.create().sort("label", 1).sort(X.IP, 1);
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 50);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 50);
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		if (!X.isEmpty(name)) {
 			W q1 = W.create();
 			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
+			q1.or(X.IP, name, W.OP.like);
+			q1.or(X.ID, name, W.OP.like);
 			q.and(q1);
-			this.set("name", name);
+			this.set(X.NAME, name);
 		}
 
-		String tag = this.getString("tag");
+		String tag = this.getString(X.TAG);
 		if(X.isEmpty(tag)) {
 			tag = "cpu";
 		}
-		this.set("tag", tag);
+		this.set(X.TAG, tag);
 		
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
@@ -91,10 +91,10 @@ public class nstate extends Controller {
 	@Path(login = true, path = "tcpclosewait", access = "access.config.admin")
 	public void tcpclosewait() {
 
-		W q = W.create().sort("label", 1).sort("ip", 1);
+		W q = W.create().sort("label", 1).sort(X.IP, 1);
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 50);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 50);
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();

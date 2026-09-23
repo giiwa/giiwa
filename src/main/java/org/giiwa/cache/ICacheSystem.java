@@ -45,7 +45,7 @@ public interface ICacheSystem {
 
 	boolean trylock(String name, boolean debug);
 
-	void expire(String name, long ms);
+	boolean expire(String name, long ms);
 
 	boolean unlock(String name, String value, boolean debug);
 

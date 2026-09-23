@@ -14,7 +14,14 @@
 */
 package org.giiwa.task;
 
-public class AtomicShort {
+import java.io.Serializable;
+
+public class AtomicShort implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	short a = 0;
 
@@ -24,5 +31,31 @@ public class AtomicShort {
 		}
 		return ++a;
 	}
-	
+
+	public String toString() {
+		return Short.toString(a);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + a;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AtomicShort other = (AtomicShort) obj;
+		if (a != other.a)
+			return false;
+		return true;
+	}
+
 }

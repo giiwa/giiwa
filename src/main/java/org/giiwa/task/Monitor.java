@@ -27,7 +27,7 @@ import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 
 /**
- * used to monitor a Task
+ * 任务检测工具
  * 
  * @author wujun
  *
@@ -37,31 +37,46 @@ public class Monitor {
 	static Log log = LogFactory.getLog(Monitor.class);
 
 	/**
-	 * Start.
+	 * 开始监测 并运行 一个任务
 	 *
-	 * @param t  the t
-	 * @param ms the ms
-	 * @return the long
+	 * @param t  - 任务体
+	 * @param ms - 延时时长
+	 * @return
 	 * @throws Exception
 	 */
 	public static long start(Task t, long ms) throws Exception {
 		return start(t, ms, X.EMPTY);
 	}
 
+	/**
+	 * 开始 监测并运行 一个任务
+	 * 
+	 * @param t - 任务体
+	 * @return
+	 * @throws Exception
+	 */
 	public static long start(Task t) throws Exception {
 		return start(t, 0, X.EMPTY);
 	}
 
+	/**
+	 * 开始 监测并运行 任务
+	 * 
+	 * @param t      - 任务体
+	 * @param access - 获取任务状态的code
+	 * @return
+	 * @throws Exception
+	 */
 	public static long start(Task t, String access) throws Exception {
 		return start(t, 0, access);
 	}
 
 	/**
-	 * start a task in monitor
+	 * 开始 监测并运行 任务
 	 * 
-	 * @param t      the task
-	 * @param
-	 * @param access
+	 * @param t      - 任务体
+	 * @param ms     - 延时时长， 毫秒
+	 * @param access - 获取结果的Code
 	 * @return
 	 * @throws Exception
 	 */
@@ -80,6 +95,11 @@ public class Monitor {
 		return "task/monitor/" + tid;
 	}
 
+	/**
+	 * 更新任务状态
+	 * 
+	 * @param t - 任务
+	 */
 	public static void flush(Task t) {
 
 		long tid = X.toLong(t.attach("tid"));
@@ -135,9 +155,9 @@ public class Monitor {
 	}
 
 	/**
-	 * Gets the.
+	 * 获取任务状态
 	 *
-	 * @param tid the tid
+	 * @param tid - 任务ID
 	 * @return the json
 	 */
 	public static JSON get(long tid) {
@@ -145,10 +165,10 @@ public class Monitor {
 	}
 
 	/**
-	 * get the state with the access
+	 * 获取任务状态
 	 * 
-	 * @param tid
-	 * @param access
+	 * @param tid    - 任务ID
+	 * @param access - 任务CODE
 	 * @return
 	 */
 	public static JSON get(long tid, String access) {
@@ -168,10 +188,10 @@ public class Monitor {
 					Cache.set(name, e);
 					return j1;
 				} else {
-					return JSON.create().append("state", 201).append("error", "bad access");
+					return JSON.create().append(X.STATE, 201).append("error", "bad access");
 				}
 			} else {
-				return JSON.create().append("state", 201).append("error", "not found [" + tid + "]");
+				return JSON.create().append(X.STATE, 201).append("error", "not found [" + tid + "]");
 			}
 		} finally {
 			door.unlock();

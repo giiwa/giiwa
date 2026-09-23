@@ -96,7 +96,7 @@ public final class Temp {
 	public String name = null;
 	private boolean memory = true;
 
-	@Comment()
+	@Comment(text = "文件大小")
 	public long size() {
 		try {
 			return this.bb == null ? length() : this.bb.length;
@@ -171,8 +171,8 @@ public final class Temp {
 	 */
 	public String getUri(Language lang) {
 
-		String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd") + "/"
-				+ Global.now() + "/" + id + "/" + name;
+		String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd") + "/" + Global.now() + "/" + id + "/"
+				+ name;
 		try {
 			DFile f1 = Disk.seek(filename);
 			f1.upload(this.getInputStream());
@@ -224,6 +224,11 @@ public final class Temp {
 		DFile f1 = get(id, name);
 		f1.upload(bb);
 		return f1;
+	}
+
+	@Comment(text = "上传文件到文件仓库临时文件")
+	public DFile upload(@Comment(text = "file") File ff) throws IOException {
+		return upload(new FileInputStream(ff));
 	}
 
 	/**
@@ -283,6 +288,22 @@ public final class Temp {
 	@Comment(text = "获取输出Writer")
 	public Writer getWriter() throws IOException {
 		return new OutputStreamWriter(this.getOutputStream());
+	}
+
+	@Comment(text = "输出字符串到临时文件")
+	public Temp print(@Comment(text = "src") String src) throws IOException {
+		OutputStream out = this.getOutputStream();
+		try {
+			out.write(src.getBytes());
+		} finally {
+			X.close(out);
+		}
+		return this;
+	}
+
+	@Comment(text = "获取临时文件绝对路径")
+	public String getFilename() throws IOException {
+		return this.getFile().getAbsolutePath();
 	}
 
 	@Comment(text = "获取输出流")

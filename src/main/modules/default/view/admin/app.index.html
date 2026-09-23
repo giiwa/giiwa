@@ -50,7 +50,7 @@
 		<td>$f.accessed</td>
 		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm')</td>
 		<td class='a'>
-			#if($me.hasAccess("access.config.debug","access.config.admin"))
+			#if($me.hasAccess("access.config.admin"))
 			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/app/edit?id=$f.id&__node=$!__node"><i class='icon-pencil'></i></a>
 			#end
 			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>

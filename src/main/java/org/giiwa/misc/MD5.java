@@ -30,6 +30,7 @@ import org.giiwa.dao.X;
  * @author wujun
  *
  */
+@Deprecated
 public class MD5 {
 	private static Log log = LogFactory.getLog(MD5.class);
 

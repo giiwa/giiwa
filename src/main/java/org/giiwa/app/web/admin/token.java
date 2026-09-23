@@ -41,12 +41,12 @@ public class token extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin", oplog = true)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin", oplog = true, loglevel="warn")
 	public void delete() {
 
 		JSON jo = new JSON();
 
-		String id = this.getString("id");
+		String id = this.getString(X.ID);
 		AuthToken.dao.delete(id);
 		jo.put(X.STATE, 200);
 
@@ -54,7 +54,7 @@ public class token extends Controller {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin", oplog = true)
+	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin", oplog = true, loglevel="warn")
 	public void clean() {
 		JSON jo = JSON.create();
 
@@ -74,7 +74,7 @@ public class token extends Controller {
 	@Path(login = true, access = "access.config.admin|access.config.user.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
+		String name = this.getString(X.NAME);
 		W q = W.create();
 		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
 
@@ -82,11 +82,11 @@ public class token extends Controller {
 			q.or("token", name, W.OP.like);
 			q.or("uid", X.toLong(name));
 
-			this.set("name", name);
+			this.set(X.NAME, name);
 		}
 
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int s = this.getInt(X.S);
+		int n = this.getInt(X.N, 10);
 
 		Beans<AuthToken> bs = AuthToken.dao.load(q, s, n);
 		this.pages(bs, s, n);

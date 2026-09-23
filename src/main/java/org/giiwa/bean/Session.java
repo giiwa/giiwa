@@ -103,7 +103,7 @@ public final class Session implements Serializable {
 			Cache.touch("session/" + sid, expired);
 		}
 
-		if (o == null || (Global.getInt("session.baseip", 0) == 1 && !X.isSame(ip, o.get("ip")))) {
+		if (o == null || (Global.getInt("session.baseip", 0) == 1 && !X.isSame(ip, o.get(X.IP)))) {
 
 			o = new Session();
 
@@ -112,7 +112,7 @@ public final class Session implements Serializable {
 			 */
 			o.sid = sid;
 			try {
-				o.set("ip", ip);
+				o.set(X.IP, ip);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -237,7 +237,6 @@ public final class Session implements Serializable {
 		a.clear();
 	}
 
-	@SuppressWarnings("deprecation")
 	public static void expired(long uid) {
 		try {
 			W q = W.create().and("uid", uid).sort("sid", 1);
@@ -257,10 +256,10 @@ public final class Session implements Serializable {
 
 		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class, time -> {
 			// return cleanup query
-			return W.create().and("created", Global.now() - X.ADAY * 31, W.OP.lte);
+			return W.create().and(X.CREATED, Global.now() - X.ADAY * 31, W.OP.lte);
 		});
 
-		@Column(memo = "主键", size = 50)
+		@Column(memo = "主键", size = 64, unique = true)
 		String id;
 
 		@Column(memo = "会话ID", size = 50)
@@ -281,7 +280,7 @@ public final class Session implements Serializable {
 			}
 
 			try {
-				V v = V.create("uid", uid).append("sid", sid).append("ip", ip).append("browser", browser);
+				V v = V.create("uid", uid).append("sid", sid).append(X.IP, ip).append("browser", browser);
 				if (dao.exists(sid)) {
 					dao.update(sid, v);
 				} else {

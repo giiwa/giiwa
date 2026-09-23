@@ -20,9 +20,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,9 +36,9 @@ public final class Optimizer {
 
 	private static Log log = LogFactory.getLog(Optimizer.class);
 
-	private HashMap<String, HashMap<String, Object>> exists = new HashMap<String, HashMap<String, Object>>();
+	private HashMap<String, Map<String, Object>> exists = new HashMap<>();
 
-	private Queue<Object[]> queue = new ArrayBlockingQueue<Object[]>(20);
+//	private Queue<Object[]> queue = new ArrayBlockingQueue<Object[]>(20);
 
 	private DBHelper helper = null;
 
@@ -54,16 +52,16 @@ public final class Optimizer {
 
 		List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
 		if (l1 != null) {
-			out: for (LinkedHashMap<String, Object> e : l1) {
+			for (LinkedHashMap<String, Object> e : l1) {
 				StringBuilder sb = new StringBuilder();
 				for (String s : e.keySet()) {
 
-					if (X.isIn(s, "_id")) {
-						continue out;
-					}
-					if (X.isIn(s, "id") && e.size() > 1) {
-						continue out;
-					}
+//					if (X.isIn(s, "_id")) {
+//						continue out;
+//					}
+//					if (X.isIn(s, X.ID) && e.size() > 1) {
+//						continue out;
+//					}
 
 					if (sb.length() > 0)
 						sb.append(",");
@@ -93,78 +91,84 @@ public final class Optimizer {
 
 	}
 
+	/**
+	 * 自动优化
+	 * 
+	 * @param table
+	 * @param q
+	 */
 	public void query(final String table, final W q) {
-
-		if (!table.startsWith("gi_") && Global.getInt("db.optimizer", 1) == 0) {
-//			log.warn("optimize rquried for, table=" + table + ", q=" + q);
-			return;
-		}
-
-		if (q != null && !q.isEmpty()) {
-
-			try {
-				List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
-				if (l1 != null) {
-					l1.forEach(e -> {
-						StringBuilder sb = new StringBuilder();
-						for (String s : e.keySet()) {
-
-							if (X.isIn(s, "_id")) {
-								return;
-							}
-
-							if (X.isIn(s, "id") && e.size() > 1) {
-								return;
-							}
-
-							if (sb.length() > 0)
-								sb.append(",");
-							sb.append(s).append(":").append(e.get(s));
-						}
-
-						String id = UID.id(table, sb.toString());
-						if (!_exists(table, id, sb.toString())) {
-
-							if (queue.size() < 20) {
-
-								HashMap<String, Object> m = exists.get(table);
-								if (m == null) {
-									return;
-								}
-
-								synchronized (m) {
-									m.put(id, sb.toString());
-								}
-
-								queue.add(new Object[] { table, e });
-
-								if (log.isWarnEnabled()) {
-									log.warn("optimizer.query, table=" + table + ", query.size=" + queue.size());
-								}
-
-								checker.schedule(0);
-							} else if (log.isWarnEnabled()) {
-								log.warn("optimizer, too many pending, table=" + table + ", drop the [" + q
-										+ "], pending=" + queue.size());
-							}
-						}
-					});
-				}
-			} catch (Throwable e) {
-				// ignore
-				log.error(e.getMessage(), e);
-				GLog.applog.error("db", "optimize", "table=" + table + ", query=" + q, e);
-			}
-
-			if (queue.isEmpty()) {
-				return;
-			}
-
-//			log.debug("open", new Exception());
-
-			checker.schedule(0);
-
-		}
+		return;
+//		if (!table.startsWith("gi_") && Global.getInt("db.optimizer", 1) == 0) {
+////			log.warn("optimize rquried for, table=" + table + ", q=" + q);
+//			return;
+//		}
+//
+//		if (q != null && !q.isEmpty()) {
+//
+//			try {
+//				List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
+//				if (l1 != null) {
+//					l1.forEach(e -> {
+//						StringBuilder sb = new StringBuilder();
+//						for (String s : e.keySet()) {
+//
+////							if (X.isIn(s, "_id")) {
+////								return;
+////							}
+////
+////							if (X.isIn(s, X.ID) && e.size() > 1) {
+////								return;
+////							}
+//
+//							if (sb.length() > 0)
+//								sb.append(",");
+//							sb.append(s).append(":").append(e.get(s));
+//						}
+//
+//						String id = UID.id(table, sb.toString());
+//						if (!_exists(table, id, sb.toString())) {
+//
+//							if (queue.size() < 20) {
+//
+//								Map<String, Object> m = exists.get(table);
+//								if (m == null) {
+//									return;
+//								}
+//
+//								synchronized (m) {
+//									m.put(id, sb.toString());
+//								}
+//
+//								queue.add(new Object[] { table, e });
+//
+//								if (log.isWarnEnabled()) {
+//									log.warn("optimizer.query, table=" + table + ", query.size=" + queue.size());
+//								}
+//
+//								checker.schedule(0);
+//							} else if (log.isWarnEnabled()) {
+//								log.warn("optimizer, too many pending, table=" + table + ", drop the [" + q
+//										+ "], pending=" + queue.size());
+//							}
+//						}
+//					});
+//				}
+//			} catch (Throwable e) {
+//				// ignore
+//				log.error(e.getMessage(), e);
+//				GLog.applog.error("db", "optimize", "table=" + table + ", query=" + q, e);
+//			}
+//
+//			if (queue.isEmpty()) {
+//				return;
+//			}
+//
+////			log.debug("open", new Exception());
+//
+//			checker.schedule(0);
+//
+//		}
 
 	}
 
@@ -172,6 +176,9 @@ public final class Optimizer {
 
 	public void optimize(String table, W q) {
 
+		/**
+		 * 快速监测并退出
+		 */
 		synchronized (_ignore) {
 			String id = UID.id(table, q);
 			if (_ignore.contains(id)) {
@@ -180,62 +187,64 @@ public final class Optimizer {
 			_ignore.add(id);
 		}
 
-		Task.schedule("optimize." + table, t -> {
-			List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
-			if (l1 != null) {
-				l1.forEach(e -> {
-					StringBuilder sb = new StringBuilder();
-					for (String s : e.keySet()) {
-
-						if (X.isIn(s, "_id")) {
-							return;
+		/**
+		 * 创建索引, 不能阻塞，否则导致整个性能问题
+		 */
+		try {
+			Task.schedule(t -> {
+				List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
+				if (l1 != null) {
+					l1.forEach(e -> {
+						StringBuilder sb = new StringBuilder();
+						for (String s : e.keySet()) {
+							if (sb.length() > 0)
+								sb.append(",");
+							sb.append(s).append(":").append(e.get(s));
 						}
+						String id = UID.id(table, sb.toString());
 
-						if (X.isIn(s, "id") && e.size() > 1) {
-							return;
-						}
+						if (!_exists(table, id, sb.toString())) {
 
-						if (sb.length() > 0)
-							sb.append(",");
-						sb.append(s).append(":").append(e.get(s));
-					}
-					String id = UID.id(table, sb.toString());
-
-					if (!_exists(table, id, sb.toString())) {
-
-						HashMap<String, Object> m = exists.get(table);
-						if (m == null) {
-							// should be bug
-							return;
-						}
-						if (m.size() >= 64) {
-							String err = "the [" + table + "] index[" + m.size()
-									+ "] exceed the max[64], required for [" + sb.toString() + "]";
-							GLog.applog.warn(Optimizer.class, "index", err);
+							Map<String, Object> m = exists.get(table);
+							if (m == null) {
+								// should be bug
+								return;
+							}
+							if (m.size() >= 64) {
+								String err = "the [" + table + "] index[" + m.size()
+										+ "] exceed the max[64], required for [" + sb.toString() + "]";
+								GLog.applog.warn("db", "optimize", err);
 //							throw new RuntimeException(err);
+							}
+
+							synchronized (m) {
+								m.put(id, sb.toString());
+							}
+
+							log.warn("create index [" + table + "], e=" + e);
+							helper.createIndex(table, e, false);
+
+						} else if (log.isDebugEnabled()) {
+							log.debug("optimizer, table=" + table + ", sortkey exists, q=" + q);
 						}
 
-						synchronized (m) {
-							m.put(id, sb.toString());
-						}
+					});
+				}
 
-						log.warn("create index [" + table + "], e=" + e);
-						helper.createIndex(table, e, false);
+			});
+		} catch (Exception err) {
+			log.error("table=" + table + ", q=" + q, err);
+		}
 
-					} else if (log.isDebugEnabled()) {
-						log.debug("optimizer, table=" + table + ", sortkey exists, q=" + q);
-					}
+	}
 
-				});
-			}
-
-		}, false);
-
+	public void drop(String table) {
+		exists.remove(table);
 	}
 
 	private boolean _exists(String table, String id, String keys) {
 
-		HashMap<String, Object> m = null;
+		Map<String, Object> m = null;
 
 		m = exists.get(table);
 		if (m == null) {
@@ -286,7 +295,7 @@ public final class Optimizer {
 
 		List<Map<String, Object>> l1 = helper.getIndexes(table);
 
-		HashMap<String, Object> m = null;
+		Map<String, Object> m = null;
 		synchronized (exists) {
 			m = exists.get(table);
 			if (m == null) {
@@ -322,69 +331,69 @@ public final class Optimizer {
 		}
 	}
 
-	private Task checker = new Task() {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public String getName() {
-			return "gi.db.optimizer";
-		}
-
-		@Override
-		public int getPriority() {
-			return Thread.MIN_PRIORITY;
-		}
-
-		@SuppressWarnings({ "unchecked" })
-		@Override
-		public void onExecute() {
-
-			// check the db.optimizer=1 ?
-
-			Object[] o = queue.isEmpty() ? null : queue.remove();
-			while (o != null) {
-
-				String table = (String) o[0];
-				LinkedHashMap<String, Object> keys = (LinkedHashMap<String, Object>) o[1];
-				try {
-
-					if (!keys.isEmpty()) {
-
-						if (Global.getInt("db.optimizer", 1) == 1) {
-
-							log.warn("optimizer, table=" + table + ", create.index=" + keys.toString() + ", queue.size="
-									+ queue.size());
-							helper.createIndex(table, keys, false);
-						} else {
-
-							if (log.isWarnEnabled()) {
-								log.warn("optimizer, table=" + table + ", disabled");
-							}
-
-							GLog.applog.warn("db", "optimize", "required, table=" + table + ", keys=" + keys);
-						}
-
-					}
-				} catch (Throwable e) {
-					// ignore
-					log.error(e.getMessage(), e);
-					GLog.applog.error("db", "optimize", "table=" + table + ", key=" + keys, e);
-				}
-
-				o = queue.isEmpty() ? null : queue.remove();
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			if (!queue.isEmpty()) {
-				this.schedule(X.AMINUTE);
-			}
-		}
-
-	};
+//	private Task checker = new Task() {
+//
+//		/**
+//		 * 
+//		 */
+//		private static final long serialVersionUID = 1L;
+//
+//		@Override
+//		public String getName() {
+//			return "gi.db.optimizer";
+//		}
+//
+//		@Override
+//		public int getPriority() {
+//			return Thread.MIN_PRIORITY;
+//		}
+//
+//		@SuppressWarnings({ "unchecked" })
+//		@Override
+//		public void onExecute() {
+//
+//			// check the db.optimizer=1 ?
+//
+//			Object[] o = queue.isEmpty() ? null : queue.remove();
+//			while (o != null) {
+//
+//				String table = (String) o[0];
+//				LinkedHashMap<String, Object> keys = (LinkedHashMap<String, Object>) o[1];
+//				try {
+//
+//					if (!keys.isEmpty()) {
+//
+//						if (Global.getInt("db.optimizer", 1) == 1) {
+//
+//							log.warn("create index, table=" + table + ", create.index=" + keys.toString()
+//									+ ", queue.size=" + queue.size());
+//							helper.createIndex(table, keys, false);
+//						} else {
+//
+//							if (log.isWarnEnabled()) {
+//								log.warn("optimizer, table=" + table + ", disabled");
+//							}
+//
+//							GLog.applog.warn("db", "optimize", "required, table=" + table + ", keys=" + keys);
+//						}
+//
+//					}
+//				} catch (Throwable e) {
+//					// ignore
+//					log.error(e.getMessage(), e);
+//					GLog.applog.error("db", "optimize", "table=" + table + ", key=" + keys, e);
+//				}
+//
+//				o = queue.isEmpty() ? null : queue.remove();
+//			}
+//		}
+//
+//		@Override
+//		public void onFinish() {
+//			if (!queue.isEmpty()) {
+//				this.schedule(X.AMINUTE);
+//			}
+//		}
+//
+//	};
 }

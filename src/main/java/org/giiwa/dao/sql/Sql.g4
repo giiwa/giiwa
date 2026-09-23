@@ -1,249 +1,184 @@
 grammar Sql;
 
-LONG : [0-9]+;
-FLOAT : [0-9\\.]+;
-NAME: [\\]*[_a-zA-Z][a-zA-Z_0-9\\.]*;
-STRING: '\'' (.)*? '\''
-	|'"' (.)*? '"'
-	;
-TIME: [0-9]+[dDhHmMsS];
+fragment A : [aA]; fragment B : [bB]; fragment C : [cC]; fragment D : [dD];
+fragment E : [eE]; fragment F : [fF]; fragment G : [gG]; fragment H : [hH];
+fragment I : [iI]; fragment J : [jJ]; fragment K : [kK]; fragment L : [lL];
+fragment M : [mM]; fragment N : [nN]; fragment O : [oO]; fragment P : [pP];
+fragment Q : [qQ]; fragment R : [rR]; fragment S : [sS]; fragment T : [tT];
+fragment U : [uU]; fragment V : [vV]; fragment W : [wW]; fragment X : [xX];
+fragment Y : [yY]; fragment Z : [zZ];
 
-WS: [ \t\r\n]+ -> skip;
+// 关键字
+AND         : A N D;
+OR          : O R;
+NOT         : N O T;
+IN          : I N;
+BETWEEN     : B E T W E E N;
+LIKE        : L I K E;
+SELECT      : S E L E C T;
+FROM        : F R O M;
+WHERE       : W H E R E;
+GROUP       : G R O U P;
+BY          : B Y;
+ORDER       : O R D E R;
+ASC         : A S C;
+DESC        : D E S C;
+OFFSET      : O F F S E T;
+LIMIT       : L I M I T;
+TODATE      : T O D A T E '(';
+TODAY       : T O D A Y '(';
+NOW         : N O W '(';
+TOSTRING    : T O S T R I N G '(';
+TODOUBLE    : T O D O U B L E '(';
+TOFLOAT     : T O F L O A T '(';
+TOLONG      : T O L O N G '(';
+UUID        : U U I D '(';
+OBJECTID    : O B J E C T I D '(';
+FORMAT      : F O R M A T '(';
+COUNT       : C O U N T '(';
+HELP        : H E L P '(';
+NULL        : N U L L;
 
-stat: show
-	| desc
-	| select
-	| set
-	| insert
-	| update
-	;
+NAME
+    : ID
+    | BACKTICK_NAME
+;
 
-/*
- * show databases
- * show dbs
- */
-show: ('show'|'SHOW') showoptions;
+ID      : [_a-zA-Z][a-zA-Z_0-9.]*;
+BACKTICK_NAME : '`' ~[`]+ '`';
 
-showoptions: ('dbs' | 'DBS' | 'databases' | 'DATABASES' | 'ENGINES' | 'COLLATION' | 'CHARACTER SET' | 'groups' | 'GROUPS' | 'tables' | 'TABLES' |  'CREATE TABLE' tablename| ('table'|'TABLE') ('like'|'LIKE') tablename | 'DBS' | 'DATABASE' | 'GROUP' | ('columns'|'COLUMNS'|'full columns'|'FULL COLUMNS'|'full fields'|'FULL FIELDS'|'INDEX') ('from'|'FROM') tablename | 'FULL TABLES' (|'WHERE' expr))
-	;
+LONG    : [0-9]+;
+FLOAT   : [0-9]+ '.' [0-9]+;
 
-desc: ('desc'|'DESC') tablename
-	;
-	
-/*
- * select * from table1 .... 
- * select * from () where () group () order by () offset ? limit ?
- * 
- */
-select: (| 'select'|'SELECT') (| val | columns) (|('from'|'FROM') tablename) (|('where'|'WHERE') expr) (|((|'group' 'by'|'GROUP' 'BY') group)) (|(('order' 'by'|'ORDER' 'BY') order (',' order)*)) (|(('offset'|'OFFSET') offset)) (|(('limit'|'LIMIT') limit));
+STRING
+    : '\'' .*? '\''
+    | '"' .*? '"'
+;
 
-/*
- * *
- * a,b,c
- * a.b, a.c
- * a, count(*), sum(b), max(c)
- */
-columns: '*'
-	| NAME (',' NAME)* (',' func)*
-	;
-func: sum
-	| avg
-	| count
-	| max
-	| min
-	;
-tablename: NAME
-	| STRING
-	;
+TIME    : [0-9]+[a-zA-Z];
+WS      : [ \t\r\n]+ -> skip;
 
-/*
- * a >= ... 
- * a > ...
- * a <= ...
- * a < ...
- * a != ...
- * a = ...
- * a like ...
- * a !like ...
- * ()
- * () and () or ()
- */
-expr: NAME op=('>=' | '>' | '<=' | '<' | '!=' | '==' | '=' | 'like' | 'LIKE' | '!like' | '!LIKE' | 'not like' | 'NOT LIKE') val
-    | '(' expr ')' 
-	| expr cond=('and' | 'or' | 'AND' | 'OR') expr
-	| not='not' expr
-    ;
+select
+    : SELECT?
+      columns?
+      FROM? tablename?
+      WHERE? expr?
+      (GROUP BY group)?
+      (ORDER BY order (',' order)*)?
+      ( (OFFSET offset (LIMIT limit)?) | (LIMIT limit (OFFSET offset)?) )?
+;
 
-/*
- * 'string1|string2' => string1 or string2
- * 1.1|1.2 => 12.1 or 11.2
- * 1|2 => 1 or 2
- * null
- * todate(...)
- * today(...)
- * uuid(...)
- * () * ()
- * () / ()
- * () + ()
- * () - ()
- * 
- */
-val: STRING ('|' STRING)*
-	| FLOAT ('|' FLOAT)*
-	| LONG ('|' LONG)*
-	| null
-	| todate
-	| today
-	| now
-	| time
-	| tostring
-	| tolong
-	| uuid
-	| objectid
-	| val op=('*'|'/') val
-	| val op=('+'|'-') val
-	| fg=('+'|'-') val
-	;
-	
-/*
- * a = null
- * a = null()
- */	
-null: 'null'
-	| 'NULL'
-	| 'null(' ')'
-	| 'NULL(' ')'
-	;
+columns
+    : '*'
+    | columnItem (',' columnItem)*
+;
 
-/*
- * todate('20220101', 'yyyyMMdd')
- * todate(20220101, 'yyyyMMdd')
- * todate(20220101 + 2, 'yyyyMMdd')
- * todate(today())
- * todate(today() - 1000*60*60*24)
- * todate(today('yyyyMMdd') - 7, 'yyyyMMdd')
- * ...
- */
-todate: ('todate('|'TODATE(') time ',' STRING ')'
-	| ('todate('|'TODATE(') time ')'
-	;
-	
-/*
- * today(...)
- * 'string'
- * long
- * (time)
- * () * () 
- * () / ()
- * () + ()
- * () - ()
- */
-time: today
-	| now
-	| STRING
-	| LONG
-	| '(' time ')'
-	| time op=('+'|'-') time
-	| time op=('+'|'-') TIME
-	;
+columnItem
+    : NAME
+    | COUNT '*' ')'
+    | COUNT columnItem ')'
+    | HELP ')'
+    | val
+;
 
-/*
- * today() => long
- * today('yyyy-MM-dd') => string
- * today('yyyyMMdd') => int
- * 'today(...)'
- * "today(...)"
- */	
-today: ('today('|'TODAY(') (|STRING) ')'
-	| '\'' today '\''
-	| '"' today '"'
-	;
+tablename
+    : NAME                  // 单名称 NAME / `name`
+    | NAME '.' NAME         // 库.表：NAME.NAME 支持`db`.`tbl`
+    | STRING
+    | STRING '.' STRING
+;
 
-/*
- * now() => long
- * now('yyyy-MM-dd') => string
- * now('yyyyMMdd') => int
- * 'now(...)'
- * "now(...)"
- */	
-now: ('now('|'NOW') (|STRING) ')'
-	| '\'' now '\''
-	| '"' now '"'
-	;
-	
-/*
- * tostring(a,b,c)
- */
-tostring: ('tostring('|'TOSTRING(') val (',' val)* ')';
+expr
+    : '(' expr ')'                                      # exprParen
+    | NOT expr                                          # exprNot
+    | NAME BETWEEN val AND val                          # exprBetween
+    | NAME IN inValueList                               # exprIn
+    | NAME op=('>=' | '>' | '<=' | '<' | '!=' | '<>' | '==' | '=' | LIKE) valOrList  # exprCompare
+    | expr AND expr                                     # exprAnd
+    | expr OR expr                                      # exprOr
+;
 
-/*
- * tolong(val)
- */
-tolong: ('tolong('|'TOLONG(') val ')';
+valOrList
+    : val (',' val)*
+    | val ('|' val)*            //兼容老版本
+;
 
-/*
- * uuid('...')
- * touuid('...')
- */
-uuid: ('uuid('|'UUID(') (|STRING) ')'
-	|('touuid('|'TOUUID(') STRING ')'
-	;
+inValueList
+    :'(' val (',' val)* ')'
+    |'[' val (',' val)* ']'     //扩展习惯
+;
 
-/*
- * objectid('...')
- */
-objectid: ('objectid('|'OBJECTID(') STRING ')'
-	;
+val
+    : STRING
+    | FLOAT
+    | LONG
+    | NULL
+    | todate
+    | time
+    | tostring
+    | todouble
+    | tofloat
+    | tolong
+    | uuid
+    | objectid
+    | format
+    | val op=('*'|'/') val
+    | val op=('+'|'-') val
+    | fg=('+'|'-') val
+;
 
-/*
- * sum(name)
- */
-sum: ('sum('|'SUM(') NAME ')';
+todate
+    : TODATE time (',' STRING)? ')'
+;
 
-/*
- * avg(name)
- */
-avg: ('avg('|'AVG') NAME ')';
+format
+    : FORMAT val ',' STRING ')'
+;
 
-/*
- * count(*)
- * count(name)
- */
-count: ('count('|'COUNT(') NAME ')'
-	|('count('|'COUNT(') '*' ')'
-	;
+time
+    : today
+    | now
+    | todate                    //用于时间格式化
+    | '(' time ')'
+    | time op=('+'|'-') time
+    | time op=('+'|'-') TIME
+    | LONG                      //用于时间格式化
+    | STRING                    //用于时间格式化
+;
 
-/*
- * max(name)
- */
-max: ('max('|'MAX(') NAME ')';
+today
+    : TODAY (STRING)? ')'
+;
 
-/*
- * min(name)
- */
-min: ('min('|'MIN(') NAME ')';
+now
+    : NOW (STRING)? ')'
+;
 
-group: NAME (',' NAME)*;
-order: NAME (|by=('asc' | 'desc'|'ASC'|'DESC'));
-offset: LONG;
-limit: LONG;
+tostring
+    : TOSTRING val ')'
+;
 
-/*
- * set name value
- */
-set: ('set'|'SET') setvalue
-	;
-	
-/*
- * insert into table 
- */
-insert: ('insert'|'INSERT') ('into'|'INTO') tablename (|columns) ('value'|'VALUE') '(' value ')' 
-	;
-value: val (',' val)*
-	;
+todouble
+    : TODOUBLE val (',' STRING)? ')'
+;
 
-update: ('update'|'UPDATE') tablename ('set'|'SET') setvalue (|('where'|'WHERE') expr)
-	;
+tofloat
+    : TOFLOAT val (',' STRING)? ')'
+;
 
-setvalue: NAME (NAME|val) (',' setvalue)*
-	;
+tolong
+    : TOLONG val (',' STRING)? ')'
+;
+
+uuid
+    : UUID (STRING)? ')'
+;
+
+objectid
+    : OBJECTID (STRING)? ')'
+;
+
+group   : NAME (',' NAME)*;
+order   : NAME (ASC | DESC)?;
+offset  : LONG;
+limit   : LONG;

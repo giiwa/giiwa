@@ -7,7 +7,7 @@
 	#end
 </div>
 <div class="">
-	<form action='/admin/setting/set/$name' method='post' class='form' enctype="multipart/form-data">
+	<form action='/admin/setting/set/$name' method='post' class='form' enctype="multipart/form-data" autocomplete="off">
 	
 		<input type="hidden" name="__node" value="$!__node" />
 		
@@ -17,11 +17,15 @@
 		<div class="btns">
 			<button type='submit'>$lang.get('btn.save')</button>
 			&nbsp;&nbsp;
-			<a class='btn btn-warning' href='javascript:;' onclick='_reset();'>$lang.get('btn.reset')</a>
+			<a class='btn btn-primary' href='javascript:;' onclick='_reset();'>$lang.get('btn.reset')</a>
+            &nbsp;&nbsp;
+            <a class='btn btn-info' href="/admin/setting/download/$name" target="_blank">$lang.get('btn.download')</a>
+            &nbsp;&nbsp;
+            <a class='btn btn-warning' href='javascript:;' onclick='_upload();'>$lang.get('btn.upload')</a>
 		</div>
-		
 	</form>
 </div>
+<div style="display:none"><input type="file" id="fileInput" /></div>
 
 <script>
 function _reset() {
@@ -29,12 +33,43 @@ function _reset() {
 		giiwa.processing.show();
 		$.post('/admin/setting/reset/$name?__node=$!__node', {}, function(d){
 			giiwa.processing.hide();
-			if(d.state == 200) {
-				giiwa.reload();
-			} else if(d.message){
-				giiwa.error(d.message);
+			if(d.message){
+				giiwa.info(d.message);
 			}
 		});
 	}
 }
+
+fileInput = document.getElementById('fileInput');
+//选中文件后自动执行上传
+fileInput.addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) {
+        return;
+    }
+
+    giiwa.processing.show();
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await fetch('/admin/setting/upload/$name', {
+            method: 'POST',
+            body: formData
+        });
+        giiwa.processing.hide();
+        if(res) {
+            const d = await res.json();
+            if(d.message){
+                giiwa.success(d.message);
+            }
+        }
+    } catch (err) {
+        giiwa.error("网络错误：" + err.message);
+        giiwa.processing.hide();
+    }
+});
+function _upload(){
+	fileInput.click();
+}
+
 </script>

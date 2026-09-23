@@ -22,12 +22,18 @@ public class FileInfo implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	public String name;
 	public boolean exists;
 	public boolean isfile;
 	public long length;
 	public long creation;
 	public long lastmodified;
+
+	@Override
+	public String toString() {
+		return "FileInfo [name=" + name + ", exists=" + exists + ", isfile=" + isfile + ", length=" + length
+				+ ", creation=" + creation + ", lastmodified=" + lastmodified + "]";
+	}
 
 }

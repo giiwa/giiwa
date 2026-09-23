@@ -79,6 +79,7 @@ public class FileCache implements ICacheSystem {
 
 					_D e = (_D) _fromBytes(b);
 					if (!e.expired()) {
+						Cache.error = 0;
 						return e.o;
 					}
 				} finally {
@@ -89,7 +90,7 @@ public class FileCache implements ICacheSystem {
 //				}
 			}
 		} catch (Exception e) {
-
+			Cache.error = 1;
 		}
 		return null;
 	}
@@ -131,11 +132,12 @@ public class FileCache implements ICacheSystem {
 				} finally {
 					X.close(out);
 				}
-
+				Cache.error = 0;
 				return true;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			Cache.error = 1;
 		}
 		return false;
 	}
@@ -250,9 +252,9 @@ public class FileCache implements ICacheSystem {
 	}
 
 	@Override
-	public void expire(String id, long ms) {
+	public boolean expire(String id, long ms) {
 		// TODO Auto-generated method stub
-
+		return true;
 	}
 
 	@Override

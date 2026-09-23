@@ -12,7 +12,17 @@ import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.driver.Doris;
 import org.giiwa.json.JSON;
 
+/**
+ * Doris 数据库助手
+ * 
+ * @author joe
+ *
+ *
+ *         注意，有性能问题
+ */
 public class DorisHelper extends RDSHelper {
+
+	// jdbc:doris://host:port/database
 
 	private Doris d = new Doris();
 
@@ -35,7 +45,7 @@ public class DorisHelper extends RDSHelper {
 		Connection con = null;
 		Statement stat = null;
 
-		JSON id = X.get(cols, "name", "id");
+		JSON id = X.get(cols, X.NAME, X.ID);
 		if (id == null) {
 			throw new SQLException("primary key missed, [id]");
 		}
@@ -57,13 +67,14 @@ public class DorisHelper extends RDSHelper {
 
 				l2 = driver.listColumns(con, dbname, schema, tablename);
 				if (l2 != null && !l2.isEmpty()) {
+					// 表已经存在了
 
 					// check columns
 					for (JSON j1 : cols) {
-						String name = j1.getString("name");
-						JSON j2 = X.get(l2, "name", name);
+						String name = j1.getString(X.NAME);
+						JSON j2 = X.get(l2, X.NAME, name);
 
-						// log.info("name=" + name + ", j2=" + j2);
+						// log.info(X.NAME=" + name + ", j2=" + j2);
 						if (j2 == null) {
 							this.addColumn(tablename, j1);
 						} else {
@@ -116,7 +127,7 @@ public class DorisHelper extends RDSHelper {
 
 			// id first
 			{
-				String name = id.getString("name");
+				String name = id.getString(X.NAME);
 				String type = id.getString("type");
 				int size = id.getInt("size");
 				String display = id.getString("display").replaceAll("'", "\"");
@@ -125,8 +136,8 @@ public class DorisHelper extends RDSHelper {
 			}
 
 			for (JSON col : cols) {
-				String name = col.getString("name");
-				if (X.isSame(name, "id")) {
+				String name = col.getString(X.NAME);
+				if (X.isSame(name, X.ID)) {
 					continue;
 				}
 				String type = col.getString("type");
@@ -139,13 +150,24 @@ public class DorisHelper extends RDSHelper {
 
 			}
 			sql.append(" )");
-//			if (!X.isEmpty(memo)) {
-//				sql.append(" comment '" + memo.replaceAll("'", "\"") + "'");
-//			}
-			// create table table1(a varchar(10), b varchar(10)) unique key(a) distributed
-			// by hash(a) properties("enable_unique_key_merge_on_write" = "false");
-			sql.append(
-					" unique key(id) distributed by hash(id) properties(\"enable_unique_key_merge_on_write\" = \"false\")");
+			sql.append("""
+						unique key(id)
+						distributed by hash(id) buckets 10
+					properties(
+							"replication_num" = "3",
+							"enable_unique_key_merge_on_write" = "false",
+							"compression" = "LZ4"
+							) """);
+
+//			DISTRIBUTED BY HASH(分桶字段) BUCKETS 10
+//			-- 副本数、存储介质、压缩、排序键
+//			PROPERTIES (
+//			    "replication_num" = "3",
+//			    "storage_medium" = "HDD",
+//			    "storage_cooldown_time" = "2026-12-31 23:59:59",
+//			    "enable_vectorized_engine" = "true",
+//			    "compression" = "LZ4"
+//			);
 
 			log.info(sql.toString());
 
@@ -193,7 +215,7 @@ public class DorisHelper extends RDSHelper {
 			r = p.executeQuery("select count(*) n from " + tablename);
 			int n = 0;
 			if (r.next()) {
-				n = r.getInt("n");
+				n = r.getInt(X.N);
 			}
 
 			p.execute("truncate table " + tablename);
@@ -208,8 +230,9 @@ public class DorisHelper extends RDSHelper {
 		return -1;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
-	public int insertTable(String table, List<V> values) throws SQLException {
+	public int insertTable(String table, List values) throws SQLException {
 
 		if (values == null || values.isEmpty())
 			return 0;
@@ -240,7 +263,8 @@ public class DorisHelper extends RDSHelper {
 			StringBuilder s = new StringBuilder();
 			int total = 0;
 
-			for (String name : values.get(0).names()) {
+			V v0 = (V) values.get(0);
+			for (String name : v0.names()) {
 				if (s.length() > 0)
 					s.append(",");
 				s.append(name);
@@ -258,8 +282,8 @@ public class DorisHelper extends RDSHelper {
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
-			for (V v : values) {
-
+			for (Object o : values) {
+				V v = (V) o;
 				if (v == null || v.isEmpty())
 					return 0;
 

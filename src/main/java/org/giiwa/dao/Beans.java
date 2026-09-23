@@ -51,7 +51,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	public long cost = -1;
 
-	private Map<String, JSON> meta = null;
+	private Map<String, JSON> _meta = null;
 
 	private String[] selected;
 
@@ -69,6 +69,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return id;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Comment(text = "统计计数")
 	public long count() {
 		try {
@@ -133,9 +134,9 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 			return;
 		}
 
-		this.meta = new HashMap<String, JSON>();
+		this._meta = new HashMap<String, JSON>();
 		for (JSON e : meta) {
-			this.meta.put(e.getString("name"), e);
+			this._meta.put(e.getString(X.NAME), e);
 		}
 	}
 
@@ -178,7 +179,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	@Comment(text = "转换为json列表", demo = ".jsons('a', 'b', 'c')")
+	@Comment(text = "转换为json列表", demo = ".jsons('a', 'b:b1->.1', 'c->%tY-%&lt;tm-%&lt;td %&lt;tH:%&lt;tM:%&lt;tS')")
 	public List<JSON> jsons(String... names) {
 		select(names);
 		return jsons();
@@ -190,10 +191,21 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		List<JSON> l1 = new ArrayList<JSON>();
 		for (E e : this) {
 			JSON j = e.json(selected);
-			if (meta != null) {
+			l1.add(j);
+		}
+		return l1;
+	}
+
+	@Comment(text = "转换为json列表", demo = ".jsons2()")
+	public List<JSON> jsons2() {
+
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (E e : this) {
+			JSON j = e.json(selected);
+			if (_meta != null) {
 				JSON j2 = JSON.create();
 				for (String name : j.keySet()) {
-					JSON c1 = meta.get(name);
+					JSON c1 = _meta.get(name);
 					if (c1 == null) {
 						j2.put(name, j.get(name));
 					} else {
@@ -207,7 +219,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	@Comment(text = "删除列表中字段", demo = ".remove('_id', '_node', 'created')")
+	@Comment(text = "删除列表中字段", demo = ".remove('_id', '_.*', 'created')")
 	public Beans<E> remove(String... names) {
 		for (E e : this) {
 			e.remove(names);
@@ -339,12 +351,12 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	}
 
 	@Comment(text = "排序", demo = ".sort('name')")
-	public Beans<E> sort(@Comment(text = "name") String name) {
+	public Beans<E> sort(@Comment(text = X.NAME) String name) {
 		return sort(name, 1);
 	}
 
 	@Comment(text = "排序", demo = ".sort('name', -1)")
-	public Beans<E> sort(@Comment(text = "name") String name, @Comment(text = "asc") int asc) {
+	public Beans<E> sort(@Comment(text = X.NAME) String name, @Comment(text = "asc") int asc) {
 		Collections.sort(this, new Comparator<E>() {
 
 			@Override
@@ -361,7 +373,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	}
 
 	@Comment(text = "取TOPn", demo = ".top(10)")
-	public Beans<E> top(@Comment(text = "n") int n) {
+	public Beans<E> top(@Comment(text = X.N) int n) {
 		Beans<E> l1 = Beans.create();
 		for (int i = 0; i < n; i++) {
 			l1.add(this.get(i));
@@ -369,7 +381,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	@Comment(text = "反转列表", demo = ".revers()")
+	@Comment(text = "反转列表", demo = ".reverse()")
 	public Beans<E> reverse() {
 		Collections.reverse(this);
 		return this;
@@ -404,11 +416,11 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 			}
 		}
 		if (cc != null) {
-			if (meta != null) {
+			if (_meta != null) {
 				String[] ss = new String[cc.length];
 				for (int i = 0; i < cc.length; i++) {
 					String s = cc[i];
-					JSON c = meta.get(s);
+					JSON c = _meta.get(s);
 					if (c == null) {
 						ss[i] = s;
 					} else {
@@ -433,7 +445,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		}
 
 		ex.close();
-		return X.IO.read(t.getFile(), "UTF-8");
+		return X.IO.read(t.getFile(), X.UTF8);
 	}
 
 }
